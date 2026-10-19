@@ -1,0 +1,18 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/backend/vendor/
+/frontend/node_modules/
+
+# Generated build files
+/frontend/dist/
+/backend/storage/*.key
+
+# Local editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
