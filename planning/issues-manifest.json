@@ -1,0 +1,3210 @@
+[
+  {
+    "id": "RENT-001",
+    "title": "Record lecturer evidence for Next.js and JWT substitutions",
+    "body_file": "planning/issues/RENT-001.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T3a",
+      "T4b"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "question",
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 1,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/1"
+  },
+  {
+    "id": "RENT-003",
+    "title": "Add issue-linked branches, pull requests, and CI",
+    "body_file": "planning/issues/RENT-003.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T1a",
+      "T1b",
+      "T1d"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 2,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/2"
+  },
+  {
+    "id": "RENT-004",
+    "title": "Create the Next.js frontend shell",
+    "body_file": "planning/issues/RENT-004.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T3a"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 3,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/3"
+  },
+  {
+    "id": "RENT-005",
+    "title": "Wire Laravel to Supabase Postgres, Auth, and Storage",
+    "body_file": "planning/issues/RENT-005.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T2a",
+      "T3f"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 4,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/4"
+  },
+  {
+    "id": "RENT-082",
+    "title": "File Member A sprint self-reports",
+    "body_file": "planning/issues/RENT-082.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "SELF-A"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 5,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/5"
+  },
+  {
+    "id": "RENT-083",
+    "title": "File Member B sprint self-reports",
+    "body_file": "planning/issues/RENT-083.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "SELF-B"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 6,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/6"
+  },
+  {
+    "id": "RENT-084",
+    "title": "File Member C sprint self-reports",
+    "body_file": "planning/issues/RENT-084.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "SELF-C"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 7,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/7"
+  },
+  {
+    "id": "RENT-085",
+    "title": "File Member D sprint self-reports",
+    "body_file": "planning/issues/RENT-085.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "SELF-D"
+    ],
+    "dependencies": [],
+    "module": "M10",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 8,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/8"
+  },
+  {
+    "id": "RENT-006",
+    "title": "Add user_profiles keyed to Supabase Auth",
+    "body_file": "planning/issues/RENT-006.md",
+    "fr_ids": [
+      "FR01"
+    ],
+    "ac_ids": [
+      "FR01-AC01",
+      "FR01-AC02",
+      "FR01-AC03",
+      "FR01-AC04"
+    ],
+    "rubric_ids": [
+      "T2a"
+    ],
+    "dependencies": [
+      "RENT-005"
+    ],
+    "module": "M01",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 9,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/9"
+  },
+  {
+    "id": "RENT-067",
+    "title": "Bootstrap the queue worker and scheduler",
+    "body_file": "planning/issues/RENT-067.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T6a"
+    ],
+    "dependencies": [
+      "RENT-005"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 10,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/10"
+  },
+  {
+    "id": "RENT-072",
+    "title": "Install Telescope for restricted diagnostics",
+    "body_file": "planning/issues/RENT-072.md",
+    "fr_ids": [
+      "FR48"
+    ],
+    "ac_ids": [
+      "FR48-AC01",
+      "FR48-AC02",
+      "FR48-AC03"
+    ],
+    "rubric_ids": [
+      "T5a"
+    ],
+    "dependencies": [
+      "RENT-005"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 11,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/11"
+  },
+  {
+    "id": "RENT-073",
+    "title": "Log errors and send a critical alert",
+    "body_file": "planning/issues/RENT-073.md",
+    "fr_ids": [
+      "FR47"
+    ],
+    "ac_ids": [
+      "FR47-AC01",
+      "FR47-AC02",
+      "FR47-AC03"
+    ],
+    "rubric_ids": [
+      "T5b"
+    ],
+    "dependencies": [
+      "RENT-005"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 12,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/12"
+  },
+  {
+    "id": "RENT-075",
+    "title": "Monitor CPU, memory, disk, and network",
+    "body_file": "planning/issues/RENT-075.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T5d"
+    ],
+    "dependencies": [
+      "RENT-005"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 13,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/13"
+  },
+  {
+    "id": "RENT-007",
+    "title": "Migrate properties, units, media, and listings",
+    "body_file": "planning/issues/RENT-007.md",
+    "fr_ids": [
+      "FR07",
+      "FR41"
+    ],
+    "ac_ids": [
+      "FR07-AC01",
+      "FR07-AC02",
+      "FR07-AC03",
+      "FR07-AC04",
+      "FR41-AC01",
+      "FR41-AC02",
+      "FR41-AC03"
+    ],
+    "rubric_ids": [
+      "T2a"
+    ],
+    "dependencies": [
+      "RENT-006"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 14,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/14"
+  },
+  {
+    "id": "RENT-012",
+    "title": "Verify Supabase JWTs in Laravel",
+    "body_file": "planning/issues/RENT-012.md",
+    "fr_ids": [
+      "FR43"
+    ],
+    "ac_ids": [
+      "FR43-AC01",
+      "FR43-AC02",
+      "FR43-AC03",
+      "FR43-AC04",
+      "FR43-AC05"
+    ],
+    "rubric_ids": [
+      "T4b",
+      "T3b"
+    ],
+    "dependencies": [
+      "RENT-005",
+      "RENT-006"
+    ],
+    "module": "M01",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 15,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/15"
+  },
+  {
+    "id": "RENT-008",
+    "title": "Migrate enquiries, tenancies, contracts, and exclusion",
+    "body_file": "planning/issues/RENT-008.md",
+    "fr_ids": [
+      "FR33",
+      "FR67",
+      "FR86"
+    ],
+    "ac_ids": [
+      "FR33-AC01",
+      "FR33-AC02",
+      "FR33-AC03",
+      "FR33-AC04",
+      "FR33-AC05",
+      "FR67-AC01",
+      "FR67-AC02",
+      "FR67-AC03",
+      "FR67-AC04",
+      "FR86-AC01",
+      "FR86-AC02",
+      "FR86-AC03",
+      "FR86-AC04",
+      "FR86-AC05"
+    ],
+    "rubric_ids": [
+      "T2a"
+    ],
+    "dependencies": [
+      "RENT-007"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 16,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/16"
+  },
+  {
+    "id": "RENT-009",
+    "title": "Migrate reports, audit logs, notifications, and outbox",
+    "body_file": "planning/issues/RENT-009.md",
+    "fr_ids": [
+      "FR32",
+      "FR45"
+    ],
+    "ac_ids": [
+      "FR32-AC01",
+      "FR32-AC02",
+      "FR32-AC03",
+      "FR32-AC04",
+      "FR45-AC01",
+      "FR45-AC02",
+      "FR45-AC03",
+      "FR45-AC04"
+    ],
+    "rubric_ids": [
+      "T2a",
+      "T6a"
+    ],
+    "dependencies": [
+      "RENT-006",
+      "RENT-007"
+    ],
+    "module": "M09",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 17,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/17"
+  },
+  {
+    "id": "RENT-010",
+    "title": "Migrate favourite_properties",
+    "body_file": "planning/issues/RENT-010.md",
+    "fr_ids": [
+      "FR88"
+    ],
+    "ac_ids": [
+      "FR88-AC01",
+      "FR88-AC02",
+      "FR88-AC03",
+      "FR88-AC04",
+      "FR88-AC05",
+      "FR88-AC06",
+      "FR88-AC07",
+      "FR88-AC08",
+      "FR88-AC09",
+      "FR88-AC10"
+    ],
+    "rubric_ids": [
+      "T2a"
+    ],
+    "dependencies": [
+      "RENT-006",
+      "RENT-007"
+    ],
+    "module": "M04",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 18,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/18"
+  },
+  {
+    "id": "RENT-002",
+    "title": "Agree the CSRF demonstration for bearer authentication",
+    "body_file": "planning/issues/RENT-002.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T3c"
+    ],
+    "dependencies": [
+      "RENT-012"
+    ],
+    "module": "M01",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "question",
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 19,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/19"
+  },
+  {
+    "id": "RENT-013",
+    "title": "Bootstrap and update the signed-in profile",
+    "body_file": "planning/issues/RENT-013.md",
+    "fr_ids": [
+      "FR01",
+      "FR06",
+      "FR49"
+    ],
+    "ac_ids": [
+      "FR01-AC01",
+      "FR01-AC02",
+      "FR01-AC03",
+      "FR01-AC04",
+      "FR06-AC01",
+      "FR06-AC02",
+      "FR06-AC03",
+      "FR49-AC01",
+      "FR49-AC02",
+      "FR49-AC03"
+    ],
+    "rubric_ids": [
+      "T3b"
+    ],
+    "dependencies": [
+      "RENT-012"
+    ],
+    "module": "M01",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 20,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/20"
+  },
+  {
+    "id": "RENT-011",
+    "title": "Seed public, hidden, suspended, and saved scenarios",
+    "body_file": "planning/issues/RENT-011.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T2b"
+    ],
+    "dependencies": [
+      "RENT-007",
+      "RENT-008",
+      "RENT-009",
+      "RENT-010"
+    ],
+    "module": "M10",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 21,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/21"
+  },
+  {
+    "id": "RENT-014",
+    "title": "Build registration, login, logout, and reset screens",
+    "body_file": "planning/issues/RENT-014.md",
+    "fr_ids": [
+      "FR01",
+      "FR02",
+      "FR04",
+      "FR49"
+    ],
+    "ac_ids": [
+      "FR01-AC01",
+      "FR01-AC02",
+      "FR01-AC03",
+      "FR01-AC04",
+      "FR02-AC01",
+      "FR02-AC02",
+      "FR02-AC03",
+      "FR02-AC04",
+      "FR04-AC01",
+      "FR04-AC02",
+      "FR04-AC03",
+      "FR49-AC01",
+      "FR49-AC02",
+      "FR49-AC03"
+    ],
+    "rubric_ids": [
+      "T3b"
+    ],
+    "dependencies": [
+      "RENT-004",
+      "RENT-013"
+    ],
+    "module": "M01",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 22,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/22"
+  },
+  {
+    "id": "RENT-016",
+    "title": "Enforce resource and admin policies",
+    "body_file": "planning/issues/RENT-016.md",
+    "fr_ids": [
+      "FR05"
+    ],
+    "ac_ids": [
+      "FR05-AC01",
+      "FR05-AC02",
+      "FR05-AC03",
+      "FR05-AC04"
+    ],
+    "rubric_ids": [
+      "T4b"
+    ],
+    "dependencies": [
+      "RENT-013"
+    ],
+    "module": "M01",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 23,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/23"
+  },
+  {
+    "id": "RENT-015",
+    "title": "Add tenant and owner dashboard shells",
+    "body_file": "planning/issues/RENT-015.md",
+    "fr_ids": [
+      "FR06"
+    ],
+    "ac_ids": [
+      "FR06-AC01",
+      "FR06-AC02",
+      "FR06-AC03"
+    ],
+    "rubric_ids": [
+      "T3e"
+    ],
+    "dependencies": [
+      "RENT-014"
+    ],
+    "module": "M01",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 24,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/24"
+  },
+  {
+    "id": "RENT-017",
+    "title": "Add idempotency keys, revisions, and the error schema",
+    "body_file": "planning/issues/RENT-017.md",
+    "fr_ids": [
+      "FR74"
+    ],
+    "ac_ids": [
+      "FR74-AC01",
+      "FR74-AC02",
+      "FR74-AC03",
+      "FR74-AC04"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-016"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 25,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/25"
+  },
+  {
+    "id": "RENT-035",
+    "title": "Build the admin first-review queue",
+    "body_file": "planning/issues/RENT-035.md",
+    "fr_ids": [
+      "FR13"
+    ],
+    "ac_ids": [
+      "FR13-AC01",
+      "FR13-AC02",
+      "FR13-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-004",
+      "RENT-015"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 26,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/26"
+  },
+  {
+    "id": "RENT-062",
+    "title": "Build the admin report queue",
+    "body_file": "planning/issues/RENT-062.md",
+    "fr_ids": [
+      "FR39"
+    ],
+    "ac_ids": [
+      "FR39-AC01",
+      "FR39-AC02",
+      "FR39-AC03",
+      "FR39-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-004",
+      "RENT-015"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 27,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/27"
+  },
+  {
+    "id": "RENT-018",
+    "title": "Add owner property create, update, and archive",
+    "body_file": "planning/issues/RENT-018.md",
+    "fr_ids": [
+      "FR07",
+      "FR08",
+      "FR41"
+    ],
+    "ac_ids": [
+      "FR07-AC01",
+      "FR07-AC02",
+      "FR07-AC03",
+      "FR07-AC04",
+      "FR08-AC01",
+      "FR08-AC02",
+      "FR08-AC03",
+      "FR08-AC04",
+      "FR41-AC01",
+      "FR41-AC02",
+      "FR41-AC03"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-007",
+      "RENT-017"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 28,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/28"
+  },
+  {
+    "id": "RENT-036",
+    "title": "Build the admin first-review detail",
+    "body_file": "planning/issues/RENT-036.md",
+    "fr_ids": [
+      "FR13"
+    ],
+    "ac_ids": [
+      "FR13-AC01",
+      "FR13-AC02",
+      "FR13-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-035"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 29,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/29"
+  },
+  {
+    "id": "RENT-063",
+    "title": "Build the admin report detail",
+    "body_file": "planning/issues/RENT-063.md",
+    "fr_ids": [
+      "FR39"
+    ],
+    "ac_ids": [
+      "FR39-AC01",
+      "FR39-AC02",
+      "FR39-AC03",
+      "FR39-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-062"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 30,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/30"
+  },
+  {
+    "id": "RENT-019",
+    "title": "Build property create and edit screens",
+    "body_file": "planning/issues/RENT-019.md",
+    "fr_ids": [
+      "FR07",
+      "FR08"
+    ],
+    "ac_ids": [
+      "FR07-AC01",
+      "FR07-AC02",
+      "FR07-AC03",
+      "FR07-AC04",
+      "FR08-AC01",
+      "FR08-AC02",
+      "FR08-AC03",
+      "FR08-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-015",
+      "RENT-018"
+    ],
+    "module": "M02",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 31,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/31"
+  },
+  {
+    "id": "RENT-020",
+    "title": "Add unit create, bulk create, edit, and operational status",
+    "body_file": "planning/issues/RENT-020.md",
+    "fr_ids": [
+      "FR50",
+      "FR51",
+      "FR52",
+      "FR41"
+    ],
+    "ac_ids": [
+      "FR50-AC01",
+      "FR50-AC02",
+      "FR50-AC03",
+      "FR50-AC04",
+      "FR51-AC01",
+      "FR51-AC02",
+      "FR51-AC03",
+      "FR51-AC04",
+      "FR52-AC01",
+      "FR52-AC02",
+      "FR52-AC03",
+      "FR52-AC04",
+      "FR41-AC01",
+      "FR41-AC02",
+      "FR41-AC03"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-018"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 32,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/32"
+  },
+  {
+    "id": "RENT-030",
+    "title": "Create and edit the property listing draft",
+    "body_file": "planning/issues/RENT-030.md",
+    "fr_ids": [
+      "FR10",
+      "FR11"
+    ],
+    "ac_ids": [
+      "FR10-AC01",
+      "FR10-AC02",
+      "FR10-AC03",
+      "FR10-AC04",
+      "FR11-AC01",
+      "FR11-AC02",
+      "FR11-AC03",
+      "FR11-AC04"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-018"
+    ],
+    "module": "M03",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 33,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/33"
+  },
+  {
+    "id": "RENT-071",
+    "title": "Generate OpenAPI with Scramble",
+    "body_file": "planning/issues/RENT-071.md",
+    "fr_ids": [
+      "FR44"
+    ],
+    "ac_ids": [
+      "FR44-AC01",
+      "FR44-AC02",
+      "FR44-AC03"
+    ],
+    "rubric_ids": [
+      "T4c"
+    ],
+    "dependencies": [
+      "RENT-012",
+      "RENT-018"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P1",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 34,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/34"
+  },
+  {
+    "id": "RENT-021",
+    "title": "Build unit management screens",
+    "body_file": "planning/issues/RENT-021.md",
+    "fr_ids": [
+      "FR50",
+      "FR51",
+      "FR52"
+    ],
+    "ac_ids": [
+      "FR50-AC01",
+      "FR50-AC02",
+      "FR50-AC03",
+      "FR50-AC04",
+      "FR51-AC01",
+      "FR51-AC02",
+      "FR51-AC03",
+      "FR51-AC04",
+      "FR52-AC01",
+      "FR52-AC02",
+      "FR52-AC03",
+      "FR52-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-019",
+      "RENT-020"
+    ],
+    "module": "M02",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 35,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/35"
+  },
+  {
+    "id": "RENT-022",
+    "title": "Store property and unit photos in Supabase Storage",
+    "body_file": "planning/issues/RENT-022.md",
+    "fr_ids": [
+      "FR09"
+    ],
+    "ac_ids": [
+      "FR09-AC01",
+      "FR09-AC02",
+      "FR09-AC03",
+      "FR09-AC04"
+    ],
+    "rubric_ids": [
+      "T3f"
+    ],
+    "dependencies": [
+      "RENT-005",
+      "RENT-020"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 36,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/36"
+  },
+  {
+    "id": "RENT-026",
+    "title": "Edit controlled property and unit policies",
+    "body_file": "planning/issues/RENT-026.md",
+    "fr_ids": [
+      "FR60",
+      "FR61"
+    ],
+    "ac_ids": [
+      "FR60-AC01",
+      "FR60-AC02",
+      "FR60-AC03",
+      "FR60-AC04",
+      "FR61-AC01",
+      "FR61-AC02",
+      "FR61-AC03",
+      "FR61-AC04"
+    ],
+    "rubric_ids": [
+      "T2a"
+    ],
+    "dependencies": [
+      "RENT-020"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 37,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/37"
+  },
+  {
+    "id": "RENT-027",
+    "title": "Manage standard and custom amenities",
+    "body_file": "planning/issues/RENT-027.md",
+    "fr_ids": [
+      "FR87"
+    ],
+    "ac_ids": [
+      "FR87-AC01",
+      "FR87-AC02",
+      "FR87-AC03",
+      "FR87-AC04",
+      "FR87-AC05",
+      "FR87-AC06",
+      "FR87-AC07",
+      "FR87-AC08",
+      "FR87-AC09",
+      "FR87-AC10"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-020"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 38,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/38"
+  },
+  {
+    "id": "RENT-080",
+    "title": "Replace the root README with the submission overview",
+    "body_file": "planning/issues/RENT-080.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "README"
+    ],
+    "dependencies": [
+      "RENT-011",
+      "RENT-071"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "C",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 39,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/39"
+  },
+  {
+    "id": "RENT-023",
+    "title": "Select, reorder, and remove gallery images",
+    "body_file": "planning/issues/RENT-023.md",
+    "fr_ids": [
+      "FR56",
+      "FR57"
+    ],
+    "ac_ids": [
+      "FR56-AC01",
+      "FR56-AC02",
+      "FR56-AC03",
+      "FR56-AC04",
+      "FR57-AC01",
+      "FR57-AC02",
+      "FR57-AC03",
+      "FR57-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-022"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 40,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/40"
+  },
+  {
+    "id": "RENT-028",
+    "title": "Build policy and amenity editing screens",
+    "body_file": "planning/issues/RENT-028.md",
+    "fr_ids": [
+      "FR60",
+      "FR61",
+      "FR87"
+    ],
+    "ac_ids": [
+      "FR60-AC01",
+      "FR60-AC02",
+      "FR60-AC03",
+      "FR60-AC04",
+      "FR61-AC01",
+      "FR61-AC02",
+      "FR61-AC03",
+      "FR61-AC04",
+      "FR87-AC01",
+      "FR87-AC02",
+      "FR87-AC03",
+      "FR87-AC04",
+      "FR87-AC05",
+      "FR87-AC06",
+      "FR87-AC07",
+      "FR87-AC08",
+      "FR87-AC09",
+      "FR87-AC10"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-021",
+      "RENT-026",
+      "RENT-027"
+    ],
+    "module": "M02",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 41,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/41"
+  },
+  {
+    "id": "RENT-029",
+    "title": "Audit property, unit, and policy changes",
+    "body_file": "planning/issues/RENT-029.md",
+    "fr_ids": [
+      "FR55"
+    ],
+    "ac_ids": [
+      "FR55-AC01",
+      "FR55-AC02",
+      "FR55-AC03",
+      "FR55-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-009",
+      "RENT-018",
+      "RENT-020",
+      "RENT-026",
+      "RENT-027"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 42,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/42"
+  },
+  {
+    "id": "RENT-024",
+    "title": "Build the owner gallery screen",
+    "body_file": "planning/issues/RENT-024.md",
+    "fr_ids": [
+      "FR56",
+      "FR57"
+    ],
+    "ac_ids": [
+      "FR56-AC01",
+      "FR56-AC02",
+      "FR56-AC03",
+      "FR56-AC04",
+      "FR57-AC01",
+      "FR57-AC02",
+      "FR57-AC03",
+      "FR57-AC04"
+    ],
+    "rubric_ids": [
+      "T6b"
+    ],
+    "dependencies": [
+      "RENT-021",
+      "RENT-023"
+    ],
+    "module": "M02",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 43,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/43"
+  },
+  {
+    "id": "RENT-025",
+    "title": "Clean orphaned and deleted media safely",
+    "body_file": "planning/issues/RENT-025.md",
+    "fr_ids": [
+      "FR59"
+    ],
+    "ac_ids": [
+      "FR59-AC01",
+      "FR59-AC02",
+      "FR59-AC03",
+      "FR59-AC04"
+    ],
+    "rubric_ids": [
+      "T3f"
+    ],
+    "dependencies": [
+      "RENT-023",
+      "RENT-067"
+    ],
+    "module": "M02",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 44,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/44"
+  },
+  {
+    "id": "RENT-031",
+    "title": "Submit the initial listing package",
+    "body_file": "planning/issues/RENT-031.md",
+    "fr_ids": [
+      "FR12"
+    ],
+    "ac_ids": [
+      "FR12-AC01",
+      "FR12-AC02",
+      "FR12-AC03",
+      "FR12-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-030",
+      "RENT-023",
+      "RENT-026",
+      "RENT-027"
+    ],
+    "module": "M03",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 45,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/45"
+  },
+  {
+    "id": "RENT-032",
+    "title": "Approve or reject the initial listing package",
+    "body_file": "planning/issues/RENT-032.md",
+    "fr_ids": [
+      "FR13",
+      "FR14",
+      "FR15"
+    ],
+    "ac_ids": [
+      "FR13-AC01",
+      "FR13-AC02",
+      "FR13-AC03",
+      "FR14-AC01",
+      "FR14-AC02",
+      "FR14-AC03",
+      "FR14-AC04",
+      "FR15-AC01",
+      "FR15-AC02",
+      "FR15-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-031",
+      "RENT-016"
+    ],
+    "module": "M03",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 46,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/46"
+  },
+  {
+    "id": "RENT-033",
+    "title": "Publish, hide, and archive a listing",
+    "body_file": "planning/issues/RENT-033.md",
+    "fr_ids": [
+      "FR17",
+      "FR18"
+    ],
+    "ac_ids": [
+      "FR17-AC01",
+      "FR17-AC02",
+      "FR17-AC03",
+      "FR17-AC04",
+      "FR18-AC01",
+      "FR18-AC02",
+      "FR18-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-032"
+    ],
+    "module": "M03",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 47,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/47"
+  },
+  {
+    "id": "RENT-037",
+    "title": "Build admin approve and reject reason forms",
+    "body_file": "planning/issues/RENT-037.md",
+    "fr_ids": [
+      "FR14",
+      "FR15"
+    ],
+    "ac_ids": [
+      "FR14-AC01",
+      "FR14-AC02",
+      "FR14-AC03",
+      "FR14-AC04",
+      "FR15-AC01",
+      "FR15-AC02",
+      "FR15-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-036",
+      "RENT-032"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 48,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/48"
+  },
+  {
+    "id": "RENT-034",
+    "title": "Build the owner listing draft, submit, and publish flow",
+    "body_file": "planning/issues/RENT-034.md",
+    "fr_ids": [
+      "FR10",
+      "FR11",
+      "FR12",
+      "FR17",
+      "FR18"
+    ],
+    "ac_ids": [
+      "FR10-AC01",
+      "FR10-AC02",
+      "FR10-AC03",
+      "FR10-AC04",
+      "FR11-AC01",
+      "FR11-AC02",
+      "FR11-AC03",
+      "FR11-AC04",
+      "FR12-AC01",
+      "FR12-AC02",
+      "FR12-AC03",
+      "FR12-AC04",
+      "FR17-AC01",
+      "FR17-AC02",
+      "FR17-AC03",
+      "FR17-AC04",
+      "FR18-AC01",
+      "FR18-AC02",
+      "FR18-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-024",
+      "RENT-028",
+      "RENT-030",
+      "RENT-031",
+      "RENT-033"
+    ],
+    "module": "M03",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 49,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/49"
+  },
+  {
+    "id": "RENT-039",
+    "title": "Search published listings by the full date interval",
+    "body_file": "planning/issues/RENT-039.md",
+    "fr_ids": [
+      "FR19",
+      "FR20",
+      "FR40",
+      "FR77"
+    ],
+    "ac_ids": [
+      "FR19-AC01",
+      "FR19-AC02",
+      "FR19-AC03",
+      "FR19-AC04",
+      "FR20-AC01",
+      "FR20-AC02",
+      "FR20-AC03",
+      "FR20-AC04",
+      "FR40-AC01",
+      "FR40-AC02",
+      "FR40-AC03",
+      "FR77-AC01",
+      "FR77-AC02",
+      "FR77-AC03",
+      "FR77-AC04"
+    ],
+    "rubric_ids": [
+      "T3e",
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-033",
+      "RENT-008",
+      "RENT-027"
+    ],
+    "module": "M04",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 50,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/50"
+  },
+  {
+    "id": "RENT-042",
+    "title": "Save and remove favourite properties",
+    "body_file": "planning/issues/RENT-042.md",
+    "fr_ids": [
+      "FR88"
+    ],
+    "ac_ids": [
+      "FR88-AC01",
+      "FR88-AC02",
+      "FR88-AC03",
+      "FR88-AC04",
+      "FR88-AC05",
+      "FR88-AC06",
+      "FR88-AC07",
+      "FR88-AC08",
+      "FR88-AC09",
+      "FR88-AC10"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-010",
+      "RENT-016",
+      "RENT-033"
+    ],
+    "module": "M04",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 51,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/51"
+  },
+  {
+    "id": "RENT-044",
+    "title": "Submit and withdraw a rental enquiry",
+    "body_file": "planning/issues/RENT-044.md",
+    "fr_ids": [
+      "FR25",
+      "FR26",
+      "FR28",
+      "FR42"
+    ],
+    "ac_ids": [
+      "FR25-AC01",
+      "FR25-AC02",
+      "FR25-AC03",
+      "FR25-AC04",
+      "FR25-AC05",
+      "FR26-AC01",
+      "FR26-AC02",
+      "FR26-AC03",
+      "FR28-AC01",
+      "FR28-AC02",
+      "FR28-AC03",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-017",
+      "RENT-008",
+      "RENT-033"
+    ],
+    "module": "M05",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 52,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/52"
+  },
+  {
+    "id": "RENT-059",
+    "title": "Accept listing reports and show reporter outcomes",
+    "body_file": "planning/issues/RENT-059.md",
+    "fr_ids": [
+      "FR38",
+      "FR72"
+    ],
+    "ac_ids": [
+      "FR38-AC01",
+      "FR38-AC02",
+      "FR38-AC03",
+      "FR38-AC04",
+      "FR38-AC05",
+      "FR72-AC01",
+      "FR72-AC02",
+      "FR72-AC03",
+      "FR72-AC04"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-016",
+      "RENT-009",
+      "RENT-033"
+    ],
+    "module": "M08",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 53,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/53"
+  },
+  {
+    "id": "RENT-038",
+    "title": "Cover the first-review screens with UI tests",
+    "body_file": "planning/issues/RENT-038.md",
+    "fr_ids": [
+      "FR13",
+      "FR14",
+      "FR15"
+    ],
+    "ac_ids": [
+      "FR13-AC01",
+      "FR13-AC02",
+      "FR13-AC03",
+      "FR14-AC01",
+      "FR14-AC02",
+      "FR14-AC03",
+      "FR14-AC04",
+      "FR15-AC01",
+      "FR15-AC02",
+      "FR15-AC03"
+    ],
+    "rubric_ids": [
+      "T3g"
+    ],
+    "dependencies": [
+      "RENT-035",
+      "RENT-036",
+      "RENT-037"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 54,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/54"
+  },
+  {
+    "id": "RENT-040",
+    "title": "Build listing search and detail pages",
+    "body_file": "planning/issues/RENT-040.md",
+    "fr_ids": [
+      "FR19",
+      "FR21"
+    ],
+    "ac_ids": [
+      "FR19-AC01",
+      "FR19-AC02",
+      "FR19-AC03",
+      "FR19-AC04",
+      "FR21-AC01",
+      "FR21-AC02",
+      "FR21-AC03",
+      "FR21-AC04"
+    ],
+    "rubric_ids": [
+      "T3e",
+      "T6b"
+    ],
+    "dependencies": [
+      "RENT-004",
+      "RENT-039"
+    ],
+    "module": "M04",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 55,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/55"
+  },
+  {
+    "id": "RENT-041",
+    "title": "Cache public listings and keep private data uncached",
+    "body_file": "planning/issues/RENT-041.md",
+    "fr_ids": [
+      "FR46"
+    ],
+    "ac_ids": [
+      "FR46-AC01",
+      "FR46-AC02",
+      "FR46-AC03"
+    ],
+    "rubric_ids": [
+      "T6c"
+    ],
+    "dependencies": [
+      "RENT-039",
+      "RENT-033"
+    ],
+    "module": "M04",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 56,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/56"
+  },
+  {
+    "id": "RENT-074",
+    "title": "Alert when a query exceeds the slow-query threshold",
+    "body_file": "planning/issues/RENT-074.md",
+    "fr_ids": [
+      "FR48"
+    ],
+    "ac_ids": [
+      "FR48-AC01",
+      "FR48-AC02",
+      "FR48-AC03"
+    ],
+    "rubric_ids": [
+      "T5c"
+    ],
+    "dependencies": [
+      "RENT-072",
+      "RENT-039"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 57,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/57"
+  },
+  {
+    "id": "RENT-046",
+    "title": "Give owners an enquiry inbox and reject action",
+    "body_file": "planning/issues/RENT-046.md",
+    "fr_ids": [
+      "FR29",
+      "FR31"
+    ],
+    "ac_ids": [
+      "FR29-AC01",
+      "FR29-AC02",
+      "FR29-AC03",
+      "FR29-AC04",
+      "FR31-AC01",
+      "FR31-AC02",
+      "FR31-AC03"
+    ],
+    "rubric_ids": [
+      "T4a"
+    ],
+    "dependencies": [
+      "RENT-044"
+    ],
+    "module": "M05",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 58,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/58"
+  },
+  {
+    "id": "RENT-055",
+    "title": "Reject aged enquiries only when the interval is unavailable",
+    "body_file": "planning/issues/RENT-055.md",
+    "fr_ids": [
+      "FR85"
+    ],
+    "ac_ids": [
+      "FR85-AC01",
+      "FR85-AC02",
+      "FR85-AC03",
+      "FR85-AC04",
+      "FR85-AC05",
+      "FR85-AC06",
+      "FR85-AC07",
+      "FR85-AC08"
+    ],
+    "rubric_ids": [
+      "T6a"
+    ],
+    "dependencies": [
+      "RENT-044",
+      "RENT-039",
+      "RENT-067"
+    ],
+    "module": "M05",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 59,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/59"
+  },
+  {
+    "id": "RENT-061",
+    "title": "Resolve reports and suspend or restore listings",
+    "body_file": "planning/issues/RENT-061.md",
+    "fr_ids": [
+      "FR39",
+      "FR78"
+    ],
+    "ac_ids": [
+      "FR39-AC01",
+      "FR39-AC02",
+      "FR39-AC03",
+      "FR39-AC04",
+      "FR78-AC01",
+      "FR78-AC02",
+      "FR78-AC03",
+      "FR78-AC04",
+      "FR78-AC05"
+    ],
+    "rubric_ids": [
+      "T4d"
+    ],
+    "dependencies": [
+      "RENT-059",
+      "RENT-033"
+    ],
+    "module": "M08",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 60,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/60"
+  },
+  {
+    "id": "RENT-043",
+    "title": "Build favourite hearts and the saved list",
+    "body_file": "planning/issues/RENT-043.md",
+    "fr_ids": [
+      "FR88"
+    ],
+    "ac_ids": [
+      "FR88-AC01",
+      "FR88-AC02",
+      "FR88-AC03",
+      "FR88-AC04",
+      "FR88-AC05",
+      "FR88-AC06",
+      "FR88-AC07",
+      "FR88-AC08",
+      "FR88-AC09",
+      "FR88-AC10"
+    ],
+    "rubric_ids": [
+      "T3e"
+    ],
+    "dependencies": [
+      "RENT-014",
+      "RENT-040",
+      "RENT-042"
+    ],
+    "module": "M04",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 61,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/61"
+  },
+  {
+    "id": "RENT-045",
+    "title": "Build the enquiry form and tenant request list",
+    "body_file": "planning/issues/RENT-045.md",
+    "fr_ids": [
+      "FR25",
+      "FR27",
+      "FR28"
+    ],
+    "ac_ids": [
+      "FR25-AC01",
+      "FR25-AC02",
+      "FR25-AC03",
+      "FR25-AC04",
+      "FR25-AC05",
+      "FR27-AC01",
+      "FR27-AC02",
+      "FR27-AC03",
+      "FR27-AC04",
+      "FR28-AC01",
+      "FR28-AC02",
+      "FR28-AC03"
+    ],
+    "rubric_ids": [
+      "T3e"
+    ],
+    "dependencies": [
+      "RENT-040",
+      "RENT-044"
+    ],
+    "module": "M05",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 62,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/62"
+  },
+  {
+    "id": "RENT-060",
+    "title": "Build the listing report form and reporter list",
+    "body_file": "planning/issues/RENT-060.md",
+    "fr_ids": [
+      "FR38",
+      "FR72"
+    ],
+    "ac_ids": [
+      "FR38-AC01",
+      "FR38-AC02",
+      "FR38-AC03",
+      "FR38-AC04",
+      "FR38-AC05",
+      "FR72-AC01",
+      "FR72-AC02",
+      "FR72-AC03",
+      "FR72-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-040",
+      "RENT-059"
+    ],
+    "module": "M08",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 63,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/63"
+  },
+  {
+    "id": "RENT-078",
+    "title": "Record frontend resource-loading improvements",
+    "body_file": "planning/issues/RENT-078.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T6b"
+    ],
+    "dependencies": [
+      "RENT-040",
+      "RENT-024"
+    ],
+    "module": "M04",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 64,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/64"
+  },
+  {
+    "id": "RENT-047",
+    "title": "Build the owner enquiry inbox",
+    "body_file": "planning/issues/RENT-047.md",
+    "fr_ids": [
+      "FR29",
+      "FR31"
+    ],
+    "ac_ids": [
+      "FR29-AC01",
+      "FR29-AC02",
+      "FR29-AC03",
+      "FR29-AC04",
+      "FR31-AC01",
+      "FR31-AC02",
+      "FR31-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-015",
+      "RENT-046"
+    ],
+    "module": "M05",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 65,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/65"
+  },
+  {
+    "id": "RENT-048",
+    "title": "Commit a tenancy proposal and temporary hold",
+    "body_file": "planning/issues/RENT-048.md",
+    "fr_ids": [
+      "FR30",
+      "FR33",
+      "FR34",
+      "FR42",
+      "FR67",
+      "FR75",
+      "FR86"
+    ],
+    "ac_ids": [
+      "FR30-AC01",
+      "FR30-AC02",
+      "FR30-AC03",
+      "FR30-AC04",
+      "FR33-AC01",
+      "FR33-AC02",
+      "FR33-AC03",
+      "FR33-AC04",
+      "FR33-AC05",
+      "FR34-AC01",
+      "FR34-AC02",
+      "FR34-AC03",
+      "FR34-AC04",
+      "FR34-AC05",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04",
+      "FR67-AC01",
+      "FR67-AC02",
+      "FR67-AC03",
+      "FR67-AC04",
+      "FR75-AC01",
+      "FR75-AC02",
+      "FR75-AC03",
+      "FR75-AC04",
+      "FR86-AC01",
+      "FR86-AC02",
+      "FR86-AC03",
+      "FR86-AC04",
+      "FR86-AC05"
+    ],
+    "rubric_ids": [
+      "T4d"
+    ],
+    "dependencies": [
+      "RENT-046",
+      "RENT-026",
+      "RENT-017"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 66,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/66"
+  },
+  {
+    "id": "RENT-064",
+    "title": "Build admin report decision forms",
+    "body_file": "planning/issues/RENT-064.md",
+    "fr_ids": [
+      "FR39"
+    ],
+    "ac_ids": [
+      "FR39-AC01",
+      "FR39-AC02",
+      "FR39-AC03",
+      "FR39-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-063",
+      "RENT-061"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 67,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/67"
+  },
+  {
+    "id": "RENT-065",
+    "title": "Build the admin suspend and restore form",
+    "body_file": "planning/issues/RENT-065.md",
+    "fr_ids": [
+      "FR78"
+    ],
+    "ac_ids": [
+      "FR78-AC01",
+      "FR78-AC02",
+      "FR78-AC03",
+      "FR78-AC04",
+      "FR78-AC05"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-063",
+      "RENT-061"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 68,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/68"
+  },
+  {
+    "id": "RENT-049",
+    "title": "Confirm or decline the exact contract version",
+    "body_file": "planning/issues/RENT-049.md",
+    "fr_ids": [
+      "FR81",
+      "FR82",
+      "FR86"
+    ],
+    "ac_ids": [
+      "FR81-AC01",
+      "FR81-AC02",
+      "FR81-AC03",
+      "FR81-AC04",
+      "FR81-AC05",
+      "FR81-AC06",
+      "FR82-AC01",
+      "FR82-AC02",
+      "FR82-AC03",
+      "FR82-AC04",
+      "FR82-AC05",
+      "FR86-AC01",
+      "FR86-AC02",
+      "FR86-AC03",
+      "FR86-AC04",
+      "FR86-AC05"
+    ],
+    "rubric_ids": [
+      "T4d"
+    ],
+    "dependencies": [
+      "RENT-048"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 69,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/69"
+  },
+  {
+    "id": "RENT-050",
+    "title": "Download the private contract document",
+    "body_file": "planning/issues/RENT-050.md",
+    "fr_ids": [
+      "FR35",
+      "FR67"
+    ],
+    "ac_ids": [
+      "FR35-AC01",
+      "FR35-AC02",
+      "FR35-AC03",
+      "FR35-AC04",
+      "FR67-AC01",
+      "FR67-AC02",
+      "FR67-AC03",
+      "FR67-AC04"
+    ],
+    "rubric_ids": [
+      "T3f"
+    ],
+    "dependencies": [
+      "RENT-022",
+      "RENT-048"
+    ],
+    "module": "M06",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 70,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/70"
+  },
+  {
+    "id": "RENT-054",
+    "title": "Expire confirmation holds on a schedule",
+    "body_file": "planning/issues/RENT-054.md",
+    "fr_ids": [
+      "FR83"
+    ],
+    "ac_ids": [
+      "FR83-AC01",
+      "FR83-AC02",
+      "FR83-AC03",
+      "FR83-AC04",
+      "FR83-AC05"
+    ],
+    "rubric_ids": [
+      "T6a"
+    ],
+    "dependencies": [
+      "RENT-048",
+      "RENT-067"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 71,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/71"
+  },
+  {
+    "id": "RENT-068",
+    "title": "Deliver domain notifications through the outbox",
+    "body_file": "planning/issues/RENT-068.md",
+    "fr_ids": [
+      "FR32",
+      "FR45"
+    ],
+    "ac_ids": [
+      "FR32-AC01",
+      "FR32-AC02",
+      "FR32-AC03",
+      "FR32-AC04",
+      "FR45-AC01",
+      "FR45-AC02",
+      "FR45-AC03",
+      "FR45-AC04"
+    ],
+    "rubric_ids": [
+      "T6a"
+    ],
+    "dependencies": [
+      "RENT-009",
+      "RENT-067",
+      "RENT-048"
+    ],
+    "module": "M09",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 72,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/72"
+  },
+  {
+    "id": "RENT-076",
+    "title": "Raise API test coverage above 70 percent",
+    "body_file": "planning/issues/RENT-076.md",
+    "fr_ids": [
+      "FR75"
+    ],
+    "ac_ids": [
+      "FR75-AC01",
+      "FR75-AC02",
+      "FR75-AC03",
+      "FR75-AC04"
+    ],
+    "rubric_ids": [
+      "T4d"
+    ],
+    "dependencies": [
+      "RENT-048",
+      "RENT-039",
+      "RENT-061",
+      "RENT-012"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 73,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/73"
+  },
+  {
+    "id": "RENT-079",
+    "title": "Remove listing and tenancy query antipatterns",
+    "body_file": "planning/issues/RENT-079.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T6d"
+    ],
+    "dependencies": [
+      "RENT-039",
+      "RENT-048"
+    ],
+    "module": "M04",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 74,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/74"
+  },
+  {
+    "id": "RENT-066",
+    "title": "Cover admin report screens with UI tests",
+    "body_file": "planning/issues/RENT-066.md",
+    "fr_ids": [
+      "FR39",
+      "FR78"
+    ],
+    "ac_ids": [
+      "FR39-AC01",
+      "FR39-AC02",
+      "FR39-AC03",
+      "FR39-AC04",
+      "FR78-AC01",
+      "FR78-AC02",
+      "FR78-AC03",
+      "FR78-AC04",
+      "FR78-AC05"
+    ],
+    "rubric_ids": [
+      "T3g"
+    ],
+    "dependencies": [
+      "RENT-062",
+      "RENT-063",
+      "RENT-064",
+      "RENT-065"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 75,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/75"
+  },
+  {
+    "id": "RENT-052",
+    "title": "Record move-in, cancellation, and tenancy end",
+    "body_file": "planning/issues/RENT-052.md",
+    "fr_ids": [
+      "FR66",
+      "FR80",
+      "FR42"
+    ],
+    "ac_ids": [
+      "FR66-AC01",
+      "FR66-AC02",
+      "FR66-AC03",
+      "FR66-AC04",
+      "FR66-AC05",
+      "FR80-AC01",
+      "FR80-AC02",
+      "FR80-AC03",
+      "FR80-AC04",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-049"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 76,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/76"
+  },
+  {
+    "id": "RENT-053",
+    "title": "Submit a corrected unconfirmed contract",
+    "body_file": "planning/issues/RENT-053.md",
+    "fr_ids": [
+      "FR71",
+      "FR82",
+      "FR42"
+    ],
+    "ac_ids": [
+      "FR71-AC01",
+      "FR71-AC02",
+      "FR71-AC03",
+      "FR71-AC04",
+      "FR82-AC01",
+      "FR82-AC02",
+      "FR82-AC03",
+      "FR82-AC04",
+      "FR82-AC05",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-049"
+    ],
+    "module": "M06",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 77,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/77"
+  },
+  {
+    "id": "RENT-051",
+    "title": "Build the tenancy timeline and confirmation screen",
+    "body_file": "planning/issues/RENT-051.md",
+    "fr_ids": [
+      "FR35",
+      "FR71",
+      "FR81"
+    ],
+    "ac_ids": [
+      "FR35-AC01",
+      "FR35-AC02",
+      "FR35-AC03",
+      "FR35-AC04",
+      "FR71-AC01",
+      "FR71-AC02",
+      "FR71-AC03",
+      "FR71-AC04",
+      "FR81-AC01",
+      "FR81-AC02",
+      "FR81-AC03",
+      "FR81-AC04",
+      "FR81-AC05",
+      "FR81-AC06"
+    ],
+    "rubric_ids": [
+      "T3e"
+    ],
+    "dependencies": [
+      "RENT-049",
+      "RENT-050"
+    ],
+    "module": "M06",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1.5,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 78,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/78"
+  },
+  {
+    "id": "RENT-081",
+    "title": "Produce the course demo recording",
+    "body_file": "planning/issues/RENT-081.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "DEMO"
+    ],
+    "dependencies": [
+      "RENT-080",
+      "RENT-075",
+      "RENT-074",
+      "RENT-054"
+    ],
+    "module": "M10",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "C",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 79,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/79"
+  },
+  {
+    "id": "RENT-069",
+    "title": "Expose the private notification inbox API",
+    "body_file": "planning/issues/RENT-069.md",
+    "fr_ids": [
+      "FR73"
+    ],
+    "ac_ids": [
+      "FR73-AC01",
+      "FR73-AC02",
+      "FR73-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-068"
+    ],
+    "module": "M09",
+    "owner_alias": "B",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 0.5,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 80,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/80"
+  },
+  {
+    "id": "RENT-086",
+    "title": "Add admin screenshots and accessibility notes",
+    "body_file": "planning/issues/RENT-086.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "README",
+      "DEMO"
+    ],
+    "dependencies": [
+      "RENT-038",
+      "RENT-066",
+      "RENT-080"
+    ],
+    "module": "M08",
+    "owner_alias": "D",
+    "assignee": null,
+    "reviewer": "C",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "course",
+    "labels": [
+      "documentation"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 81,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/81"
+  },
+  {
+    "id": "RENT-056",
+    "title": "Submit, withdraw, or reject a renewal request",
+    "body_file": "planning/issues/RENT-056.md",
+    "fr_ids": [
+      "FR68",
+      "FR69",
+      "FR42"
+    ],
+    "ac_ids": [
+      "FR68-AC01",
+      "FR68-AC02",
+      "FR68-AC03",
+      "FR68-AC04",
+      "FR69-AC01",
+      "FR69-AC02",
+      "FR69-AC03",
+      "FR69-AC04",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-052"
+    ],
+    "module": "M07",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 82,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/82"
+  },
+  {
+    "id": "RENT-077",
+    "title": "Raise UI and business coverage above 70 percent",
+    "body_file": "planning/issues/RENT-077.md",
+    "fr_ids": [],
+    "ac_ids": [],
+    "rubric_ids": [
+      "T3g"
+    ],
+    "dependencies": [
+      "RENT-043",
+      "RENT-045",
+      "RENT-051",
+      "RENT-038",
+      "RENT-066"
+    ],
+    "module": "M10",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "course",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 83,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/83"
+  },
+  {
+    "id": "RENT-070",
+    "title": "Build the notification inbox screen",
+    "body_file": "planning/issues/RENT-070.md",
+    "fr_ids": [
+      "FR73"
+    ],
+    "ac_ids": [
+      "FR73-AC01",
+      "FR73-AC02",
+      "FR73-AC03"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-069",
+      "RENT-014"
+    ],
+    "module": "M09",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "low",
+    "estimate_days": 0.5,
+    "priority": "P1",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 84,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/84"
+  },
+  {
+    "id": "RENT-057",
+    "title": "Propose a renewal segment without releasing occupancy",
+    "body_file": "planning/issues/RENT-057.md",
+    "fr_ids": [
+      "FR70",
+      "FR84",
+      "FR42"
+    ],
+    "ac_ids": [
+      "FR70-AC01",
+      "FR70-AC02",
+      "FR70-AC03",
+      "FR70-AC04",
+      "FR70-AC05",
+      "FR70-AC06",
+      "FR84-AC01",
+      "FR84-AC02",
+      "FR84-AC03",
+      "FR84-AC04",
+      "FR42-AC01",
+      "FR42-AC02",
+      "FR42-AC03",
+      "FR42-AC04"
+    ],
+    "rubric_ids": [
+      "T4d"
+    ],
+    "dependencies": [
+      "RENT-056",
+      "RENT-048"
+    ],
+    "module": "M07",
+    "owner_alias": "A",
+    "assignee": null,
+    "reviewer": "B",
+    "risk": "high",
+    "estimate_days": 2,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 85,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/85"
+  },
+  {
+    "id": "RENT-058",
+    "title": "Build renewal request and proposal screens",
+    "body_file": "planning/issues/RENT-058.md",
+    "fr_ids": [
+      "FR68",
+      "FR69",
+      "FR70"
+    ],
+    "ac_ids": [
+      "FR68-AC01",
+      "FR68-AC02",
+      "FR68-AC03",
+      "FR68-AC04",
+      "FR69-AC01",
+      "FR69-AC02",
+      "FR69-AC03",
+      "FR69-AC04",
+      "FR70-AC01",
+      "FR70-AC02",
+      "FR70-AC03",
+      "FR70-AC04",
+      "FR70-AC05",
+      "FR70-AC06"
+    ],
+    "rubric_ids": [],
+    "dependencies": [
+      "RENT-051",
+      "RENT-056",
+      "RENT-057"
+    ],
+    "module": "M07",
+    "owner_alias": "C",
+    "assignee": null,
+    "reviewer": "A",
+    "risk": "medium",
+    "estimate_days": 1,
+    "priority": "P0",
+    "labels": [
+      "enhancement"
+    ],
+    "existing_issue": null,
+    "action": "created",
+    "github_issue_number": 86,
+    "github_issue_url": "https://github.com/ndrhmdk/rentOS/issues/86"
+  }
+]
