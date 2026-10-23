@@ -1,6 +1,6 @@
 # Business rules
 
-**BR01.** One current nonarchived listing per property; WHOLE_SPACE exactly one auto-unit; do not market whole property and component rooms as separate overlapping inventory.
+**BR01.** One current non-archived listing per property; WHOLE_SPACE exactly one auto-unit; do not market whole property and component rooms as separate overlapping properties and units.
 
 **BR02.** Property/image approval is removed. Only initial listing review sees the full linked package; subsequent valid edits remain approved and are audited. Initial stale approval fails under shared content revision lock.
 
@@ -18,17 +18,17 @@
 
 **BR09.** Blocking ranges are finite and ordered. PostgreSQL GiST EXCLUDE guards same-unit overlapping PENDING_CONFIRMATION/CONFIRMED/ACTIVE spans. Adjacent bookings allowed; remove lifetime one-allocated-unit UNIQUE rule.
 
-**BR10.** All inventory mutation paths share lock order property then units sorted UUID then request/tenancy/renewal. Include bulk additions, maintenance, expiry and15day evaluation, not just proposal endpoint.
+**BR10.** All properties and units mutation paths share lock order property then units sorted UUID then request/tenancy/renewal. Include bulk additions, maintenance, expiry and15day evaluation, not just proposal endpoint.
 
 **BR11.** Proposed confirmation deadline48h is configurable and not teacher-approved fixed policy. At/after deadline confirm fails; release due holds explicitly, never now() in exclusion predicate.
 
-**BR12.** At age>=15days reject only still-PENDING enquiries with no eligible alternative covering stored desired interval. Preferred unit is soft preference; hidden listing is not proof of occupation.
+**BR12.** At age>=15days reject only still-PENDING rental requests with no eligible alternative covering stored desired interval. Preferred unit is soft preference; hidden listing is not proof of occupation.
 
 **BR13.** Renewal is a consecutive new segment under the same tenancy. Pending extension blocks dates but does not change agreed rent/end until mutual confirmation. Many unconfirmed correction rows can share renewal_request_id; it must not be UNIQUE.
 
 **BR14.** Operational READY/MAINTENANCE/RETIRED is separate from rental availability. Contract end does not prove physical move-out; manual overstay operational block is required before further allocation if needed.
 
-**BR15.** New original period follows unit minimum of at least3calendar months; rent>0, deposit>=0. Positive consecutive renewal extension is part of continuous tenancy. Do not substitute advertised values for agreed contract terms.
+**BR15.** New original period follows unit minimum of at least 3 calendar months; rent>0, deposit>=0. Positive consecutive renewal extension is part of continuous tenancy. Do not substitute advertised values for agreed contract terms.
 
 **BR16.** Store success audit/outbox/replay outcome in the same transaction; after-commit workers do not roll back committed business on notification failure. All private links reauthorize.
 

@@ -1,6 +1,9 @@
 # Product overview
-rentOS supports long-term rental discovery and owner-managed inventory. An owner manages properties and independently rentable units, advertises eligible units through one current property-level listing, receives private contact enquiries, and records negotiated tenancy proposals for tenant acknowledgement. A tenancy continues across original and renewal contract segments.
 
-Public discovery is separate from private owner, tenant and admin workspaces. A signed-in user may be both owner and tenant. Initial listing review happens once; later valid edits are audited and violations can be reported or suspended.
+rentOS helps people advertise and find long-term rental spaces, contact an owner, agree on a specific unit/date period and retain a clear history of mutually acknowledged agreements.
 
-Favourite properties let an authenticated user return to saved properties using a heart on cards/details and a private favourites page. Saving does not reserve inventory, imply contact, or alter tenancy availability.
+A property is the physical location. A unit is an independently rentable space inside it. A listing advertises selected units. A rental request opens discussion; a tenancy proposal reserves dates; an agreed tenancy follows mutual confirmation of the same submitted contract version.
+
+The landing page supports location/date search, filters and listing details. A signed-in user can save favourite properties and act as both tenant and owner through Manage rentals. Admins approve only the first listing publication and investigate reports afterward.
+
+[Scope](product-scope.md) · [Roles](actors-and-roles.md) · [Terminology](../02-domain/terminology.md)

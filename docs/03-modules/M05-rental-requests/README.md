@@ -1,10 +1,12 @@
-# M05 Rental requests and offline contact
- Primary owner: Member-C. Required reviewer: Member-A. This is a proposed allocation, not verified GitHub assignment.
+# M05-rental-requests: Tenant rental requests and owner request lists
 
- Contact snapshots, pending enquiries, owner phone discussion, rejection/withdrawal and age15day availability outcome.
+A rental request is an application/contact record. It stays PENDING throughout owner–tenant discussion outside the app.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: Request acceptance atomic with tenancy proposal; one pending thread; cron versus withdrawal/create races.
+Primary contributors: Hien, Kien, Tri. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: No calendar, chat or separate manual Accept. Another acceptance does not immediately reject other prospects.
+- [RNT-05](../../../planning/issues/RNT-05.md) — Kien
+- [RNT-07](../../../planning/issues/RNT-07.md) — Tri
+- [RNT-11](../../../planning/issues/RNT-11.md) — Hien
+- [RNT-15](../../../planning/issues/RNT-15.md) — Hien

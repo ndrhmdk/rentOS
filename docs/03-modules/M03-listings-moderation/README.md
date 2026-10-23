@@ -1,10 +1,12 @@
-# M03 Listings and initial moderation
- Primary owner: Member-B. Required reviewer: Member-A. This is a proposed allocation, not verified GitHub assignment.
+# M03-listings-moderation: Owner listings and initial admin approval
 
- Property-level draft, first package review, owner publication and independent admin suspension. Member-D builds admin screens against reviewed endpoints.
+Create listing is a separate action from Create property. First publication requires one complete-package admin approval.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: Stale initial approval, owner edits versus suspension and shared visibility gate.
+Primary contributors: Kien, Tri. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: After initial approval edits do not reapprove; owner cannot clear suspension; CHANGES_REQUESTED extension deferred.
+- [RNT-02](../../../planning/issues/RNT-02.md) — Kien
+- [RNT-04](../../../planning/issues/RNT-04.md) — Tri
+- [RNT-14](../../../planning/issues/RNT-14.md) — Kien
+- [RNT-16](../../../planning/issues/RNT-16.md) — Tri

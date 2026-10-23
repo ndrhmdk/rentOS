@@ -1,7 +1,11 @@
-# Stable private property bookmarks
+# Private property-level favourites
 
-Status: specified design, implementation unverified.
+Status: agreed project design; implementation unverified.
 
-Decision: favourite_properties relates user_profiles to properties with UUID PK and unique pair. PUT/DELETE desired state, no toggle. Persistence independent of listing turnover/availability; visibility gate prevents hidden-content leaks.
+## Decision and reason
 
-Consequences: tests and issue acceptance must reference this behavior; record any approved change here and update affected PRDs/workflows/data/API/acceptance together.
+Unique user/property identity in favourite_properties; PUT intended-state save and idempotent DELETE. Guest sign-in prompt without queued save. Serialize local heart intent and reconcile failure. Hidden/suspended targets remain generic removable placeholders with no hidden details. Saving allocates no unit and reveals no contact.
+
+## Consequences and validation
+
+Apply the owning module requirements and acceptance scenarios; update the related API/data/workflow/issue documents together if the decision changes. Record actual implementation tests and evidence rather than treating this ADR as proof of working code.

@@ -1,7 +1,11 @@
-# Database-enforced period allocation
+# Operational state and date-qualified availability
 
-Status: specified design, implementation unverified.
+Status: agreed project design; implementation unverified.
 
-Decision: Use GiST exclusion on finite blocked ranges; confirmed projection plus current proposal extension. Allow adjacent future tenancies. Shared actions and deferred projection checks complement exclusion.
+## Decision and reason
 
-Consequences: tests and issue acceptance must reference this behavior; record any approved change here and update affected PRDs/workflows/data/API/acceptance together.
+READY/MAINTENANCE/RETIRED is operational. Determine vacancy from entire requested interval and blocking tenancy envelope. Pending confirmation temporarily reserves dates; PostgreSQL GiST exclusion rejects overlap. Adjacent bookings are allowed. Expiry requires an explicit locked action; no time-dependent now() predicate in the constraint.
+
+## Consequences and validation
+
+Apply the owning module requirements and acceptance scenarios; update the related API/data/workflow/issue documents together if the decision changes. Record actual implementation tests and evidence rather than treating this ADR as proof of working code.

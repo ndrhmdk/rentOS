@@ -1,10 +1,12 @@
-# M04 Discovery and favourite properties
- Primary owner: Member-C. Required reviewer: Member-B. This is a proposed allocation, not verified GitHub assignment.
+# M04-discovery-favourites: Landing page, location/date search and private favourites
 
- Text/address search, same-unit filtering, date availability, public cards/details and private saved properties.
+Visitors browse safe public advertisements; location and all unit/date filters must match an eligible unit for the entire requested interval.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: No shared-cache private favourite flags, no availability promises, correct unavailable placeholders.
+Primary contributors: Hien, Khai, Tri. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: Maps deferred. Save properties, not listings/units. Favourites never allocate units or send enquiries.
+- [RNT-06](../../../planning/issues/RNT-06.md) — Khai
+- [RNT-07](../../../planning/issues/RNT-07.md) — Tri
+- [RNT-11](../../../planning/issues/RNT-11.md) — Hien
+- [RNT-15](../../../planning/issues/RNT-15.md) — Hien

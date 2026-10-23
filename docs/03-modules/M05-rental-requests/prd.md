@@ -1,167 +1,95 @@
-# M05 Product requirements
+# Tenant rental requests and owner request lists — PRD
 
-## Purpose
-Contact snapshots, pending enquiries, owner phone discussion, rejection/withdrawal and age15day availability outcome.
+## Outcome
 
-## Actors and permissions
-Use actor/resource Policies from each FR below; UI guards never replace backend checks.
+A rental request is an application/contact record. It stays PENDING throughout owner–tenant discussion outside the app.
+
+## Scope and screens/actions
+
+- Tenant contact/date/preferred-unit form, own status list and withdraw action; owner private request list/contact/reject action.
+- No standalone owner Accept endpoint. Proposal creation commits ACCEPTED with a tenancy/version/reservation in one transaction.
+- At age >=15 days, auto-reject only if no eligible alternative unit fits the complete stored interval. Reap expired reservations first; publication visibility is not physical occupation.
 
 ## Functional requirements
 
-### FR25 Submit rental request with contact details
-Priority: P0 Must. Actors: Tenant. Dependencies: Shared identity/resource foundation.
+### FR25 — Submit rental request with contact details
 
-Factors: Eligibility; no reservation; duplicate semantics
+**Priority:** P0 Must. **Actors:** Tenant. **Delivery:** Primary: RNT-07.
 
-Tools: Laravel shared action + DB transaction + lockForUpdate + PostgreSQL constraints + Next.js + React + Tailwind + TanStack Query
+Authenticated tenant submits contact_name, contact_phone, desired_move_in_date, desired_end_date, optional preferred_unit_id and message. Store contact snapshots. Status PENDING throughout offline discussion. No calendar, manual discussion acceptance or unit reservation at rental request creation.
 
-Authenticated tenant submits contact_name, contact_phone, desired_move_in_date, desired_end_date, optional preferred_unit_id and message. Store contact snapshots. Status PENDING throughout offline discussion. No calendar, manual discussion acceptance or unit reservation at enquiry creation.
+Acceptance: [5 cases for FR25](../../06-acceptance/test-scenarios.md#fr25); IDs FR25-AC01, FR25-AC02, FR25-AC03, FR25-AC04, FR25-AC05.
 
-Acceptance criteria:
+### FR26 — Prevent duplicate pending rental requests
 
-- FR25-AC01 [Positive] Tenant submits valid three-month request → PENDING request stored and owner notified with private contact snapshots.
-- FR25-AC02 [Validation] Missing/invalid phone or dates, own listing, or unit outside property → Reject with field errors; phone syntax validation is not verification.
-- FR25-AC03 [Security] Other tenant reads contact details → Denied; only requester, owning manager and authorized admin may access.
-- FR25-AC04 [Race] Same request submitted twice → Idempotency key and one PENDING tenant/listing index yield one thread.
-- FR25-AC05 [Integrity] Tenant later changes profile phone → Submitted contact snapshot remains unchanged.
-
-### FR26 Prevent duplicate pending rental requests
-Priority: P0 Must. Actors: Tenant. Dependencies: Shared identity/resource foundation.
-
-Factors: Concurrent duplication; usable threads
-
-Tools: PostgreSQL partial unique index + shared action
+**Priority:** P0 Must. **Actors:** Tenant. **Delivery:** Primary: RNT-07.
 
 At most one PENDING request per tenant/listing; accepted/rejected/withdrawn history remains. Unique partial index is authoritative; retries compare payload.
 
-Acceptance criteria:
+Acceptance: [3 cases for FR26](../../06-acceptance/test-scenarios.md#fr26); IDs FR26-AC01, FR26-AC02, FR26-AC03.
 
-- FR26-AC01 [Race] Two independent connections submit same tenant/listing → One PENDING row; loser returns existing thread or 409.
-- FR26-AC02 [Positive] Prior enquiry is terminal and user submits new valid one → New PENDING request permitted.
-- FR26-AC03 [Integrity] Owner calls tenant or views message → Request remains PENDING; no implied acceptance or allocation.
+### FR27 — Tenant rental request dashboard
 
-### FR27 Tenant rental request dashboard
-Priority: P0 Must. Actors: Tenant. Dependencies: Shared identity/resource foundation.
-
-Factors: Private data; state clarity
-
-Tools: Next.js + React + Tailwind + TanStack Query + Laravel REST + FormRequest + Policies + Eloquent + Supabase PostgreSQL
+**Priority:** P0 Must. **Actors:** Tenant. **Delivery:** Primary: RNT-07.
 
 Display private submitted contacts, desired dates, request status/outcome and linked tenancy confirmation state. ACCEPTED means proposal created, not that tenancy contract is mutually confirmed.
 
-Acceptance criteria:
+Acceptance: [4 cases for FR27](../../06-acceptance/test-scenarios.md#fr27); IDs FR27-AC01, FR27-AC02, FR27-AC03, FR27-AC04.
 
-- FR27-AC01 [Positive] Proposal created from pending enquiry → Show ACCEPTED plus Awaiting your contract confirmation.
-- FR27-AC02 [Integrity] Tenant rejects contract version later → Request acceptance history retained; tenancy shows Awaiting revision.
-- FR27-AC03 [Security] Another tenant requests dashboard row → 403/404.
-- FR27-AC04 [Positive] Owner discusses by phone → Request stays PENDING until proposal created.
+### FR28 — Withdraw pending rental request
 
-### FR28 Withdraw pending rental request
-Priority: P0 Must. Actors: Tenant. Dependencies: Shared identity/resource foundation.
-
-Factors: Pending state transitions; withdrawal versus proposal race
-
-Tools: Laravel shared action + DB transaction + lockForUpdate + PostgreSQL constraints
+**Priority:** P0 Must. **Actors:** Tenant. **Delivery:** Primary: RNT-07.
 
 Tenant may withdraw own PENDING request with audit and owner notification. Accepted requests are handled through tenancy proposal actions instead.
 
-Acceptance criteria:
+Acceptance: [3 cases for FR28](../../06-acceptance/test-scenarios.md#fr28); IDs FR28-AC01, FR28-AC02, FR28-AC03.
 
-- FR28-AC01 [Positive] Withdraw pending thread → WITHDRAWN; no unit to release.
-- FR28-AC02 [Race] Withdraw competes with proposal creation → Same request lock; either withdrawn with no tenancy or accepted with tenancy, never both.
-- FR28-AC03 [Validation] Withdraw accepted thread → 409 with link to tenancy workflow.
+### FR29 — Owner rental request inbox
 
-### FR29 Owner rental request inbox
-Priority: P0 Must. Actors: Owner. Dependencies: Shared identity/resource foundation.
-
-Factors: Ownership; meaningful lead state
-
-Tools: Next.js + React + Tailwind + TanStack Query + Laravel REST + FormRequest + Policies + Eloquent + Supabase PostgreSQL
+**Priority:** P0 Must. **Actors:** Owner. **Delivery:** Primary: RNT-07.
 
 Owner sees own property requests and private tenant contact snapshots, dates and preferred unit. Discuss offline while PENDING. Actions are Reject and Create tenancy proposal; no viewing/calendar or stand-alone Accept.
 
-Acceptance criteria:
+Acceptance: [4 cases for FR29](../../06-acceptance/test-scenarios.md#fr29); IDs FR29-AC01, FR29-AC02, FR29-AC03, FR29-AC04.
 
-- FR29-AC01 [Positive] Owner opens pending enquiry → Phone/contact visible; no reservation created by reading/calling.
-- FR29-AC02 [Security] Different owner accesses inbox row → 403/404.
-- FR29-AC03 [Integrity] Owner records valid proposal → Request becomes ACCEPTED only within proposal transaction.
-- FR29-AC04 [Race] Inbox stale after tenant withdraws → Create action rechecks request PENDING and fails safely.
+### FR30 — Accept request when tenancy proposal commits
 
-### FR30 Accept request when tenancy proposal commits
-Priority: P0 Must. Actors: Owner. Dependencies: Shared identity/resource foundation.
-
-Factors: Atomic final acceptance; offline agreement
-
-Tools: Laravel FormRequest + Policies + DB transaction/lockForUpdate + PostgreSQL constraints
+**Priority:** P0 Must. **Actors:** Owner. **Delivery:** Primary: RNT-05.
 
 Create tenancy, immutable ORIGINAL contract version, explicit owner confirmation, temporary reservation, audit and outbox; change rental request PENDING to ACCEPTED in the same transaction. Tenant confirmation follows separately.
 
-Acceptance criteria:
+Acceptance: [4 cases for FR30](../../06-acceptance/test-scenarios.md#fr30); IDs FR30-AC01, FR30-AC02, FR30-AC03, FR30-AC04.
 
-- FR30-AC01 [Positive] Owner submits valid proposal with explicit confirmation → One PENDING_CONFIRMATION tenancy; request ACCEPTED; owner confirmation refers to exact version.
-- FR30-AC02 [Failure] Database overlap constraint or file validation fails → Rollback acceptance, tenancy/version, audit/outbox and reservation.
-- FR30-AC03 [Race] Reject/withdraw competes with proposal → One valid terminal request transition; no accepted request without tenancy.
-- FR30-AC04 [Integrity] Other requests concern same or alternative units → Do not immediately reject them; apply 15-day availability policy.
+### FR31 — Reject pending rental request
 
-### FR31 Reject pending rental request
-Priority: P0 Must. Actors: Owner. Dependencies: Shared identity/resource foundation.
+**Priority:** P0 Must. **Actors:** Owner. **Delivery:** Primary: RNT-07.
 
-Factors: Explainability; cancellation
+Owner can reject PENDING rental request with reason; no viewing cancellation or automatic rejection merely because another rental request was accepted. System auto-rejection uses FR85.
 
-Tools: Laravel shared action + DB transaction + lockForUpdate + PostgreSQL constraints
+Acceptance: [3 cases for FR31](../../06-acceptance/test-scenarios.md#fr31); IDs FR31-AC01, FR31-AC02, FR31-AC03.
 
-Owner can reject PENDING enquiry with reason; no viewing cancellation or automatic rejection merely because another enquiry was accepted. System auto-rejection uses FR85.
+### FR32 — Audit request and tenancy outcomes
 
-Acceptance criteria:
-
-- FR31-AC01 [Positive] Owner rejects with reason → REJECTED, history and tenant notice committed.
-- FR31-AC02 [Validation] Blank reason or terminal request → 422/409; unchanged.
-- FR31-AC03 [Race] Reject races with Create tenancy proposal → One terminal transition; no duplicate tenancy/outcome.
-
-### FR32 Audit request and tenancy outcomes
-Priority: P0 Must. Actors: System. Dependencies: Shared identity/resource foundation.
-
-Factors: Durable business history; transaction consistency
-
-Tools: PostgreSQL audit_logs + shared Laravel actions
+**Priority:** P0 Must. **Actors:** System. **Delivery:** Primary: RNT-07.
 
 Append-only audit events record request status, proposal/confirmation/version changes and automatic decisions with actor/system identity, safe before/after, reason and correlation UUID.
 
-Acceptance criteria:
+Acceptance: [4 cases for FR32](../../06-acceptance/test-scenarios.md#fr32); IDs FR32-AC01, FR32-AC02, FR32-AC03, FR32-AC04.
 
-- FR32-AC01 [Positive] Request accepted through proposal → Audit links request, tenancy and version identities.
-- FR32-AC02 [Integrity] Proposal later rejected/expired → Acceptance event retained; separate tenancy outcome appended.
-- FR32-AC03 [Failure] Business transaction rolls back → No success audit/outbox survives.
-- FR32-AC04 [Security] User tries editing/deleting audit event → Denied by API and database privilege/trigger policy.
+### FR85 — Apply 15-day rejection using actual availability
 
-### FR85 Apply 15-day rejection using actual availability
-Priority: P0 Must. Actors: Owner; Tenant. Dependencies: Shared identity/resource foundation.
-
-Factors: Authorization; immutable versions; concurrent transitions
-
-Tools: Laravel Scheduler + database queue worker + shared availability query + Laravel FormRequest + Policies + DB transaction/lockForUpdate + PostgreSQL constraints
+**Priority:** P0 Must. **Actors:** Owner; Tenant. **Delivery:** Primary: RNT-11.
 
 Assumption: a PENDING rental request becomes eligible for auto-rejection at created_at+15 days. Reject with NO_AVAILABLE_UNIT only if no READY/marketed/nonarchived eligible unit in the listing property covers the complete desired interval. A preferred unit is a preference, so consider alternatives. Do not reject only because request aged15 days or another request accepted. Exclude admin/publication visibility from physical availability test; hiding is not occupation.
 
-Acceptance criteria:
+Acceptance: [8 cases for FR85](../../06-acceptance/test-scenarios.md#fr85); IDs FR85-AC01, FR85-AC02, FR85-AC03, FR85-AC04, FR85-AC05, FR85-AC06, FR85-AC07, FR85-AC08.
 
-- FR85-AC01 [Boundary] Request age14d23h59m and all units blocked → Keep PENDING; not due.
-- FR85-AC02 [Positive] Age>=15d and no qualifying unit for complete requested period → REJECTED with system reason and availability evaluation timestamp; audit/notify once.
-- FR85-AC03 [Positive] Age>=15d and alternative unit available although preferred unit blocked → Keep PENDING.
-- FR85-AC04 [Positive] Age>=15d and reservation just expired → Reap expired hold under lock; retain request if unit now available.
-- FR85-AC05 [Race] Scheduler rejects while owner creates proposal or tenant withdraws → Shared property/unit/request locks; one terminal transition; no rejected accepted request.
-- FR85-AC06 [Race] New unit or maintenance release competes with availability scan → Property lock across inventory-changing actions produces a coherent decision.
-- FR85-AC07 [Integrity] Listing manually hidden but suitable unit available → Do not infer no availability from publication state; keep request pending.
-- FR85-AC08 [Boundary] Desired move-in already in past → Do not silently shift dates; use stored interval, flag for discussion. Stale-date expiry is deferred.
+## API, validation and failure behavior
 
-## Data and API boundary
-Use the shared data dictionary and versioned API contract; do not invent tables/enums to suit one screen. Every issue identifies exact routes, schema fields, stale-state behavior and cache invalidation that it changes.
+Private product routes require `auth:sanctum`, the allowed action ability and the current resource Policy. Public GET routes serialize safe fields only. Use FormRequests and Resources. Deny forged actors/foreign references; preserve documented 401/403/404/409/422 behavior. Show loading/empty/network/field/revision/session feedback in the related UI.
 
-## Failure and concurrency
-Request acceptance atomic with tenancy proposal; one pending thread; cron versus withdrawal/create races. Ordinary permission/validation/empty/network states are part of completion, alongside the specific race cases above. PostgreSQL invariants require real database tests.
+State-changing domain actions use agreed revision/idempotency/lock order and audit/outbox transaction rules. External storage failure is handled without pretending an upload or queued delivery already completed. See [API design](../../07-architecture/api-design.md).
 
-## Definition of done
-UI and API integrated where applicable; unit and integration tests; private/public DTO checks; Scramble and source docs synchronized; audit/outbox only where required; issue-linked PR and reviewer evidence. No implementation is claimed here.
+## Tests and completion
 
-## Out of scope
-No calendar, chat or separate manual Accept. Another acceptance does not immediately reject other prospects.
+Each feature owner writes meaningful unit/component and API/PostgreSQL integration tests, including denied, invalid, retry/stale and concurrency cases where relevant. Use a short manual checklist for changed screens; automated browser/E2E suites are not required. Record actual commands/results and evidence; current case specifications are not passed tests.

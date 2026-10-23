@@ -1,9 +1,16 @@
 # Security design
-Verify Supabase access JWT with configured allowed asymmetric algorithm, project issuer/audience, expiry, subject and cached trusted JWKS; bounded refresh on unknown key, fail closed. Do not follow arbitrary key URLs from token input. Enforce active profile and resource Policies for all actions and downloads. is_admin is server-only; owner/tenant party snapshots protect confirmation role identity.
 
-The current design sends Authorization bearer headers; do not introduce cross-origin session cookies or Sanctum PAT duplication without a recorded decision. Inventory protection uses DB constraints, not UI disabling. Contracts/storage paths are private and immutable; image metadata is validated from actual bytes, not file extension alone. Escape custom text and prevent XSS, which could expose bearer tokens. Bind SQL parameters and validate allowlisted JSON keys.
+Read [security NFRs](../05-non-functional-requirements/security.md) and [identity ADR](technical-decisions/ADR-001-identity-and-sanctum.md).
 
-## CSRF rubric treatment
-CSRF risk depends on actual automatically attached browser credentials. Bearer-only endpoints must not quietly accept ambient auth cookies; strict allowed origins/CORS, safe verbs and server validation still apply. If local implementation has cookie-authenticated routes/forms, implement framework CSRF protection and test missing/invalid tokens plus hostile origins. CORS alone is not a CSRF defense. Do not globally disable CSRF to satisfy a demo. Record with lecturer which demonstrated design satisfies printed Task3c under approved Next.js substitution; server validation alone is not evidence of CSRF protection.
+| Boundary | Required control | Negative test |
+| --- | --- | --- |
+| Identity issuance | Trusted Supabase signature/project/expiry/subject, account eligibility, rate limit | Forged/wrong-project/expired JWT, arbitrary kid URL, concurrent bootstrap |
+| Product API | Actual Sanctum token, finite expiry/revocation and required ability | Provider JWT alone, missing/expired/revoked token, read-only token attempting write |
+| Resource | Current ownership/participant/admin Policy | Foreign UUID, forged owner_id/is_admin, removed admin privilege despite token ability |
+| Public reads | Current visibility gate and safe Resource shape | Suspended/hidden direct URL or shared-cache leak |
+| Private objects | Authorized immutable upload/reference/hash and short-lived download capabilities | Other participant/outsider, wrong hash/version, tokens in logs |
+| Diagnostics | Local or explicitly restricted non-local Telescope, payload/query filtering | Guest/ordinary user, bearer/recovery/password/contact leakage |
+| Database | Private schema/roles/grants; constraints and immutable/write-once rules | Direct Data API write, cross-scope FKs, overlap or mutable agreed terms |
+| Browser cache | Account-scoped queries, clear/cancel old state on switch | Prior user’s favourite/contact/contract appears after sign-out |
 
-Clear account-scoped profile/request/contract/favourite caches on logout/switch. No tenant contacts, report internal notes, document links, JWTs or service keys in public DTOs/shared caches/logs. Tombstone saved items with hidden target expose only saved relation identity/time and generic unavailable status; no hidden title/photo/address/moderation reason.
+Supabase sign-out alone cannot instantly revoke a separately issued Sanctum token; Laravel revocation is explicit. Likewise offline JWT checks do not establish instant provider-session revocation. Finite token expiry limits the gap. No second password store is introduced. If cookie-authenticated functionality is added, configure CSRF/CORS/session rules for that path rather than assuming bearer conventions apply.

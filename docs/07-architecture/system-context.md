@@ -1,4 +1,16 @@
 # System context
-Users access Next.js public, tenant, owner and admin interfaces. Supabase Auth provides identity; Next.js calls Laravel with access bearer tokens. Laravel verifies project JWT claims/signature, resolves profile and applies resource Policies, then uses Eloquent/direct PostgreSQL for business data. Storage integration manages images and private contract objects. Queue workers and scheduler execute shared domain actions and dispatch durable notifications.
 
-No service key, database password or JWT signing material is sent to browser. A public/anon key alone must not grant direct application-table access. Direct DB connection may bypass RLS depending on role: do not assume auth.uid() magically scopes Eloquent. Restrict grants/RLS and enforce Laravel authorization regardless.
+```mermaid
+flowchart TD
+  U["Guest, tenant, owner or admin"] --> N["Next.js interface"]
+  N --> S["Supabase Auth"]
+  N --> L["Laravel API"]
+  L --> D["Supabase PostgreSQL"]
+  L --> F["Supabase Storage"]
+  W["Laravel worker and scheduler"] --> D
+  W --> F
+```
+
+Supabase Auth owns identity/password/recovery. Laravel verifies that identity at issuance and owns expiring Sanctum product API tokens. Next.js calls Laravel for application data; browser Storage access uses only explicitly authorized upload/download capability paths. Application tables are not directly writable through a browser Data API key.
+
+Workers deliver committed events and run bounded retry/expiry/15-day actions. Telescope supplies restricted diagnostics; alert delivery is separate. Hosting providers and installed versions must be discovered from the repository before implementation.

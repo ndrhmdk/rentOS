@@ -18,7 +18,7 @@
 | listings moderation | DRAFT/REJECTED | PENDING | First complete submission and captured revisions |
 | listings moderation | PENDING | APPROVED/REJECTED | Admin exact submitted package decision |
 | listings publication | DRAFT/HIDDEN | PUBLISHED | Initial approval, completeness and no suspension; availability check |
-| listings publication | PUBLISHED | HIDDEN | Owner hide; do not infer from one accepted enquiry |
+| listings publication | PUBLISHED | HIDDEN | Owner hide; do not infer from one accepted rental request |
 | listing_reports | OPEN | REVIEWING | Admin investigation |
 | listing_reports | OPEN/REVIEWING | RESOLVED/DISMISSED | Reasoned authorized outcome |
 

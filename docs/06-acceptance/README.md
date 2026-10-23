@@ -1,8 +1,5 @@
-# Acceptance
+# Acceptance and evidence
 
-- [Catalogue](requirements-catalog.md)
-- [Cases](acceptance-cases.md)
-- [Traceability](traceability-matrix.md)
-- [Test scenarios](test-scenarios.md)
+81 stable FRs; 329 unique acceptance specifications from the current workbook. [Traceability](traceability-matrix.md) maps each FR to its module, owning issue and verification issue. [Test scenarios](test-scenarios.md) preserves all IDs, types, triggers and expected outcomes.
 
-Current specification81 FRs/324 cases; feature execution unverified.
+Cases describe intended behavior, not executed tests. P2 rows remain deferred; FR76 is a scope rule. Unit/component/API/PostgreSQL tests and manual UI checks implement the active cases. No mandatory E2E automation. Each member writes tests for their own feature; Hien coordinates coverage reports, not everyone’s implementation.

@@ -1,42 +1,40 @@
-# Course compliance and evidence
+# Course requirements and evidence
 
-Source: Advanced Web Final Project Brief CSB35050 VNUK(2).docx, assessment tasks and rubric. Total10marks; final project weighting50%; reference duration5weeks. Preserve actual grading conditions; no claim that a substitution is approved beyond user report.
+The actual teacher brief governs scoring. Original project duration: five weeks; total 10 marks, final-project weighting 50%. This package does not invent a waiver or assert implemented evidence.
 
-| ID | Marks | Printed criterion | Concrete deliverable/evidence | Modules | Owner | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| T1a | .25 | GitHub repository | Repository URL/access; organized source/history | M10 | A | Required |
-| T1b | .25 | Good commit messages | Atomic commits referring to actual issue; meaningful purpose | All | All | Required |
-| T1c | .25 | GitHub Issues | Well-defined issue bodies with acceptance/dependency/owner links | M10 | A | Required |
-| T1d | .25 | GitHub workflow | Topic branches, linked issues and PR review history; CI supports but does not replace these | M10 | A | Required |
-| T2a | .5 | Database design/migrations | Reproducible Laravel migrations, UUID schema, constraints/ERD incl favourites | M02/M06/M04 | A+B | Required |
-| T2b | .5 | Seeders | Deterministic representative public/hidden/suspended, inventory, contracts, reports/favourites scenarios | All | B | Required |
-| T3a | .25 | Blade Livewire Tailwind | Printed rubric names these; Next.js substitution user-reported approved, exact scoring evidence needed | M01/M10 | A | Approval scope needs evidence |
-| T3b | .25 | Registration/login | Email confirmation/login/profile bootstrap and negative tests under approved provider | M01 | A | Required |
-| T3c | .25 | CSRF and server validation | Actual transport threat model, framework protection where cookie credentials apply, field errors and hostile request tests | M01+All | A | Demonstration must be agreed for substituted UI |
-| T3e | .25 | Query/filter/display | Seeded search full interval/same-unit filters, listing details and private favourites | M04 | C | Required |
-| T3f | 1 | External API integration | Use Supabase Storage API integration: auth/config, completed upload/private download, error handling/logging, tests and demo; do not claim an SDK import alone | M02 | B | Required; confirm accepted evidence if lecturer requires another provider |
-| T3g | 1 | UI/business unit+integration tests | Meaningful UI/business test suite and separately reported coverage strictly greater than70% | All | C+A | Required |
-| T4a | .5 | Resource Controllers CRUD | Actual resource controllers/FormRequests/Resources with HTTP/status/validation/ownership semantics | M02/M03/M04 | B | Required |
-| T4b | .25 | Sanctum token security | Printed rubric explicitly Sanctum scopes/permissions; chosen design Supabase JWT/Policies; get exact accepted replacement evidence | M01 | A | Unresolved specific substitution |
-| T4c | .25 | Scramble | Installed compatible Scramble generates API docs from real code; bearer scheme and409/422 examples | M10 | A | Required |
-| T4d | 1 | API unit+integration tests | Laravel API/action/policy integration coverage strictly greater than70%; real PostgreSQL race tests | All | A+B | Required |
-| T5a | .25 | Telescope | Configured compatible Telescope, restricted diagnostics, useful request/query/job evidence | M10 | A | Required |
-| T5b | .25 | Error handling/logging | Structured logs, friendly errors and actual critical error report/alert evidence | M10 | A | Required |
-| T5c | .25 | Slow-query alert | Threshold rule and delivered deduplicated alert, not just query display | M10 | A | Required |
-| T5d | .25 | Server monitoring | CPU/memory/disk/network collector and threshold alert evidence on chosen environment | M10 | A | Required |
-| T6a | .5 | Asynchronous processing | Queue worker/outbox handling and scheduler jobs; failure/retry tests and duplicate safety | M09/M06/M05 | B+A | Required |
-| T6b | .5 | Resource loading | Lazy loading/code split/images/bundles with measurable browser evidence | M04/M02 | C | Required |
-| T6c | .5 | Caching | Document selected public caching/revalidation/invalidation and private isolation tests | M04/M03 | C+B | Required |
-| T6d | .5 | Antipattern mitigation | Eager loading/indexes/query profiling and before/after evidence; no false optimization claims | M02/M04/M06 | B+A | Required |
+| Criterion | Marks | Printed requirement | Owning issue(s) | Named contributors | Evidence required |
+| --- | --- | --- | --- | --- | --- |
+| T1a | 0.25 | GitHub repository | RNT-01, RNT-16 | Khai, Tri | Repository URL/access; organized source/history |
+| T1b | 0.25 | Good commit messages | RNT-01 | Khai | Atomic commits referring to actual issue; meaningful purpose |
+| T1c | 0.25 | GitHub Issues | RNT-01 | Khai | Well-defined issue bodies with acceptance/dependency/owner links |
+| T1d | 0.25 | GitHub workflow | RNT-01, RNT-13 | Khai | Topic branches, linked issues and PR review history; CI supports but does not replace these |
+| T2a | 0.5 | Database design/migrations | RNT-01, RNT-13 | Khai | Reproducible Laravel migrations, UUID schema, constraints/ERD incl favourites |
+| T2b | 0.5 | Seeders | RNT-01 | Khai | Deterministic representative public/hidden/suspended, properties and units, contracts, reports/favourites scenarios |
+| T3a | 0.25 | Blade Livewire Tailwind | RNT-01 | Khai | Printed rubric names these; Next.js substitution user-reported approved, exact scoring evidence needed |
+| T3b | 0.25 | Registration/login | RNT-03 | Hien | Email confirmation/login/profile bootstrap and negative tests under approved provider |
+| T3c | 0.25 | CSRF and server validation | RNT-01, RNT-03, RNT-07, RNT-08 | Hien, Khai, Tri | Actual transport threat model, framework protection where cookie credentials apply, field errors and hostile request tests |
+| T3e | 0.25 | Query/filter/display | RNT-06, RNT-07, RNT-15 | Hien, Khai, Tri | Seeded search full interval/same-unit filters, listing details and private favourites |
+| T3f | 1 | External API integration | RNT-02, RNT-14 | Kien | Use Supabase Storage API integration: auth/config, completed upload/private download, error handling/logging, tests and demo; do not claim an SDK import alone |
+| T3g | 1 | UI/business unit+integration tests | RNT-01, RNT-02, RNT-03, RNT-04, RNT-05, RNT-06, RNT-07, RNT-08, RNT-09, RNT-10, RNT-11, RNT-13, RNT-14, RNT-15, RNT-16 | Hien, Khai, Kien, Tri | Meaningful UI/business test suite and separately reported coverage strictly greater than70% |
+| T4a | 0.5 | Resource Controllers CRUD | RNT-02, RNT-03, RNT-04, RNT-05, RNT-06, RNT-07, RNT-08, RNT-09 | Hien, Khai, Kien, Tri | Actual resource controllers/FormRequests/Resources with HTTP/status/validation/ownership semantics |
+| T4b | 0.25 | Sanctum token security | RNT-01, RNT-03, RNT-13 | Hien, Khai | Mandatory Sanctum token management and scopes/permissions: actual issuance, auth:sanctum, allowed/denied abilities, expiry and revocation API tests. Supabase JWT verification is not a substitute. |
+| T4c | 0.25 | Scramble | RNT-01 | Khai | Installed compatible Scramble generates API docs from real code; bearer scheme and409/422 examples |
+| T4d | 1 | API unit+integration tests | RNT-01, RNT-02, RNT-03, RNT-04, RNT-05, RNT-06, RNT-07, RNT-08, RNT-09, RNT-10, RNT-11, RNT-13, RNT-14, RNT-15, RNT-16 | Hien, Khai, Kien, Tri | Laravel API/action/policy integration coverage strictly greater than70%; real PostgreSQL race tests |
+| T5a | 0.25 | Telescope | RNT-01 | Khai | Configured compatible Telescope, restricted diagnostics, useful request/query/job evidence |
+| T5b | 0.25 | Error handling/logging | RNT-12 | Tri | Structured logs, friendly errors and actual critical error report/alert evidence |
+| T5c | 0.25 | Slow-query alert | RNT-12 | Tri | Threshold rule and delivered deduplicated alert, not just query display |
+| T5d | 0.25 | Server monitoring | RNT-12 | Tri | CPU/memory/disk/network collector and threshold alert evidence on chosen environment |
+| T6a | 0.5 | Asynchronous processing | RNT-09, RNT-10 | Khai, Kien | Queue worker/outbox handling and scheduler jobs; failure/retry tests and duplicate safety |
+| T6b | 0.5 | Resource loading | RNT-11, RNT-14 | Hien, Kien | Lazy loading/code split/images/bundles with measurable browser evidence |
+| T6c | 0.5 | Caching | RNT-11, RNT-15 | Hien | Document selected public caching/revalidation/invalidation and private isolation tests |
+| T6d | 0.5 | Antipattern mitigation | RNT-11, RNT-14 | Hien, Kien | Eager loading/indexes/query profiling and before/after evidence; no false optimization claims |
 
+## Submission
 
-## Submission requirements
-- Root repository README must include run instructions, project overview/tools, feature list/screenshots, ERD and relevant lecturer notes. This docs directory does not replace root README.
-- GitHub source, branches, issue-linked PRs and meaningful commit history.
-- Each of four members submits a self-report for each of all five sprints. Brief says late/missing reports incur10% deduction from final group mark; do not replace individual evidence with a single group report.
-- Screencast no longer than10minutes, at least720p MP4; YouTube public/unlisted or equivalent accessible link, not private. Demonstrate requirements in action; show logs/alerts/docs evidence where relevant, not only attractive pages.
+- Real root application README with actual setup/tools/env/migrations/seeds/worker/scheduler/run/test instructions, overview, screenshots and ERD.
+- Source repository, meaningful commits, topic branches and issue-linked reviewed PRs. Creating this pack does not establish any of them.
+- Each member authors their own self-report for all five sprints. The brief states a 10% group-mark deduction for late/missing reports; collecting links does not replace personal authorship.
+- Accessible public/unlisted demo link: MP4 at least 720p, no longer than 10 minutes; show real behavior/tests/docs/alerts where appropriate, not invented results.
+- Demonstrate >70% UI/business coverage and separately >70% Laravel API coverage with meaningful tests; no mandatory E2E/browser automation is added by this plan.
 
-## Explicit differences requiring evidence
-User reports Next.js/Laravel/Supabase approved. Printed T3a names Blade/Livewire and T4b names Sanctum. No file here proves which scoring criteria were waived or substituted. Keep chosen stack, create a lecturer clarification/evidence task, and mark only the affected grading item pending. Continue unrelated authorized work. Do not silently add Sanctum, remove JWT, or claim original tooling is implemented.
-
-JSONB policies/amenities are bounded descriptive attributes with canonical schemas on a relational core, not an excuse for an unstructured whole database. Explain this tradeoff in database design evidence. Supabase Storage is proposed external API evidence matching the rubric's storage API example; demonstrate integration and error handling, not just a provider login screen.
+Supabase Storage API evidence requires actual completed upload/private download and failure handling/tests, not merely an SDK dependency. Telescope is diagnostics; slow-query/critical/resource alert delivery needs actual controlled evidence. JSONB is bounded descriptive data on a relational core.
