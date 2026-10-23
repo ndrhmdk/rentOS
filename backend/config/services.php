@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
+        'storage' => [
+            'bucket' => env('SUPABASE_STORAGE_BUCKET', 'property-media'),
+            'fixture_directory' => database_path('seeders/fixtures/media'),
+            'connect_timeout' => 5,
+            'timeout' => 30,
+        ],
+    ],
+
 ];
