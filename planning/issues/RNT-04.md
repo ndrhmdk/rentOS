@@ -8,22 +8,22 @@ Admins inspect the complete first listing package and approve or reject the exac
 
 ## Ownership and order
 
-- Phase 1: Shared setup, accounts, properties and admin approval
+- Phase 1.
 - Implementation: **Tri** (frontend + backend + own tests).
 - Reviewer: **Khai**.
-- Prerequisites for final integration: [RNT-01](RNT-01.md) (GitHub #97), [RNT-03](RNT-03.md) (GitHub #98).
-- Publication: Draft; delivery: Planned; actual GitHub URL: https://github.com/ndrhmdk/rentOS/issues/99.
+- Prerequisites: [RNT-01](RNT-01.md), [RNT-03](RNT-03.md).
+- Publication: Draft; actual GitHub issue URL not recorded.
 
-A prerequisite gates closure/integration, not all early work: use agreed contracts, factories and local fixtures after the shared schema/auth checkpoint. This is one grouped issue; internal checklists/multiple PRs do not require extra micro-issues.
+Dependencies gate final integration; fixtures and agreed contracts allow earlier independent work. This remains one grouped issue with internal checklists and multiple PRs if useful.
 
 ## Functional requirements
 
-- **FR13 — Review initial listing packages** (P0 Must): Admin queue displays only initial PENDING listings with property/unit details, selected photos, policies and captured revisions. Show owner and completeness; admin approves or rejects with reason.
-  - Full cases: [FR13 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr13)
+- **FR13 — Review initial listing packages** (P0 Must): Admin queue displays only initial PENDING listings with property/unit details, selected gallery, policies and captured revisions. Show owner and completeness; admin approves or rejects with reason.
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr13)
 - **FR14 — Approve initial listing package** (P0 Must): Admin approves the exact submitted listing/property content revisions. Store reviewer/time and approved_content_revision. Approval permits publication but does not publish automatically.
-  - Full cases: [FR14 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr14)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr14)
 - **FR15 — Reject initial listing with reason** (P0 Must): Admin rejects initial submission with a required reason. Owner corrects data and resubmits; later content violations use suspension rather than resetting initial approval.
-  - Full cases: [FR15 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr15)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr15)
 
 ## Backend deliverables
 
@@ -53,16 +53,18 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 
 ## NFRs, boundaries and coordination
 
+NFR-02, NFR-03, NFR-04, NFR-07
+
 NFR-02, NFR-03, NFR-04, NFR-07; T4a, T3g, T4d
 Tri works both frontend and backend with Khai as reviewer. Owner listing submission/publication is RNT-06; Tri can finish against deterministic fixtures before that UI exists.
 
 ## Definition of done
 
-- [ ] Implement the related frontend, backend and meaningful unit/component/API integration tests under this issue; test PostgreSQL constraints/concurrency on actual PostgreSQL.
-- [ ] Private product routes require auth:sanctum, approved abilities and resource Policies. Test actual bearer expiry/revocation/permission behavior where relevant.
-- [ ] Update FormRequests/Resources/API docs and explicit frontend response types with contract changes. Future TypeScript generation is documentation only.
-- [ ] Apply shared transaction/revision/idempotency/audit rules to the affected actions. Schema changes are new reviewed migrations tested locally; never reset/reseed a hosted environment.
-- [ ] Use a short manual checklist for changed screens; automated browser/E2E suites are not required.
-- [ ] Attach actual test commands/results and relevant screenshots/provider/query/alert evidence; record personal sprint contribution. A document or fixture screenshot is not proof of implemented behavior.
+- [ ] Implement related frontend, backend and meaningful unit/component/API/PostgreSQL integration tests; all feature owners test their own changes.
+- [ ] Private routes use auth:sanctum and current account/resource Policies. Browser writes require CSRF; approved PAT endpoints additionally enforce abilities. Session-only endpoints reject PAT-only callers.
+- [ ] Update FormRequests/Resources/OpenAPI and explicit frontend types. Future TypeScript generation remains documentation only.
+- [ ] Apply transaction/revision/idempotency/audit rules to domain actions. Never store token secrets in replay records. Use reviewed migrations locally; never reset/reseed a hosted environment.
+- [ ] Use a short manual changed-screen checklist; no required automated browser/E2E suite.
+- [ ] Attach actual test commands/results and relevant evidence; specifications do not prove implementation.
 
-RNT-04 is a planning key, not a GitHub issue number. Deleted issues are not reused.
+RNT-04 is a planning key, not a GitHub number. Deleted issues are not reused.

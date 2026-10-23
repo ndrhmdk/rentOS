@@ -30,3 +30,6 @@ Property creation, unit creation, listing creation, initial approval and publica
 - [WF-26-end-cancel-tenancy](WF-26-end-cancel-tenancy.md) — FR66
 - [WF-27-hide-archive-listing](WF-27-hide-archive-listing.md) — FR18
 - [WF-28-authenticate-profile](WF-28-authenticate-profile.md) — FR01, FR02, FR04, FR05, FR06, FR43, FR49
+
+- [WF-29 Create, use and revoke personal API tokens](WF-29-manage-api-tokens.md)
+

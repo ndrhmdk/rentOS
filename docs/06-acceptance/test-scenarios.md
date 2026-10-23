@@ -1,6 +1,6 @@
 # Acceptance specifications — not executed
 
-All 329 cases are preserved as specifications; no app tests were run to create this document. Automation scope is unit/component/API/PostgreSQL integration; changed-screen checks are manual. Deferred P2 cases do not become MVP test tasks.
+All 343 cases are specifications. Unit/component/API/PostgreSQL integration tests plus manual screen checks are required; no automated browser/E2E suite. CSRF tests must explicitly defeat Laravel’s testing bypass. No application tests were run while editing these documents.
 
 ## FR01
 
@@ -9,61 +9,61 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR01-AC01
 
 - Type: Positive
-- Trigger/input: Register a valid email/password and confirm email
-- Expected: One Auth identity and one profile exist; is_admin=false.
+- Trigger/input: Register valid credentials through Fortify, then verify email
+- Expected: One users row and one matching UUID profile exist; password is hashed, is_admin=false; verified user can perform permitted product writes.
 - Evidence status: Not executed
 
 ### FR01-AC02
 
 - Type: Validation
-- Trigger/input: Invalid email or weak password
-- Expected: Provider errors are mapped to field feedback without creating a privileged profile.
+- Trigger/input: Submit invalid email, weak password or mismatched confirmation
+- Expected: 422 field errors; no partial user/profile or privileged account is created.
 - Evidence status: Not executed
 
 ### FR01-AC03
 
 - Type: Privacy
-- Trigger/input: Register an already registered email
-- Expected: Handle provider response without promising disclosure of whether the account exists; offer sign-in/reset guidance.
+- Trigger/input: Register an existing normalized email
+- Expected: No duplicate account; use the documented generic account-exists/sign-in/reset guidance without private account details.
 - Evidence status: Not executed
 
 ### FR01-AC04
 
 - Type: Race
-- Trigger/input: Two signup/profile callbacks run for the same Auth UUID
-- Expected: Unique profile PK/upsert creates one profile; retries do not reset an existing name or admin flag.
+- Trigger/input: Two registrations use the same normalized email concurrently
+- Expected: Unique constraint and transaction permit one user/profile pair; retries cannot overwrite password, name or admin privilege.
 - Evidence status: Not executed
 
 ## FR02
 
-**Sign in and obtain Sanctum API access** · P0 Must
+**Sign in with a Sanctum browser session** · P0 Must
 
 ### FR02-AC01
 
 - Type: Positive
-- Trigger/input: Confirmed user signs in and requests Laravel API access
-- Expected: Verify provider identity, issue finite-lived Sanctum token and load the correct profile through auth:sanctum.
+- Trigger/input: Initialize CSRF and log in with valid confirmed-user credentials
+- Expected: Session ID is regenerated; cookie-authenticated /api/v1/me succeeds via auth:sanctum; no personal_access_tokens row is created.
 - Evidence status: Not executed
 
 ### FR02-AC02
 
 - Type: Negative
-- Trigger/input: Wrong password or unconfirmed account
-- Expected: Clear safe error; no protected data returned.
+- Trigger/input: Wrong password or unverified account attempts protected work
+- Expected: Wrong credentials fail safely; unverified account can use only the limited verification/account flow and cannot write product data or create tokens.
 - Evidence status: Not executed
 
 ### FR02-AC03
 
 - Type: Security
-- Trigger/input: Sanctum token expires while Supabase session remains refreshable
-- Expected: Refresh provider identity and rotate this client session’s Laravel token; retry safe reads once, never blindly replay non-idempotent writes.
+- Trigger/input: Session expires while a private page is open
+- Expected: API returns 401 (or 419 if CSRF is checked first on a write); clear private client data and request login; do not exchange/refresh provider JWTs or blindly replay writes.
 - Evidence status: Not executed
 
 ### FR02-AC04
 
 - Type: Negative
-- Trigger/input: Refresh fails or session expires
-- Expected: Clear private client cache and require sign-in; API returns 401.
+- Trigger/input: Repeated login attempts or invalid CSRF
+- Expected: Rate limits and CSRF validation reject the attempt; no session is granted. Provide safe retry/login feedback.
 - Evidence status: Not executed
 
 ## FR03
@@ -73,8 +73,8 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR03-AC01
 
 - Type: Positive
-- Trigger/input: User completes allowed Google callback
-- Expected: Provider identity maps to one application profile.
+- Trigger/input: Deferred Google callback supplies verified provider identity
+- Expected: Explicit safe account linking resolves one Laravel users/profile identity; no duplicate password store.
 - Evidence status: Not executed
 
 ### FR03-AC02
@@ -93,13 +93,13 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 ## FR04
 
-**Sign out and revoke Sanctum API access** · P0 Must
+**Sign out of the browser session** · P0 Must
 
 ### FR04-AC01
 
 - Type: Positive
-- Trigger/input: User logs out successfully
-- Expected: Revoke current Sanctum token, sign out via Supabase and clear account-specific client data; subsequent private API use of revoked token returns 401.
+- Trigger/input: User submits logout with valid session and CSRF
+- Expected: Current session invalidated and CSRF regenerated; copied prior session cannot read protected data. Private client queries are cancelled/cleared.
 - Evidence status: Not executed
 
 ### FR04-AC02
@@ -112,13 +112,13 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR04-AC03
 
 - Type: Boundary
-- Trigger/input: Copied Sanctum token is replayed after successful logout
-- Expected: 401 because Laravel token was revoked; if network prevented revocation, show failure and document finite expiry instead of claiming instant invalidation.
+- Trigger/input: Use an existing personal API token after ordinary browser logout
+- Expected: Token continues until its expiry or explicit revocation. UI states this; Settings revoke makes subsequent token replay return 401. Network logout failure is not reported as completed.
 - Evidence status: Not executed
 
 ## FR05
 
-**Enforce Sanctum abilities and resource authorization** · P0 Must
+**Enforce account and resource permissions** · P0 Must
 
 ### FR05-AC01
 
@@ -252,7 +252,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Validation
 - Trigger/input: Wrong MIME, undecodable file or configured size/count exceeded
-- Expected: Reject; no broken photos row. Validate bytes, not extension alone.
+- Expected: Reject; no broken gallery row. Validate bytes, not extension alone.
 - Evidence status: Not executed
 
 ### FR09-AC03
@@ -498,7 +498,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Positive
 - Trigger/input: Owner hides listing
-- Expected: Remove from public search and normal public details; preserve rental requests/contracts.
+- Expected: Remove from public search and normal public details; preserve enquiries/contracts.
 - Evidence status: Not executed
 
 ### FR18-AC02
@@ -739,7 +739,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR26-AC02
 
 - Type: Positive
-- Trigger/input: Prior rental request is terminal and user submits new valid one
+- Trigger/input: Prior enquiry is terminal and user submits new valid one
 - Expected: New PENDING request permitted.
 - Evidence status: Not executed
 
@@ -757,7 +757,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR27-AC01
 
 - Type: Positive
-- Trigger/input: Proposal created from pending rental request
+- Trigger/input: Proposal created from pending enquiry
 - Expected: Show ACCEPTED plus Awaiting your contract confirmation.
 - Evidence status: Not executed
 
@@ -814,7 +814,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR29-AC01
 
 - Type: Positive
-- Trigger/input: Owner opens pending rental request
+- Trigger/input: Owner opens pending enquiry
 - Expected: Phone/contact visible; no reservation created by reading/calling.
 - Evidence status: Not executed
 
@@ -975,7 +975,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Positive
 - Trigger/input: Owner proposes July1-December31
-- Expected: PENDING_CONFIRMATION reserves only that period; rental request ACCEPTED; tenant invited to review exact version.
+- Expected: PENDING_CONFIRMATION reserves only that period; enquiry ACCEPTED; tenant invited to review exact version.
 - Evidence status: Not executed
 
 ### FR34-AC02
@@ -1236,62 +1236,62 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 ## FR43
 
-**Verify Supabase identity and secure APIs with Sanctum** · P0 Must
+**Protect APIs with Sanctum sessions and scoped tokens** · P0 Must
 
 ### FR43-AC01
 
 - Type: Positive
-- Trigger/input: Valid verified Supabase identity obtains API access
-- Expected: Issue hashed, expiring Sanctum token for the same UUID profile. Private product routes require Sanctum bearer authentication; provider JWT alone is rejected.
+- Trigger/input: Call private API using a valid browser session, then call /api/v1/me using an account:read personal token without cookies
+- Expected: Both supported credential modes authenticate the same Laravel user/profile; browser login never creates a PAT; provider JWT is rejected.
 - Evidence status: Not executed
 
 ### FR43-AC02
 
 - Type: Security
-- Trigger/input: Tampered/expired/wrong-project identity JWT or invalid Sanctum API token
-- Expected: Reject identity issuance or private API access with 401; do not accept alg none, unknown issuer/audience or arbitrary token key URLs.
+- Trigger/input: Present tampered, expired, revoked or unknown personal token without a session
+- Expected: 401, no protected data or mutation; token secret/hash are not returned or logged.
 - Evidence status: Not executed
 
 ### FR43-AC03
 
 - Type: Security
-- Trigger/input: Caller forges user_id or requests unauthorized admin abilities
-- Expected: Identity remains the verified subject; server chooses abilities. Reject privilege escalation and foreign-resource access even with a valid token.
+- Trigger/input: Forge actor/admin fields or submit wildcard/admin token abilities
+- Expected: Reject escalation; actor is authenticated users/profile UUID and current Policies determine access.
 - Evidence status: Not executed
 
 ### FR43-AC04
 
-- Type: Failure
-- Trigger/input: Unknown signing key, key rotation or JWKS refresh failure at issuance
-- Expected: Bounded trusted-project key refresh; fail closed if identity cannot be verified. Existing private API authentication still uses Sanctum token records.
+- Type: Security
+- Trigger/input: Use personal token on an admin, token-management or other session-only endpoint
+- Expected: 403 for unsupported credential mode even if token belongs to an admin; no data or side effect.
 - Evidence status: Not executed
 
 ### FR43-AC05
 
 - Type: Race
-- Trigger/input: Concurrent first identity exchanges or same-session token rotations
-- Expected: One profile, no overwritten admin flag; rotated session token is invalidated without revoking a different user’s token.
+- Trigger/input: Token revocation or account suspension races with a protected operation
+- Expected: After revocation/suspension commits, newly authenticated requests fail. Document already-authorized in-flight requests; sensitive domain actions recheck current account/Policy under their transaction rules.
 - Evidence status: Not executed
 
 ### FR43-AC06
 
 - Type: Security
-- Trigger/input: Valid read-only Sanctum token calls a write/admin route
-- Expected: 403 for missing ability; a token with an ability still requires current admin/ownership/participant Policy.
+- Trigger/input: Use favourites:read token to change a favourite or target another user
+- Expected: 403 for missing favourites:write; possessing write ability still cannot read/write another account’s records.
 - Evidence status: Not executed
 
 ### FR43-AC07
 
 - Type: Security
-- Trigger/input: Expired or revoked Sanctum token is replayed
-- Expected: 401. Actual bearer-token/DB integration tests verify expiry, hashed storage and logout revocation; actingAs-only tests are insufficient.
+- Trigger/input: Replay an expired/revoked token against the running auth:sanctum path
+- Expected: 401; real bearer/DB tests inspect hashed storage, expiry and revocation. actingAs-only tests are insufficient.
 - Evidence status: Not executed
 
 ### FR43-AC08
 
-- Type: Positive
-- Trigger/input: Refresh rotates one eligible client session
-- Expected: New token succeeds, prior session token fails; other sessions follow documented revocation policy and tokens never appear in logs or URLs.
+- Type: Security
+- Trigger/input: Make a first-party session request that tokenCan reports allowed for
+- Expected: Current resource/admin Policies still deny foreign or forbidden actions; tokenCan success is not proof of user permission.
 - Evidence status: Not executed
 
 ## FR44
@@ -1301,8 +1301,8 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR44-AC01
 
 - Type: Positive
-- Trigger/input: Open generated Scramble docs
-- Expected: Separate identity-to-token issuance from Sanctum bearer product APIs; document required abilities and 401/403/404/409/422 examples.
+- Trigger/input: Open Scramble docs and follow each authentication example
+- Expected: Browser session/CSRF and non-browser bearer modes, token scope matrix, session-only actions and 401/403/419/422 responses match the implemented routes.
 - Evidence status: Not executed
 
 ### FR44-AC02
@@ -1433,22 +1433,22 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR49-AC01
 
 - Type: Positive
-- Trigger/input: User completes valid provider password recovery
-- Expected: Provider resets password; authenticated server action revokes prior Sanctum tokens. Fresh sign-in and token issuance restore API access.
+- Trigger/input: Use valid Laravel broker link to reset password
+- Expected: Hash changes, reset link consumed, all sessions/PATs revoked and remember token rotated; fresh login required. No prior authenticated session is required to redeem the valid link.
 - Evidence status: Not executed
 
 ### FR49-AC02
 
 - Type: Security
-- Trigger/input: Expired/replayed recovery link or disallowed redirect
-- Expected: Rejected by provider/application; no arbitrary account reset.
+- Trigger/input: Use expired/replayed reset token, forged verification signature or arbitrary redirect
+- Expected: Reject; no password/email/account change or external redirect. Valid verification is idempotent and bound to the intended user/email.
 - Evidence status: Not executed
 
 ### FR49-AC03
 
 - Type: Privacy
-- Trigger/input: Reset requested for an unknown email
-- Expected: Generic response avoids account enumeration.
+- Trigger/input: Request password reset for unknown email
+- Expected: Generic success response and throttling avoid account enumeration; no recovery secret in logs or analytics.
 - Evidence status: Not executed
 
 ## FR50
@@ -1530,7 +1530,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Positive
 - Trigger/input: Owner marks MAINTENANCE
-- Expected: Exclude from new proposals/public qualifying properties and units without mutating existing contracts.
+- Expected: Exclude from new proposals/public qualifying inventory without mutating existing contracts.
 - Evidence status: Not executed
 
 ### FR52-AC03
@@ -1581,7 +1581,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 ## FR56
 
-**Select reorder and remove photos images** · P0 Must
+**Select reorder and remove gallery images** · P0 Must
 
 ### FR56-AC01
 
@@ -1608,7 +1608,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Integrity
 - Trigger/input: Deselect photo
-- Expected: Hide from photos; do not physically delete merely because unselected.
+- Expected: Hide from gallery; do not physically delete merely because unselected.
 - Evidence status: Not executed
 
 ## FR57
@@ -1618,7 +1618,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR57-AC01
 
 - Type: Positive
-- Trigger/input: Owner uploads new photo and saves photos change
+- Trigger/input: Owner uploads new photo and saves gallery change
 - Expected: New image immediately eligible; old image unselected/deleted as requested; audit references both UUIDs.
 - Evidence status: Not executed
 
@@ -1626,13 +1626,13 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Failure
 - Trigger/input: Upload fails before reference swap
-- Expected: Existing photos/cover remains valid.
+- Expected: Existing gallery/cover remains valid.
 - Evidence status: Not executed
 
 ### FR57-AC03
 
 - Type: Race
-- Trigger/input: Two updates target same photos/cover revision
+- Trigger/input: Two updates target same gallery/cover revision
 - Expected: One wins; other reloads; no loss of a referenced object.
 - Evidence status: Not executed
 
@@ -2119,7 +2119,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 ### FR77-AC03
 
 - Type: Race
-- Trigger/input: Reservation expires concurrently with properties and units read
+- Trigger/input: Reservation expires concurrently with inventory read
 - Expected: Committed query gives coherent before/after; proposal action rechecks/reaps due holds under lock.
 - Evidence status: Not executed
 
@@ -2425,7 +2425,7 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 
 - Type: Race
 - Trigger/input: New unit or maintenance release competes with availability scan
-- Expected: Property lock across properties and units-changing actions produces a coherent decision.
+- Expected: Property lock across inventory-changing actions produces a coherent decision.
 - Evidence status: Not executed
 
 ### FR85-AC07
@@ -2627,4 +2627,110 @@ All 329 cases are preserved as specifications; no app tests were run to create t
 - Type: Boundary
 - Trigger/input: Saved property has no date-qualified available unit
 - Expected: Save remains; no rental request, contact disclosure or unit reservation is created.
+- Evidence status: Not executed
+
+## FR89
+
+**Manage personal API tokens** · P0 Must
+
+### FR89-AC01
+
+- Type: Positive
+- Trigger/input: Verified user confirms password and creates a named token with account:read and 7-day expiry
+- Expected: 201 returns plaintext once over HTTPS/no-store; DB stores SHA-256 hash, UUID user reference, exact allowed abilities and finite expires_at.
+- Evidence status: Not executed
+
+### FR89-AC02
+
+- Type: Privacy
+- Trigger/input: Reload token list or inspect subsequent API responses, audit logs and Telescope
+- Expected: Only metadata/status is shown; plaintext token, hash, cookies and password never appear. No secret is persisted in TanStack/localStorage or generic idempotency response cache.
+- Evidence status: Not executed
+
+### FR89-AC03
+
+- Type: Validation
+- Trigger/input: Submit missing/oversized name, empty/unknown/wildcard/admin abilities, or expiry outside 1/7/30-day choices
+- Expected: 422 and no token. Default 30 days is documented as a configurable project default; client may only choose the approved options.
+- Evidence status: Not executed
+
+### FR89-AC04
+
+- Type: Security
+- Trigger/input: Attempt creation/revocation without browser session, with stale password confirmation or invalid CSRF
+- Expected: Session-only guard/confirmation/CSRF rejects before mutation; API token alone cannot list, create or revoke tokens.
+- Evidence status: Not executed
+
+### FR89-AC05
+
+- Type: Security
+- Trigger/input: User B guesses user A token id in list/revoke
+- Expected: Current-user-scoped query returns 404; no metadata leakage or foreign revocation.
+- Evidence status: Not executed
+
+### FR89-AC06
+
+- Type: Positive
+- Trigger/input: Revoke own token and replay it without session cookies
+- Expected: 204; subsequent request returns 401. Rotation requires explicitly creating replacement and revoking old; expired token remains unusable before scheduled pruning.
+- Evidence status: Not executed
+
+### FR89-AC07
+
+- Type: Failure
+- Trigger/input: Token creation response is lost after commit
+- Expected: Do not automatically retry or recover secret from storage; show metadata on refresh, allow revoke and explicit new creation. No plaintext replay record exists.
+- Evidence status: Not executed
+
+### FR89-AC08
+
+- Type: Security
+- Trigger/input: Reset password or suspend account with live sessions and tokens
+- Expected: Revoke all PATs and sessions as part of the security action; active-account middleware blocks suspended users immediately on new requests. Re-enabling an account does not restore revoked tokens.
+- Evidence status: Not executed
+
+## FR90
+
+**Protect browser forms against CSRF** · P0 Must
+
+### FR90-AC01
+
+- Type: Positive
+- Trigger/input: Browser gets /sanctum/csrf-cookie then submits an allowed form with credentials and matching X-XSRF-TOKEN
+- Expected: Expected success and server-side validation; session cookie is HttpOnly, readable XSRF cookie is used only for CSRF and is not a login credential.
+- Evidence status: Not executed
+
+### FR90-AC02
+
+- Type: Security
+- Trigger/input: Submit login and representative authenticated POST/PUT/PATCH/DELETE requests with missing/wrong/other-session CSRF
+- Expected: 419 on Laravel baseline; no database/audit/outbox/storage side effects. Test CSRF middleware with the framework test bypass explicitly disabled.
+- Evidence status: Not executed
+
+### FR90-AC03
+
+- Type: Security
+- Trigger/input: Cross-site form sends victim session cookies without correct CSRF
+- Expected: No state change; no blanket CSRF exemption on api/* or authentication endpoints. CORS does not substitute for CSRF validation.
+- Evidence status: Not executed
+
+### FR90-AC04
+
+- Type: Positive
+- Trigger/input: Cookie-free non-browser request uses a valid favourites:write token on the approved route
+- Expected: Succeeds subject to scope/Policy without CSRF cookie. A disallowed browser origin or mixed stale session request cannot turn into a CSRF bypass.
+- Evidence status: Not executed
+
+### FR90-AC05
+
+- Type: Failure
+- Trigger/input: Session/CSRF expires while filling a form
+- Expected: Show 401/419 recovery feedback, preserve safe input, reinitialize/login as needed and ask for explicit resubmission; do not blindly repeat contract or other writes.
+- Evidence status: Not executed
+
+### FR90-AC06
+
+- Type: Deployment
+- Trigger/input: Test localhost ports and production sibling subdomains with exact credentialed CORS settings
+- Expected: Cookies, XSRF header, allowed origins and stateful host:port list agree; HTTPS Secure cookie works. Unrelated default domains fail the deployment checklist until a documented same-origin proxy/domain arrangement is implemented.
 - Evidence status: Not executed

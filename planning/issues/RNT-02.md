@@ -8,52 +8,52 @@ Owners create and edit properties, units, photos and amenities, then separately 
 
 ## Ownership and order
 
-- Phase 1: Shared setup, accounts, properties and admin approval
+- Phase 1.
 - Implementation: **Kien** (frontend + backend + own tests).
 - Reviewer: **Khai**.
-- Prerequisites for final integration: [RNT-01](RNT-01.md) (GitHub #97), [RNT-03](RNT-03.md) (GitHub #98), [RNT-04](RNT-04.md) (GitHub #99).
-- Publication: Draft; delivery: Planned; actual GitHub URL: https://github.com/ndrhmdk/rentOS/issues/100.
+- Prerequisites: [RNT-01](RNT-01.md), [RNT-03](RNT-03.md), [RNT-04](RNT-04.md).
+- Publication: Draft; actual GitHub issue URL not recorded.
 
-A prerequisite gates closure/integration, not all early work: use agreed contracts, factories and local fixtures after the shared schema/auth checkpoint. This is one grouped issue; internal checklists/multiple PRs do not require extra micro-issues.
+Dependencies gate final integration; fixtures and agreed contracts allow earlier independent work. This remains one grouped issue with internal checklists and multiple PRs if useful.
 
 ## Functional requirements
 
 - **FR07 — Create property draft without moderation** (P0 Must): Owner creates physical property, address, amenities and controlled policies. WHOLE_SPACE atomically creates one backend unit; SEPARATE_UNITS uses explicit unit creation. Incomplete drafts can be saved. No property approval state or mandatory ownership evidence/phone verification in MVP. Amenities use properties.shared_amenities JSONB with schema_version, allowlisted standard key/object entries and custom text array; select or add custom features directly in the property form (FR87).
-  - Full cases: [FR07 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr07)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr07)
 - **FR08 — Manage and archive own property** (P0 Must): Owner edits own property and archives unused resources. Existing tenancy, request, contract and audit references are preserved. Archive prevents new marketing/proposals but does not erase active agreements.
-  - Full cases: [FR08 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr08)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr08)
 - **FR09 — Upload property and unit photos** (P0 Must): Upload validated images and create one property_media row with optional same-property unit_id. No review_status, approval, replacement chain or admin photo queue. Upload completes before media becomes selectable. Initial listing review sees selected photos; later additions appear directly when selected on an eligible listing.
-  - Full cases: [FR09 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr09)
-- **FR41 — Property and unit REST CRUD** (P0 Must): Authorize owner-scoped CRUD for properties, units and photos selection. Route linked-content writes through property content lock/revision/audit action. No property approval, document-evidence review or image-review endpoints.
-  - Full cases: [FR41 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr41)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr09)
+- **FR41 — Property and unit REST CRUD** (P0 Must): Authorize owner-scoped CRUD for properties, units and gallery selection. Route linked-content writes through property content lock/revision/audit action. No property approval, document-evidence review or image-review endpoints.
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr41)
 - **FR50 — Create and bulk create units** (P0 Must): SEPARATE_UNITS allows manual or structured bulk creation: count, prefix, starting number and defaults. Generate editable preview rows in Next.js; save final JSON array transactionally. No LLM/SQL generation. Unit amenity defaults use the same controlled JSONB structure as FR87; each preview row gets its own copied value, not linked mutable defaults.
-  - Full cases: [FR50 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr50)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr50)
 - **FR51 — Edit unit details and advertised terms** (P0 Must): Owner edits specifications, marketed price/deposit, minimum duration and controlled policy overrides. Valid post-approval edits appear directly with audit; current or proposed contract snapshots are immutable. Unit amenities use units.amenities with allowlisted scope-aware catalog keys and custom text per FR87; no owner-created global amenity key.
-  - Full cases: [FR51 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr51)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr51)
 - **FR52 — Manage operational status independently of availability** (P0 Must): units.operational_status is READY, MAINTENANCE or RETIRED. Rental availability is derived for a requested interval from blocking tenancy ranges, not an OCCUPIED flag. is_marketed controls advertisement only. Maintenance stops new proposals but does not cancel agreements.
-  - Full cases: [FR52 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr52)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr52)
 - **FR55 — Audit property unit and policy updates** (P0 Must): Increment property.content_revision for changes to any initial-review content, including units, selected photos and policies. Before first approval invalidate pending snapshot. After approval retain approval and show changes directly; append safe audit before/after with actor/time. Amenity changes increment property content_revision, retain normal post-approval editing and record before/after audit. Standard label changes in the code catalog do not rewrite saved keys (FR87).
-  - Full cases: [FR55 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr55)
-- **FR56 — Select reorder and remove photos images** (P0 Must): Owner selects media, sets order and cover, or soft-deletes unused photos. Selected nondeleted property/unit media may appear without review. Cover must be selected, same-property shared media; deleting cover requires replacement or explicit hide.
-  - Full cases: [FR56 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr56)
-- **FR57 — Update photos without a replacement-review workflow** (P0 Must): To change photo bytes, upload a new object/media row and switch photos/cover references in a transaction after upload succeeds; optionally soft-delete old media. No replaces_image_id, image approvals or waiting-choice dialog.
-  - Full cases: [FR57 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr57)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr55)
+- **FR56 — Select reorder and remove gallery images** (P0 Must): Owner selects media, sets order and cover, or soft-deletes unused photos. Selected nondeleted property/unit media may appear without review. Cover must be selected, same-property shared media; deleting cover requires replacement or explicit hide.
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr56)
+- **FR57 — Update photos without a replacement-review workflow** (P0 Must): To change photo bytes, upload a new object/media row and switch gallery/cover references in a transaction after upload succeeds; optionally soft-delete old media. No replaces_image_id, image approvals or waiting-choice dialog.
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr57)
 - **FR60 — Manage controlled property JSONB policies** (P0 Must): properties.policies contains schema_version, defaults for predefined pets/smoking, and shared_rules array. Owner uses form fields; backend validates allowlisted keys/enums and limits. No independent policy table in MVP; later migration can preserve stable keys. Approved listings update immediately with audit.
-  - Full cases: [FR60 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr60)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr60)
 - **FR61 — Resolve unit policy overrides and additional rules** (P0 Must): units.policy_overrides contains optional predefined enum overrides and additional_rules array. Missing key inherits property default; shared_rules always retained. Preserve resolved actually agreed policies in immutable version snapshot at proposal, editable only through new version.
-  - Full cases: [FR61 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr61)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr61)
 - **FR87 — Manage consistent standard and custom amenities** (P0 Must): Owners select standard amenities or add custom text directly in Create/Edit Property and Unit forms. Laravel owns a code-managed catalog with stable keys, localized canonical labels, explicit aliases and allowed PROPERTY/UNIT scopes, exposed through GET /amenities. Both amenity columns use controlled JSONB {schema_version:1,standard:{key:{enabled:boolean,details?:text}},custom:[text]}. Standard search matches canonical key and enabled=true; custom text is descriptive only. Backend allowlist/type/limit validation; NFC+trim+whitespace normalization for custom display, case folding only for local duplicate detection. No automatic global slug creation, semantic synonym inference, owner_label or amenity tables in MVP. Catalog changes later require explicit migrations only if keys/meaning change.
-  - Full cases: [FR87 (10 cases)](../../docs/06-acceptance/test-scenarios.md#fr87)
+  - [All 10 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr87)
 - **FR10 — Create property-level listing draft** (P0 Must): Choose own nonarchived property, market selected units, enter title/description and choose cover from existing selected media. Reuse property address/policies and unit specifications/photos. One nonarchived listing per property.
-  - Full cases: [FR10 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr10)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr10)
 - **FR11 — Edit listing without reapproval after initial approval** (P0 Must): After first APPROVED decision, owner may update property, units, policies, media and listing wording immediately without resetting approval. Changes are audited and remain reportable. Edits before approval invalidate the submitted content revision. Admin suspension is independent and cannot be cleared by an edit.
-  - Full cases: [FR11 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr11)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr11)
 - **FR12 — Submit initial listing package** (P0 Must): First publication requires admin review of listing plus linked property, marketed units, selected media and policies as one package. Validate required address, unit details, at least one shared photo and photo per marketed unit. Capture property content_revision and listing submitted_revision. Rejected initial submissions may be corrected/resubmitted.
-  - Full cases: [FR12 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr12)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr12)
 - **FR17 — Publish initially approved listing** (P0 Must): Owner may publish only an initially approved, nonarchived, complete listing belonging to a nonarchived property and not admin-suspended. Require at least one READY, marketed unit with availability for the selected date query. Search without dates defaults to today for the unit minimum duration. No property/image approval conditions.
-  - Full cases: [FR17 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr17)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr17)
 - **FR18 — Hide or archive listing** (P0 Must): Owner can hide or archive own listing. Admin suspension is a separate control with required reason. Republishing an owner-hidden listing retains initial approval and must pass current eligibility; owner cannot remove admin suspension.
-  - Full cases: [FR18 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr18)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr18)
 
 ## Backend deliverables
 
@@ -90,16 +90,18 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 
 ## NFRs, boundaries and coordination
 
+NFR-01, NFR-02, NFR-03, NFR-04, NFR-07
+
 NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3f, T4a, T3g, T4d
 Kien owns property/unit/photo management and owner listing creation/publication. Keep Create property and Create listing as separate flows/screens. Tri owns admin approval (RNT-04); Khai owns public landing/search/detail pages and their APIs (RNT-06). Scheduled deletion of unreferenced photo files after retention belongs to RNT-10.
 
 ## Definition of done
 
-- [ ] Implement the related frontend, backend and meaningful unit/component/API integration tests under this issue; test PostgreSQL constraints/concurrency on actual PostgreSQL.
-- [ ] Private product routes require auth:sanctum, approved abilities and resource Policies. Test actual bearer expiry/revocation/permission behavior where relevant.
-- [ ] Update FormRequests/Resources/API docs and explicit frontend response types with contract changes. Future TypeScript generation is documentation only.
-- [ ] Apply shared transaction/revision/idempotency/audit rules to the affected actions. Schema changes are new reviewed migrations tested locally; never reset/reseed a hosted environment.
-- [ ] Use a short manual checklist for changed screens; automated browser/E2E suites are not required.
-- [ ] Attach actual test commands/results and relevant screenshots/provider/query/alert evidence; record personal sprint contribution. A document or fixture screenshot is not proof of implemented behavior.
+- [ ] Implement related frontend, backend and meaningful unit/component/API/PostgreSQL integration tests; all feature owners test their own changes.
+- [ ] Private routes use auth:sanctum and current account/resource Policies. Browser writes require CSRF; approved PAT endpoints additionally enforce abilities. Session-only endpoints reject PAT-only callers.
+- [ ] Update FormRequests/Resources/OpenAPI and explicit frontend types. Future TypeScript generation remains documentation only.
+- [ ] Apply transaction/revision/idempotency/audit rules to domain actions. Never store token secrets in replay records. Use reviewed migrations locally; never reset/reseed a hosted environment.
+- [ ] Use a short manual changed-screen checklist; no required automated browser/E2E suite.
+- [ ] Attach actual test commands/results and relevant evidence; specifications do not prove implementation.
 
-RNT-02 is a planning key, not a GitHub issue number. Deleted issues are not reused.
+RNT-02 is a planning key, not a GitHub number. Deleted issues are not reused.

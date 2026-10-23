@@ -10,3 +10,6 @@
 - [Technical decisions](technical-decisions/README.md)
 
 This is the Advanced Web project using Next.js + Laravel + Supabase. Do not substitute the user’s separate full-Next.js/Prisma project. Laravel is the single application migration/API authority.
+
+- [Fortify/Sanctum setup and token scope matrix](authentication-setup.md)
+

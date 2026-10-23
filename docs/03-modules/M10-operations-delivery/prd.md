@@ -16,7 +16,7 @@ Khai owns the complete initial engineering setup in RNT-01, including Sanctum, S
 
 **Priority:** P1 Should. **Actors:** Developer. **Delivery:** Primary: RNT-01.
 
-Document Supabase bearer identity verification at token issuance separately from Sanctum bearer authentication on private product endpoints, including abilities, expiry/revocation and 401/403. Document payloads, responses, UUIDs, revisions and idempotency.
+Scramble documents Fortify session/CSRF setup separately from Sanctum bearer tokens, the token-enabled endpoint/ability matrix, session-only routes and 401/403/419/422 failures. Include token creation/list/revocation, expiry, one-time secret response and redaction. Preserve payload, revision and idempotency documentation.
 
 Acceptance: [3 cases for FR44](../../06-acceptance/test-scenarios.md#fr44); IDs FR44-AC01, FR44-AC02, FR44-AC03.
 
@@ -40,13 +40,13 @@ Acceptance: [3 cases for FR48](../../06-acceptance/test-scenarios.md#fr48); IDs 
 
 **Priority:** P3 Exclude. **Actors:** Team. **Delivery:** Scope rule applied to all issues.
 
-No phone OTP, property/image moderation, image replacement review, in-app viewing calendar, platform e-signature engine, payment collection, mid-term confirmed-contract amendment, Kafka/RabbitMQ, Elasticsearch or custom thumbnail AI in initial MVP. Supabase Auth email confirmation remains. Maps/Google sign-in/property reviews retain separately marked deferred priorities.
+No phone OTP, property/image moderation, image replacement review, in-app viewing calendar, platform e-signature engine, payment collection, mid-term confirmed-contract amendment, Kafka/RabbitMQ, Elasticsearch or custom thumbnail AI in initial MVP. Laravel email confirmation remains required. Maps/Google sign-in/property reviews retain separately marked deferred priorities.
 
 Acceptance: [3 cases for FR76](../../06-acceptance/test-scenarios.md#fr76); IDs FR76-AC01, FR76-AC02, FR76-AC03.
 
 ## API, validation and failure behavior
 
-Private product routes require `auth:sanctum`, the allowed action ability and the current resource Policy. Public GET routes serialize safe fields only. Use FormRequests and Resources. Deny forged actors/foreign references; preserve documented 401/403/404/409/422 behavior. Show loading/empty/network/field/revision/session feedback in the related UI.
+Private product routes require `auth:sanctum` and current resource Policies. Browser writes require CSRF; explicitly token-enabled routes additionally require the corresponding PAT ability. Public GET routes serialize safe fields only. Use FormRequests and Resources. Deny forged actors/foreign references; preserve documented 401/403/404/409/422 behavior. Show loading/empty/network/field/revision/session feedback in the related UI.
 
 State-changing domain actions use agreed revision/idempotency/lock order and audit/outbox transaction rules. External storage failure is handled without pretending an upload or queued delivery already completed. See [API design](../../07-architecture/api-design.md).
 

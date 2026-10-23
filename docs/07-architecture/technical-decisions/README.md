@@ -1,6 +1,6 @@
 # Technical decisions
 
-- [Supabase identity plus mandatory Sanctum API tokens](ADR-001-identity-and-sanctum.md)
+- [Fortify accounts, browser sessions and personal API tokens](ADR-001-identity-and-sanctum.md)
 - [Immutable contract versions and same-version acknowledgement](ADR-002-contract-versions-confirmations.md)
 - [Operational state and date-qualified availability](ADR-003-date-availability.md)
 - [Laravel workers and committed-event delivery](ADR-004-notification-processing.md)

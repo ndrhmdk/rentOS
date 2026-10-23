@@ -1,6 +1,6 @@
 # Constraints
 
-Next.js frontend, Laravel backend API and Supabase PostgreSQL/Auth/Storage for this Advanced Web project. Do not mix with the separate full-Next.js/Prisma project.
+Next.js frontend, Laravel backend API and Supabase PostgreSQL/Storage with Laravel Fortify accounts for this Advanced Web project. Do not mix with the separate full-Next.js/Prisma project.
 
 Sanctum token management/scopes, Scramble API docs and Telescope configuration are mandatory course items. Do not assume Next.js approval waived Sanctum. Khai owns all initial shared setup in RNT-01; the other members still implement complete frontend/backend/test feature slices. No mandatory E2E automation; >70% UI/business and API coverage remain separate course evidence. TypeScript generator setup is documentation only.
 

@@ -1,16 +1,19 @@
 # Security design
 
-Read [security NFRs](../05-non-functional-requirements/security.md) and [identity ADR](technical-decisions/ADR-001-identity-and-sanctum.md).
-
-| Boundary | Required control | Negative test |
+| Boundary | Required control | Negative evidence |
 | --- | --- | --- |
-| Identity issuance | Trusted Supabase signature/project/expiry/subject, account eligibility, rate limit | Forged/wrong-project/expired JWT, arbitrary kid URL, concurrent bootstrap |
-| Product API | Actual Sanctum token, finite expiry/revocation and required ability | Provider JWT alone, missing/expired/revoked token, read-only token attempting write |
-| Resource | Current ownership/participant/admin Policy | Foreign UUID, forged owner_id/is_admin, removed admin privilege despite token ability |
-| Public reads | Current visibility gate and safe Resource shape | Suspended/hidden direct URL or shared-cache leak |
-| Private objects | Authorized immutable upload/reference/hash and short-lived download capabilities | Other participant/outsider, wrong hash/version, tokens in logs |
-| Diagnostics | Local or explicitly restricted non-local Telescope, payload/query filtering | Guest/ordinary user, bearer/recovery/password/contact leakage |
-| Database | Private schema/roles/grants; constraints and immutable/write-once rules | Direct Data API write, cross-scope FKs, overlap or mutable agreed terms |
-| Browser cache | Account-scoped queries, clear/cancel old state on switch | Prior user’s favourite/contact/contract appears after sign-out |
+| Account lifecycle | Fortify validation, password hashing, email verification, rate limits, session rotation | Invalid credentials, duplicate registration race, forged verification/reset link |
+| Browser forms | Stateful session and Laravel CSRF validation, exact credentialed CORS | Missing/wrong/other-session CSRF rejected before mutation; hostile origin |
+| Non-browser API | Real hashed Sanctum PAT, finite expiry, explicit endpoint scope matrix | Read-only write denial; expired/revoked token; admin/session-only route denial |
+| Token management | Verified active browser session; password confirmation + CSRF on mutation; owner-scoped queries | PAT-only management, foreign token ID, wildcard/admin ability, secret re-display |
+| Resource access | Current active account, is_admin and ownership/participation Policies | Foreign-resource guesses and stale privilege assumptions |
+| Recovery/suspension | Explicit all-session/PAT invalidation and remember-token rotation | Old cookie and token replay after committed reset/suspension |
+| Storage and diagnostics | Private buckets, unexposed auth tables, restricted Telescope and secret redaction | Raw credential/contract/contact exposure and anonymous dashboard access |
 
-Supabase sign-out alone cannot instantly revoke a separately issued Sanctum token; Laravel revocation is explicit. Likewise offline JWT checks do not establish instant provider-session revocation. Finite token expiry limits the gap. No second password store is introduced. If cookie-authenticated functionality is added, configure CSRF/CORS/session rules for that path rather than assuming bearer conventions apply.
+Session authentication and API tokens are separate credential modes. Browser logout invalidates that session; explicit token revocation affects the selected PAT. Password reset/change and suspension revoke all. Newly authenticated requests must respect committed revocation; cancellation of already-authorized in-flight work is not promised.
+
+Sanctum tokenCan returns true for first-party sessions; Policies must still enforce ownership/admin rules. Session-only middleware rejects a PAT-only caller even if that token belongs to an admin. Reject unsupported credential modes before sensitive work. Do not fall back to a bearer token to bypass a failed browser CSRF check.
+
+Framework tests skip CSRF by default. Use a dedicated test harness that disables this bypass or an HTTP integration process with real CSRF enabled; prove 419 and zero writes. A test that only uses actingAs or withMiddleware is insufficient evidence by itself.
+
+See [setup and API-token matrix](authentication-setup.md) and [acceptance cases](../06-acceptance/test-scenarios.md#fr90). Defaults and API-token scope choices are project decisions, not additional teacher requirements.

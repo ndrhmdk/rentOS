@@ -1,23 +1,24 @@
 # Database dictionary
 
-Current workbook: 18 entities / 242 columns. Provider Auth reference and optional P2 reviews are explicitly labeled. Framework-owned migration/jobs/cache/Telescope tables are additional package infrastructure created from the actual installed packages; this dictionary does not invent their schemas. Domain/profile references use UUID. Sanctum’s framework token id may be bigint while tokenable_id is UUID.
+Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID references remain unchanged. Authentication tables are in the private application schema; Supabase is PostgreSQL/Storage only.
 
-## auth_users
+## users
 
-Scope: Managed external.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | uuid | PK | No |  | Provider managed identity UUID |
-| email | text |  | Yes |  | Provider managed email; password/session internals intentionally omitted |
+| id | uuid | PK | No | gen_random_uuid() | Laravel Authenticatable user UUID; profile uses the same UUID. |
+| email | text | UNIQUE | No |  | Normalized lowercase email; never duplicated in user_profiles. |
+| email_verified_at | timestamptz |  | Yes |  | Set only by valid Laravel email verification. |
+| password | varchar(255) |  | No |  | Laravel Hash password hash; hidden from every Resource/log. |
+| remember_token | varchar(100) |  | Yes |  | Laravel remember credential; remember-me disabled initially; rotate on password reset. |
+| created_at | timestamptz |  | No | now() | Account creation time. |
+| updated_at | timestamptz |  | No | now() | Account update time. |
 
 ## user_profiles
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | uuid | PK,FK | No |  | References auth.users.id; one profile per identity |
+| id | uuid | PK,FK | No |  | PK/FK to laravel.users.id; one profile per Laravel account; preserve existing domain UUIDs. |
 | full_name | text |  | No |  | Validated display/contact name |
 | phone | text |  | Yes |  | Optional contact number; not OTP ownership verification |
 | is_admin | boolean |  | No | false | Trusted server-managed moderation privilege |
@@ -28,9 +29,7 @@ Scope: Core.
 
 ## properties
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Application UUID |
 | owner_id | uuid | FK | No |  | Authorized manager profile; MVP one owner |
@@ -55,9 +54,7 @@ Scope: Core.
 
 ## units
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Stable unit UUID |
 | property_id | uuid | FK | No |  | Parent property |
@@ -85,9 +82,7 @@ Scope: Core.
 
 ## property_media
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Photo UUID; no review or replacement-chain state |
 | property_id | uuid | FK | No |  | Parent property |
@@ -96,22 +91,20 @@ Scope: Core.
 | client_operation_id | uuid |  | No |  | Uploader scoped submission key |
 | storage_path | text | UK | No |  | Unique object path; no overwriting referenced bytes |
 | caption | text |  | Yes |  | Owner caption; plain text, audited |
-| sort_order | integer |  | No | 0 | photos order |
+| sort_order | integer |  | No | 0 | Gallery order |
 | is_selected_for_listing | boolean |  | No | true | Display intent independent of approval |
-| revision | integer |  | No | 1 | Stale photos edit protection |
+| revision | integer |  | No | 1 | Stale gallery edit protection |
 | purged_at | timestamptz |  | Yes |  | Storage file deletion confirmed |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
-| deleted_at | timestamptz |  | Yes |  | Soft removal; hidden from photos; retention starts |
+| deleted_at | timestamptz |  | Yes |  | Soft removal; hidden from gallery; retention starts |
 | sha256 | text |  | No |  | Hash of completed image bytes for audit integrity |
 | mime_type | text |  | No |  | Validated decoded image media type |
 | size_bytes | bigint |  | No |  | Positive completed file byte count |
 
 ## listings
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Listing UUID |
 | property_id | uuid | FK | No |  | One nonarchived listing per property |
@@ -138,17 +131,15 @@ Scope: Core.
 
 ## rental_requests
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | uuid | PK | No | gen_random_uuid() | rental request UUID |
+| id | uuid | PK | No | gen_random_uuid() | Enquiry UUID |
 | listing_id | uuid | FK | No |  | Source listing |
 | tenant_id | uuid | FK | No |  | Authenticated prospect |
 | preferred_unit_id | uuid | FK | Yes |  | Optional preference in listing property |
 | client_operation_id | uuid |  | No |  | Tenant scoped create identity |
 | desired_move_in_date | date |  | No |  | Preference not contractual start |
-| message | text |  | No |  | rental request text |
+| message | text |  | No |  | Enquiry text |
 | status | text |  | No | PENDING | PENDING ACCEPTED REJECTED WITHDRAWN; ACCEPTED means tenancy proposal committed |
 | outcome_reason | text |  | Yes |  | Required rejection/automatic closure explanation |
 | revision | integer |  | No | 1 | Concurrent state guard |
@@ -162,14 +153,12 @@ Scope: Core.
 
 ## tenancies
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Tenancy UUID |
 | unit_id | uuid | FK | No |  | Exact allocated unit |
-| tenant_id | uuid | FK | No |  | Primary tenant matches original rental request |
-| rental_request_id | uuid | FK,UK | No |  | One result per accepted rental request |
+| tenant_id | uuid | FK | No |  | Primary tenant matches original enquiry |
+| rental_request_id | uuid | FK,UK | No |  | One result per accepted enquiry |
 | client_operation_id | uuid |  | No |  | Owner scoped record action identity |
 | status | text |  | No | PENDING_CONFIRMATION | PENDING_CONFIRMATION AWAITING_REVISION CONFIRMED ACTIVE EXPIRED CANCELLED ENDED |
 | actual_ended_at | timestamptz |  | Yes |  | Actual move-out/end or cancellation action |
@@ -189,9 +178,7 @@ Scope: Core.
 
 ## tenancy_renewal_requests
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Renewal request UUID |
 | tenancy_id | uuid | FK | No |  | Existing CONFIRMED or ACTIVE continuing tenancy |
@@ -209,9 +196,7 @@ Scope: Core.
 
 ## tenancy_contracts
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Immutable version UUID |
 | tenancy_id | uuid | FK | No |  | Parent continuous tenancy |
@@ -237,9 +222,7 @@ Scope: Core.
 
 ## listing_reports
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Report UUID |
 | listing_id | uuid | FK | No |  | Reported advertisement |
@@ -258,9 +241,7 @@ Scope: Core.
 
 ## audit_logs
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Audit UUID |
 | actor_id | uuid | FK | Yes |  | Null for explicit system action |
@@ -275,9 +256,7 @@ Scope: Core.
 
 ## notification_outbox
 
-Scope: P1 infrastructure.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Outbox UUID |
 | event_key | text | UK | No |  | Stable unique domain event identity |
@@ -295,9 +274,7 @@ Scope: P1 infrastructure.
 
 ## notifications
 
-Scope: P1 infrastructure.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Inbox UUID |
 | recipient_id | uuid | FK | No |  | Only this user can read/mark read |
@@ -311,9 +288,7 @@ Scope: P1 infrastructure.
 
 ## property_reviews
 
-Scope: P2 deferred.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Review UUID |
 | tenancy_id | uuid | FK,UK | No |  | One review per tenancy; property/tenant derived |
@@ -329,9 +304,7 @@ Scope: P2 deferred.
 
 ## idempotency_records
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Operation record UUID |
 | actor_id | uuid | FK | No |  | Verified caller; replay must reauthorize current access |
@@ -345,27 +318,42 @@ Scope: Core.
 
 ## personal_access_tokens
 
-Scope: Framework support.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | bigint | PK | No | identity | Sanctum framework token ID; UUID profile reference remains tokenable_id. |
-| tokenable_type | varchar(255) |  | No |  | Fixed allowlisted authenticatable profile model/morph alias. |
-| tokenable_id | uuid | Morph FK | No |  | UUID of user_profiles.id; uuidMorphs-compatible migration and controlled profile model. Polymorphic association needs explicit integrity enforcement. |
-| name | varchar(255) |  | No |  | Client/session label; no secret content. |
+| id | bigint | PK | No | identity | Sanctum token ID; users/profile reference remains UUID. |
+| tokenable_type | varchar(255) |  | No |  | Fixed allowed App\Models\User morph type/alias; use HasApiTokens on users. |
+| tokenable_id | uuid | Morph FK | No |  | UUID of users.id; uuidMorphs-compatible; fixed user model and explicit integrity enforcement. |
+| name | varchar(255) |  | No |  | Validated user-assigned token label, max 100 characters. |
 | token | char(64) | UNIQUE | No |  | SHA-256 token hash; plaintext returned only at issuance, never stored/logged. |
-| abilities | text |  | No |  | JSON-serialized server-approved Sanctum ability list; no client-forged wildcard/admin scopes. |
+| abilities | text |  | No |  | JSON-serialized allowed subset of account:read, favourites:read, favourites:write; no wildcard/admin permissions. |
 | last_used_at | timestamptz |  | Yes |  | Updated by Sanctum when used. |
-| expires_at | timestamptz |  | No |  | Explicit finite expiry no later than the identity JWT expiry; configured TTL also applies. |
+| expires_at | timestamptz |  | No |  | Required expiry chosen from 1/7/30 days; default 30 days (configurable project default). |
 | created_at | timestamptz |  | No | now() | Framework creation time. |
 | updated_at | timestamptz |  | No | now() | Framework update time. |
 
 ## favourite_properties
 
-Scope: Core.
-
-| Column | PostgreSQL type | Key | Nullable | Default | Meaning |
+| Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| user_id | uuid | PK,FK | No |  | References user_profiles.id; actor derives from Sanctum token; private per-user access. |
+| user_id | uuid | PK,FK | No |  | References user_profiles.id; actor derives from authenticated Laravel user with matching profile UUID. |
 | property_id | uuid | PK,FK | No |  | References properties.id; composite PK/UNIQUE(user_id,property_id). |
 | created_at | timestamptz |  | No | now() | First save time; repeat intended-state save does not duplicate row. |
+
+## sessions
+
+| Column | Type | Key | Nullable | Default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| id | varchar(255) | PK | No |  | Laravel session ID; rotate on login. |
+| user_id | uuid | FK/index | Yes |  | Nullable for guest CSRF sessions; references users.id. |
+| ip_address | varchar(45) |  | Yes |  | Session metadata; restrict retention/access. |
+| user_agent | text |  | Yes |  | Session metadata; never treated as identity. |
+| payload | text |  | No |  | Framework session payload; confidential, not exposed or logged. |
+| last_activity | integer | INDEX | No |  | Unix timestamp; session lifetime/pruning. |
+
+## password_reset_tokens
+
+| Column | Type | Key | Nullable | Default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| email | text | PK | No |  | Normalized user email used by Laravel password broker. |
+| token | varchar(255) |  | No |  | Hashed one-time password-reset token; never serialize/log. |
+| created_at | timestamptz |  | Yes |  | Password broker token expiry/throttle timestamp. |

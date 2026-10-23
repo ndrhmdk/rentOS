@@ -2,15 +2,14 @@
 
 ```mermaid
 flowchart TD
-  U["Guest, tenant, owner or admin"] --> N["Next.js interface"]
-  N --> S["Supabase Auth"]
-  N --> L["Laravel API"]
+  B["Next.js browser interface"] -->|"Session cookie and CSRF"| L["Laravel Fortify and Sanctum"]
+  C["Postman or user script"] -->|"Scoped personal API token"| L
   L --> D["Supabase PostgreSQL"]
-  L --> F["Supabase Storage"]
-  W["Laravel worker and scheduler"] --> D
-  W --> F
+  L --> S["Supabase Storage"]
+  W["Laravel workers and scheduler"] --> D
+  W --> S
 ```
 
-Supabase Auth owns identity/password/recovery. Laravel verifies that identity at issuance and owns expiring Sanctum product API tokens. Next.js calls Laravel for application data; browser Storage access uses only explicitly authorized upload/download capability paths. Application tables are not directly writable through a browser Data API key.
+Laravel owns account credentials, sessions, CSRF and personal-token management. Supabase provides database/storage services. Public listing reads need no login. Private browser actions use session authentication; approved non-browser endpoints enforce token abilities and current Policies.
 
-Workers deliver committed events and run bounded retry/expiry/15-day actions. Telescope supplies restricted diagnostics; alert delivery is separate. Hosting providers and installed versions must be discovered from the repository before implementation.
+Use controlled sibling subdomains or a deliberately tested same-origin proxy. Next.js server rendering is optional; it must not cache private responses or assume cookies forward automatically. See [setup](authentication-setup.md).

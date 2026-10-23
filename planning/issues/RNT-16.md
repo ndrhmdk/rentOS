@@ -8,34 +8,34 @@ Admin workflows are secure and accessible, and the marker/team can reproduce the
 
 ## Ownership and order
 
-- Phase 4: Final testing, fixes and submission
+- Phase 4.
 - Implementation: **Tri** (frontend + backend + own tests).
 - Reviewer: **Hien**.
-- Prerequisites for final integration: [RNT-04](RNT-04.md) (GitHub #99), [RNT-08](RNT-08.md) (GitHub #103), [RNT-12](RNT-12.md) (GitHub #105), [RNT-13](RNT-13.md) (GitHub #110), [RNT-14](RNT-14.md) (GitHub #108), [RNT-15](RNT-15.md) (GitHub #112).
-- Publication: Draft; delivery: Planned; actual GitHub URL: https://github.com/ndrhmdk/rentOS/issues/111.
+- Prerequisites: [RNT-04](RNT-04.md), [RNT-08](RNT-08.md), [RNT-12](RNT-12.md), [RNT-13](RNT-13.md), [RNT-14](RNT-14.md), [RNT-15](RNT-15.md).
+- Publication: Draft; actual GitHub issue URL not recorded.
 
-A prerequisite gates closure/integration, not all early work: use agreed contracts, factories and local fixtures after the shared schema/auth checkpoint. This is one grouped issue; internal checklists/multiple PRs do not require extra micro-issues.
+Dependencies gate final integration; fixtures and agreed contracts allow earlier independent work. This remains one grouped issue with internal checklists and multiple PRs if useful.
 
 ## Functional requirements
 
-- **FR13 — Review initial listing packages** (P0 Must): Admin queue displays only initial PENDING listings with property/unit details, selected photos, policies and captured revisions. Show owner and completeness; admin approves or rejects with reason.
-  - Full cases: [FR13 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr13)
+- **FR13 — Review initial listing packages** (P0 Must): Admin queue displays only initial PENDING listings with property/unit details, selected gallery, policies and captured revisions. Show owner and completeness; admin approves or rejects with reason.
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr13)
 - **FR14 — Approve initial listing package** (P0 Must): Admin approves the exact submitted listing/property content revisions. Store reviewer/time and approved_content_revision. Approval permits publication but does not publish automatically.
-  - Full cases: [FR14 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr14)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr14)
 - **FR15 — Reject initial listing with reason** (P0 Must): Admin rejects initial submission with a required reason. Owner corrects data and resubmits; later content violations use suspension rather than resetting initial approval.
-  - Full cases: [FR15 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr15)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr15)
 - **FR38 — Report public listing** (P0 Must): Submit reason code and description for suspicious published listing. Save OPEN report synchronously; queue admin alert after commit. Do not use Kafka/RabbitMQ for report creation.
-  - Full cases: [FR38 (5 cases)](../../docs/06-acceptance/test-scenarios.md#fr38)
+  - [All 5 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr38)
 - **FR39 — Investigate reports and suspend listings** (P0 Must): Admin moves OPEN report to REVIEWING then RESOLVED/DISMISSED with required reason. An optional suspension is atomic with resolution and audit; notify reporter with sanitized outcome. Restoration is an explicit admin restriction action, not a new ordinary property/photo review.
-  - Full cases: [FR39 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr39)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr39)
 - **FR47 — Structured logs and critical alerts** (P1 Should): Log request/event ID, actor/resource UUIDs, operation and failure duration/context. Alert configured admin/developer on critical storage, transaction or exhausted job failures. Business audit remains separate.
-  - Full cases: [FR47 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr47)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr47)
 - **FR48 — Development monitoring and slow query alerts** (P1 Should): Use Telescope in development with restricted access. Capture slow query duration and cumulative query time and configure explicit developer alert thresholds; Telescope display alone is not an alert.
-  - Full cases: [FR48 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr48)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr48)
 - **FR72 — Reporter outcome and rate limits** (P0 Must): Reporter can view own reports and sanitized status/outcome. Admin notes remain private. Enforce configured per-user/IP submission limits and one live report per reporter/listing.
-  - Full cases: [FR72 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr72)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr72)
 - **FR78 — Suspend and restore listings after reports or inspection** (P0 Must): Admin can suspend published listing directly after inspection or authenticated report with reason, audit and notice. admin_suspended_at/by/reason independent of initial moderation/publication. Owner edits cannot remove suspension. Admin may explicitly restore after checking corrections; no repeated ordinary content approval process.
-  - Full cases: [FR78 (5 cases)](../../docs/06-acceptance/test-scenarios.md#fr78)
+  - [All 5 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr78)
 
 ## Backend deliverables
 
@@ -56,6 +56,7 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 - [ ] The video meets duration/quality/access rules and shows implemented workflows plus real tests/alerts/performance evidence.
 - [ ] Each of four members provides five truthful sprint reports; D checks links/completeness but does not write or claim others’ contributions.
 - [ ] Submission and known limitations match actual code/test/evidence state, including any unresolved printed-rubric substitutions.
+- [ ] Final demonstration includes a CSRF-protected browser form (valid and rejected submission), token settings create/revoke and cookie-free scoped-token allowed/denied/401 examples; all claims link to actual implementation evidence.
 
 ## Tests/evidence owned by this member
 
@@ -65,16 +66,18 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 
 ## NFRs, boundaries and coordination
 
+NFR-02, NFR-03, NFR-04, NFR-05, NFR-06, NFR-07
+
 NFR-02, NFR-03, NFR-04, NFR-05, NFR-06, NFR-07; T1a, T3g, T4d
 Admin backend remains D-owned with Khai reviewing risky changes. Evidence work does not replace backend/frontend implementation or its tests.
 
 ## Definition of done
 
-- [ ] Implement the related frontend, backend and meaningful unit/component/API integration tests under this issue; test PostgreSQL constraints/concurrency on actual PostgreSQL.
-- [ ] Private product routes require auth:sanctum, approved abilities and resource Policies. Test actual bearer expiry/revocation/permission behavior where relevant.
-- [ ] Update FormRequests/Resources/API docs and explicit frontend response types with contract changes. Future TypeScript generation is documentation only.
-- [ ] Apply shared transaction/revision/idempotency/audit rules to the affected actions. Schema changes are new reviewed migrations tested locally; never reset/reseed a hosted environment.
-- [ ] Use a short manual checklist for changed screens; automated browser/E2E suites are not required.
-- [ ] Attach actual test commands/results and relevant screenshots/provider/query/alert evidence; record personal sprint contribution. A document or fixture screenshot is not proof of implemented behavior.
+- [ ] Implement related frontend, backend and meaningful unit/component/API/PostgreSQL integration tests; all feature owners test their own changes.
+- [ ] Private routes use auth:sanctum and current account/resource Policies. Browser writes require CSRF; approved PAT endpoints additionally enforce abilities. Session-only endpoints reject PAT-only callers.
+- [ ] Update FormRequests/Resources/OpenAPI and explicit frontend types. Future TypeScript generation remains documentation only.
+- [ ] Apply transaction/revision/idempotency/audit rules to domain actions. Never store token secrets in replay records. Use reviewed migrations locally; never reset/reseed a hosted environment.
+- [ ] Use a short manual changed-screen checklist; no required automated browser/E2E suite.
+- [ ] Attach actual test commands/results and relevant evidence; specifications do not prove implementation.
 
-RNT-16 is a planning key, not a GitHub issue number. Deleted issues are not reused.
+RNT-16 is a planning key, not a GitHub number. Deleted issues are not reused.

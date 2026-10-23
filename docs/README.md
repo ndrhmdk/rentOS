@@ -26,7 +26,7 @@ Read product → domain → module PRD → workflow → acceptance → architect
 
 ## Source and change policy
 
-- [Current functional requirements workbook](https://docs.google.com/spreadsheets/d/1w33EYYbyNxTfkC-yxoUO5PwWIAbBhakI/edit?usp=drivesdk&ouid=106252598381185742228&rtpof=true&sd=true): 81 FRs, 329 acceptance specifications, 18 dictionary entities and 242 columns; accessed 22 October 2026.
+- [Current functional requirements workbook](https://docs.google.com/spreadsheets/d/1w33EYYbyNxTfkC-yxoUO5PwWIAbBhakI/edit?usp=drivesdk&ouid=106252598381185742228&rtpof=true&sd=true): 83 FRs, 343 acceptance specifications, 20 dictionary entities and 256 columns; accessed 23 October 2026.
 - [Current task sheet](https://docs.google.com/spreadsheets/d/1KGFVfL88V_y3_pbkqb4at4xT3FxdkfP4DcFGV8bICm4/edit): 16 grouped issues; latest named assignments and setup boundaries.
 - User screenshots: teacher’s Task 4 explicitly requires Sanctum token management and token scopes/permissions. Telescope and Scramble are also mandatory; no assumed waiver.
 - Earlier project/course specifications supply unchanged business/NFR/submission constraints. The original provided documentation is superseded where it described JWT-only API access, anonymous photo review or older member aliases.

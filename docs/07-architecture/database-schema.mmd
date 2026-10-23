@@ -1,11 +1,16 @@
 erDiagram
     direction TB
-    auth_users {
-        uuid id PK "Provider managed identity UUID"
-        text email  "Provider managed email; password/session internals intentionally omitted"
+    users {
+        uuid id PK "Laravel Authenticatable user UUID; profile uses the same UUID."
+        text email UK "Normalized lowercase email; never duplicated in user_profiles."
+        timestamptz email_verified_at  "Set only by valid Laravel email verification."
+        varchar255 password  "Laravel Hash password hash; hidden from every Resource/log."
+        varchar100 remember_token  "Laravel remember credential; remember-me disabled initially; rotate on password reset."
+        timestamptz created_at  "Account creation time."
+        timestamptz updated_at  "Account update time."
     }
     user_profiles {
-        uuid id PK,FK "References auth.users.id; one profile per identity"
+        uuid id PK,FK "PK/FK to laravel.users.id; one profile per Laravel account; preserve existing domain UUIDs."
         text full_name  "Validated display/contact name"
         text phone  "Optional contact number; not OTP ownership verification"
         boolean is_admin  "Trusted server-managed moderation privilege"
@@ -26,7 +31,7 @@ erDiagram
         text district  "Searchable district or area; may be null in incomplete draft, required at listing submission/publication"
         text city  "City; may be null in incomplete draft, required at listing submission/publication"
         text description  "Shared property description; may be null in incomplete draft, required at listing submission/publication"
-        jsonb shared_amenities  "Shared property facilities. Controlled JSONB {schema_version:1,standard:{catalog_key:{enabled:boolean,details?:text}},custom:[text"
+        jsonb shared_amenities  "Shared property facilities. Controlled JSONB {schema_version:1,standard:{catalog_key:{enabled:boolean,details?:text}},custom:"
         jsonb policies  "schema_version defaults pets/smoking and shared_rules"
         integer content_revision  "Increment on property/unit/media/policy content writes; initial listing stale-review guard"
         numeric latitude  "Optional geocoding latitude -90 to90"
@@ -48,8 +53,8 @@ erDiagram
         integer bedrooms  "Nonnegative; room/studio may use0"
         numeric bathrooms  "Nonnegative count"
         text bathroom_arrangement  "PRIVATE or SHARED"
-        jsonb amenities  "Features inside the individual unit. Controlled JSONB {schema_version:1,standard:{catalog_key:{enabled:boolean,details?:text}},cus"
-        numeric advertised_monthly_rent  "Positive NUMERIC(14,0) VND; not agreed contract rent; may be null in incomplete draft, required at listing submission/publication"
+        jsonb amenities  "Features inside the individual unit. Controlled JSONB {schema_version:1,standard:{catalog_key:{enabled:boolean,details?:text}"
+        numeric advertised_monthly_rent  "Positive NUMERIC(14,0) VND; not agreed contract rent; may be null in incomplete draft, required at listing submission/publica"
         numeric deposit  "Nonnegative NUMERIC(14,0) VND; may be null in incomplete draft, required at listing submission/publication"
         integer minimum_rental_months  "At least3"
         integer max_occupants  "Positive occupancy limit; may be null in incomplete draft, required at listing submission/publication"
@@ -67,7 +72,7 @@ erDiagram
         uuid unit_id FK "Optional unit in same property"
         uuid uploaded_by FK "Authorized uploader"
         uuid client_operation_id  "Uploader scoped submission key"
-        text storage_path  "Unique object path; no overwriting referenced bytes"
+        text storage_path UK "Unique object path; no overwriting referenced bytes"
         text caption  "Owner caption; plain text, audited"
         integer sort_order  "Gallery order"
         boolean is_selected_for_listing  "Display intent independent of approval"
@@ -127,7 +132,7 @@ erDiagram
         uuid id PK "Tenancy UUID"
         uuid unit_id FK "Exact allocated unit"
         uuid tenant_id FK "Primary tenant matches original enquiry"
-        uuid rental_request_id  "One result per accepted enquiry"
+        uuid rental_request_id FK,UK "One result per accepted enquiry"
         uuid client_operation_id  "Owner scoped record action identity"
         text status  "PENDING_CONFIRMATION AWAITING_REVISION CONFIRMED ACTIVE EXPIRED CANCELLED ENDED"
         timestamptz actual_ended_at  "Actual move-out/end or cancellation action"
@@ -173,7 +178,7 @@ erDiagram
         numeric monthly_rent  "NUMERIC(14,0) positive VND applicable to this segment"
         numeric deposit_amount  "NUMERIC(14,0) nonnegative agreed deposit; do not double-charge on renewal"
         jsonb policies_snapshot  "Required actually negotiated resolved policies snapshot"
-        text document_path  "Private unique immutable object path; protect bytes from overwrite/delete"
+        text document_path UK "Private unique immutable object path; protect bytes from overwrite/delete"
         text document_sha256  "SHA256 of exact stored document bytes"
         date signed_on  "Optional owner-reported offline signing date, not platform verified"
         uuid created_by FK "Owner creating and explicitly acknowledging proposal"
@@ -213,7 +218,7 @@ erDiagram
     }
     notification_outbox {
         uuid id PK "Outbox UUID"
-        text event_key  "Stable unique domain event identity"
+        text event_key UK "Stable unique domain event identity"
         uuid recipient_id FK "Recipient profile"
         text event_type  "Configured notification kind"
         jsonb payload  "Safe resource references; no tokens/documents"
@@ -257,28 +262,41 @@ erDiagram
         uuid client_operation_id  "Client generated stable write retry UUID"
         text request_hash  "Server SHA256 of canonical original payload including parent UUID"
         text result_resource_type  "Result entity kind or bulk unit result"
-        uuid_array result_ids  "One or more resulting UUIDs; no signed links or secret response bodies"
+        uuid result_ids  "One or more resulting UUIDs; no signed links or secret response bodies"
         integer response_status  "Original successful HTTP status"
         timestamptz created_at  "Commit time; retention must respect supported retry window"
     }
     personal_access_tokens {
-        bigint id PK "Sanctum framework token ID; UUID profile reference remains tokenable_id."
-        varchar tokenable_type  "Fixed allowlisted authenticatable profile model/morph alias."
-        uuid tokenable_id  "UUID of user_profiles.id; uuidMorphs-compatible migration and controlled profile model. Polymorphic association needs explicit int"
-        varchar name  "Client/session label; no secret content."
-        char token UK "SHA-256 token hash; plaintext returned only at issuance, never stored/logged."
-        text abilities  "JSON-serialized server-approved Sanctum ability list; no client-forged wildcard/admin scopes."
+        bigint id PK "Sanctum token ID; users/profile reference remains UUID."
+        varchar255 tokenable_type  "Fixed allowed App\Models\User morph type/alias; use HasApiTokens on users."
+        uuid tokenable_id FK "UUID of users.id; uuidMorphs-compatible; fixed user model and explicit integrity enforcement."
+        varchar255 name  "Validated user-assigned token label, max 100 characters."
+        char64 token UK "SHA-256 token hash; plaintext returned only at issuance, never stored/logged."
+        text abilities  "JSON-serialized allowed subset of account:read, favourites:read, favourites:write; no wildcard/admin permissions."
         timestamptz last_used_at  "Updated by Sanctum when used."
-        timestamptz expires_at  "Explicit finite expiry no later than the identity JWT expiry; configured TTL also applies."
+        timestamptz expires_at  "Required expiry chosen from 1/7/30 days; default 30 days (configurable project default)."
         timestamptz created_at  "Framework creation time."
         timestamptz updated_at  "Framework update time."
     }
     favourite_properties {
-        uuid user_id PK,FK "References user_profiles.id; actor derives from Sanctum token; private per-user access."
+        uuid user_id PK,FK "References user_profiles.id; actor derives from authenticated Laravel user with matching profile UUID."
         uuid property_id PK,FK "References properties.id; composite PK/UNIQUE(user_id,property_id)."
         timestamptz created_at  "First save time; repeat intended-state save does not duplicate row."
     }
-    auth_users ||--|| user_profiles : identity
+    sessions {
+        varchar255 id PK "Laravel session ID; rotate on login."
+        uuid user_id FK "Nullable for guest CSRF sessions; references users.id."
+        varchar45 ip_address  "Session metadata; restrict retention/access."
+        text user_agent  "Session metadata; never treated as identity."
+        text payload  "Framework session payload; confidential, not exposed or logged."
+        integer last_activity  "Unix timestamp; session lifetime/pruning."
+    }
+    password_reset_tokens {
+        text email PK "Normalized user email used by Laravel password broker."
+        varchar255 token  "Hashed one-time password-reset token; never serialize/log."
+        timestamptz created_at  "Password broker token expiry/throttle timestamp."
+    }
+
     user_profiles ||--o{ properties : owns
     properties ||--o{ units : contains
     properties ||--o{ property_media : photos
@@ -296,6 +314,9 @@ erDiagram
     user_profiles ||--o{ listing_reports : reports
     user_profiles ||--o{ favourite_properties : private_saves
     properties ||--o{ favourite_properties : saved_property
-    user_profiles ||--o{ personal_access_tokens : logical_morph_link
     user_profiles ||--o{ notifications : private_recipient
     tenancies ||--o| property_reviews : deferred_P2
+    users ||--|| user_profiles : has_profile
+    users o|--o{ sessions : authenticates
+    users ||--o{ personal_access_tokens : tokenable_morph
+    users ||--o| password_reset_tokens : email_lookup

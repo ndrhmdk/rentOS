@@ -6,9 +6,9 @@ Exactly 16 grouped issues, four per named member. All feature owners implement f
 
 | Member | Issue | Complete outcome | Integration prerequisites |
 | --- | --- | --- | --- |
-| Khai | [RNT-01](issues/RNT-01.md) | Set up database, Sanctum, Telescope, API docs, seed data and CI/test rules | None |
+| Khai | [RNT-01](issues/RNT-01.md) | Set up database, Fortify, Sanctum, Telescope, API docs and CI/test rules | None |
 | Kien | [RNT-02](issues/RNT-02.md) | Manage properties, units, photos, amenities and owner listings | RNT-01, RNT-03, RNT-04 |
-| Hien | [RNT-03](issues/RNT-03.md) | Register/sign in, issue Sanctum tokens and protect APIs with token permissions | RNT-01 |
+| Hien | [RNT-03](issues/RNT-03.md) | Implement account forms, session login, CSRF protection and API-token settings | RNT-01 |
 | Tri | [RNT-04](issues/RNT-04.md) | Admin reviews and approves listings before first publication | RNT-01, RNT-03 |
 
 ## Phase 2: Listing browsing, rental requests, contracts and reports
@@ -40,8 +40,8 @@ Exactly 16 grouped issues, four per named member. All feature owners implement f
 
 ## Early checkpoints and independent work
 
-1. Khai publishes complete schema/seeds, API/error/revision conventions and initial Sanctum/Scramble/Telescope configuration early within RNT-01.
-2. Hien publishes the authenticated profile/token/ability contract early within RNT-03. Kien/Tri can start with local fixtures and agreed request/response contracts while account UI is completed.
+1. Khai publishes complete schema/seeds, API/error/revision conventions and initial Fortify/Sanctum/CSRF/Scramble/Telescope configuration early within RNT-01.
+2. Hien publishes the session/CSRF, profile and separate personal-token/ability contracts early within RNT-03. Kien/Tri can start with local fixtures and agreed request/response contracts while account UI is completed.
 3. Kien’s RNT-02 keeps Create property and Create listing separate. Tri’s RNT-04 can use seeded complete packages before the owner UI exists. Khai’s RNT-06 consumes the real public API for landing/location/date search/details.
 4. Tri owns RNT-07 rental requests/favourites. Hien owns RNT-08 reports/admin hide/restore. Kien owns RNT-09 renewals; Khai owns RNT-10 jobs, notifications and unreferenced-photo-file deletion. Telescope initial setup is Khai/RNT-01; diagnostics/actual alerts remain Tri/RNT-12.
 5. Every member runs committed migrations/tests locally and writes their own feature tests. Later persisted-field changes get new reviewed migrations; UI labels do not imply column renames. CI uses disposable PostgreSQL/Supabase; only reviewed main deploy migrates the shared environment.
@@ -67,14 +67,14 @@ Hien and Tri to actual collaborator handles; leave assignees empty if unknown.
 
 This prompt, when explicitly invoked for publishing, authorizes creating the
 16 missing issues in the verified target repository. Check each stable marker
-<!-- rentos-backlog: RNT-xx --> before create/retry. Use structured arguments
+<!-- rentos-backlog-v2: RNT-xx --> before create/retry. Use structured arguments
 or gh issue create --body-file; preserve actual newlines. Create in manifest
 topological order, record returned real issue numbers/URLs, then link actual
 dependencies without changing planning keys. Preserve the four phases and
 current owners. Identify already implemented work with evidence and adjust
 remaining checklists honestly; never fabricate unfinished/completed code.
 
-Sanctum token management/scopes, Scramble and Telescope setup are mandatory.
+Fortify accounts, Sanctum sessions/CSRF, separate PAT management/scopes, Scramble and Telescope setup are mandatory. Supabase provides database/storage only; do not reinstate the old identity-token bridge.
 Khai owns initial shared setup. RNT-07 belongs to Tri; RNT-08 to Hien;
 RNT-09 to Kien; RNT-10 to Khai. Require unit/component/API/PostgreSQL tests,
 not automated browser/E2E tasks or a browser-test CI gate. TypeScript generator

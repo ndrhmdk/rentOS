@@ -4,7 +4,9 @@ Endpoint names below are proposed contracts, not an audit of existing routes. In
 
 ## Authentication and authorization
 
-`POST /api/v1/auth/token` verifies the Supabase identity JWT and issues a finite Sanctum token. Private product routes use `auth:sanctum`, required abilities and resource Policies. Do not accept the provider JWT as a fallback on those routes. Token refresh/rotation and logout/recovery revocation are explicit RNT-03 actions. Public listing GET routes stay public.
+Fortify supplies register/login/logout/reset/verification routes. Next.js initializes `/sanctum/csrf-cookie` and uses session cookies plus `X-XSRF-TOKEN` on mutations. Browser login creates no API token. Separate session-only token management lives at `/api/v1/account/api-tokens`; see [setup and endpoint/ability matrix](authentication-setup.md).
+
+Only GET `/api/v1/me` and GET/PUT/DELETE favourite-properties routes initially accept personal bearer tokens with the corresponding allowed ability. Other private product routes, admin actions and token management are session-only. All private access requires current account/resource Policies. Public GET routes remain public.
 
 | Resource/actions | Visibility | Representative contract |
 | --- | --- | --- |
@@ -14,12 +16,12 @@ Endpoint names below are proposed contracts, not an audit of existing routes. In
 | Rental requests submit/list/withdraw/reject | Own tenant/owner scope | Contact snapshots and complete desired dates; no standalone Accept |
 | Tenancy proposal/contract confirm/decline/correct/move-in/end/cancel | Participants with action permission | Exact current version UUID/hash, deadline and transaction; 409 stale/overlap |
 | Renewal request/proposal/confirmation | Participants | Pending negotiation; consecutive segment; extension reservation; no replacement of old agreements |
-| Admin review/report/suspend/restore | Current admin with ability | Reasoned exact-revision decision; suspension independent of owner publication |
+| Admin review/report/suspend/restore | Current admin browser session + Policy | Reasoned exact-revision decision; suspension independent of owner publication |
 | Notifications/read and private document download | Authorized recipient/participant | Reauthorize target; no sensitive payload in public cache/logs |
 
 ## Input/output and failure rules
 
-Use FormRequests for allowed fields, Policies for resource scope, Resources for explicit JSON serialization and documented collection pagination. Never expose whole database rows as DTOs. Use 401 for unauthenticated/expired/revoked credentials, 403 for permission denial (or documented non-disclosing 404), 404 for absent/nonpublic targets, 409 for stale state/revision/overlap/replay payload conflicts and 422 for input validation. Never return raw SQL/stack/token contents.
+Use FormRequests for allowed fields, Policies for resource scope, Resources for explicit JSON serialization and documented collection pagination. Never expose whole database rows as DTOs. Use 401 for unauthenticated/expired/revoked credentials, 403 for permission denial (or documented non-disclosing 404), 404 for absent/nonpublic targets, 409 for stale state/revision/overlap/replay payload conflicts 419 for browser CSRF/session-token mismatch and 422 for input validation. Never return raw SQL/stack/token contents.
 
 Create/retry keys are scoped to actor/action/parent and canonical payload. A key reused with another payload fails 409. Capture business/audit/outbox/replay results atomically; do not re-send side effects on terminal replay. Revision conflict requires a reload/review rather than blind last-write-wins. Client-side disabling alone is not concurrency protection.
 
@@ -58,4 +60,4 @@ If adopted later, inspect inference gaps/nullability/date/decimal/JSONB/paginati
 - https://scramble.dedoc.co/usage/export
 - https://openapi-ts.dev/introduction
 
-Verify installed versions before applying framework-specific commands. The identity-token bridge, scopes, cache boundaries and product rules above are project design decisions, not claimed defaults of those libraries.
+Verify installed versions before applying framework-specific commands. The session/PAT separation, scopes, cache boundaries and product rules above are project design decisions, not claimed defaults of those libraries.

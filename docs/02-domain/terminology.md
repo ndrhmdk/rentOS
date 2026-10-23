@@ -16,5 +16,7 @@
 | Favourite property | Private persistent user/property relation; saves do not reserve units |
 | Unreferenced photo-file deletion | Scheduled removal of abandoned/removed stored photos after retention and final reference checks |
 | Token ability | Server-approved Sanctum permission; always combined with resource Policies |
-| Identity JWT | Supabase credential verified at Laravel token issuance, not accepted directly on private product APIs |
+| Browser session | Laravel session identified by an HttpOnly cookie; browser mutations also require a matching CSRF token |
+| Personal API token | Independently created Sanctum credential for allowed non-browser APIs; scoped, expiring and revocable |
+| CSRF token | Session-bound value sent with browser mutations; it does not authenticate the user by itself |
 | API token | Hashed, expiring Sanctum credential used on private Laravel product endpoints |

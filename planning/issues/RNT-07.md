@@ -8,32 +8,32 @@ A tenant saves properties and submits a pending rental request; owners discuss o
 
 ## Ownership and order
 
-- Phase 2: Listing browsing, rental requests, contracts and reports
+- Phase 2.
 - Implementation: **Tri** (frontend + backend + own tests).
 - Reviewer: **Khai**.
-- Prerequisites for final integration: [RNT-01](RNT-01.md) (GitHub #97), [RNT-03](RNT-03.md) (GitHub #98), [RNT-06](RNT-06.md) (GitHub #101).
-- Publication: Draft; delivery: Planned; actual GitHub URL: https://github.com/ndrhmdk/rentOS/issues/102.
+- Prerequisites: [RNT-01](RNT-01.md), [RNT-03](RNT-03.md), [RNT-06](RNT-06.md).
+- Publication: Draft; actual GitHub issue URL not recorded.
 
-A prerequisite gates closure/integration, not all early work: use agreed contracts, factories and local fixtures after the shared schema/auth checkpoint. This is one grouped issue; internal checklists/multiple PRs do not require extra micro-issues.
+Dependencies gate final integration; fixtures and agreed contracts allow earlier independent work. This remains one grouped issue with internal checklists and multiple PRs if useful.
 
 ## Functional requirements
 
-- **FR25 — Submit rental request with contact details** (P0 Must): Authenticated tenant submits contact_name, contact_phone, desired_move_in_date, desired_end_date, optional preferred_unit_id and message. Store contact snapshots. Status PENDING throughout offline discussion. No calendar, manual discussion acceptance or unit reservation at rental request creation.
-  - Full cases: [FR25 (5 cases)](../../docs/06-acceptance/test-scenarios.md#fr25)
+- **FR25 — Submit rental request with contact details** (P0 Must): Authenticated tenant submits contact_name, contact_phone, desired_move_in_date, desired_end_date, optional preferred_unit_id and message. Store contact snapshots. Status PENDING throughout offline discussion. No calendar, manual discussion acceptance or unit reservation at enquiry creation.
+  - [All 5 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr25)
 - **FR26 — Prevent duplicate pending rental requests** (P0 Must): At most one PENDING request per tenant/listing; accepted/rejected/withdrawn history remains. Unique partial index is authoritative; retries compare payload.
-  - Full cases: [FR26 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr26)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr26)
 - **FR27 — Tenant rental request dashboard** (P0 Must): Display private submitted contacts, desired dates, request status/outcome and linked tenancy confirmation state. ACCEPTED means proposal created, not that tenancy contract is mutually confirmed.
-  - Full cases: [FR27 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr27)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr27)
 - **FR28 — Withdraw pending rental request** (P0 Must): Tenant may withdraw own PENDING request with audit and owner notification. Accepted requests are handled through tenancy proposal actions instead.
-  - Full cases: [FR28 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr28)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr28)
 - **FR29 — Owner rental request inbox** (P0 Must): Owner sees own property requests and private tenant contact snapshots, dates and preferred unit. Discuss offline while PENDING. Actions are Reject and Create tenancy proposal; no viewing/calendar or stand-alone Accept.
-  - Full cases: [FR29 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr29)
-- **FR31 — Reject pending rental request** (P0 Must): Owner can reject PENDING rental request with reason; no viewing cancellation or automatic rejection merely because another rental request was accepted. System auto-rejection uses FR85.
-  - Full cases: [FR31 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr31)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr29)
+- **FR31 — Reject pending rental request** (P0 Must): Owner can reject PENDING enquiry with reason; no viewing cancellation or automatic rejection merely because another enquiry was accepted. System auto-rejection uses FR85.
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr31)
 - **FR32 — Audit request and tenancy outcomes** (P0 Must): Append-only audit events record request status, proposal/confirmation/version changes and automatic decisions with actor/system identity, safe before/after, reason and correlation UUID.
-  - Full cases: [FR32 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr32)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr32)
 - **FR88 — Save and manage favourite properties** (P0 Must): Private authenticated property-level persistent saves, idempotent intended-state writes, safe hidden placeholders and private list/count. Saving creates no rental request/reservation.
-  - Full cases: [FR88 (10 cases)](../../docs/06-acceptance/test-scenarios.md#fr88)
+  - [All 10 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr88)
 
 ## Backend deliverables
 
@@ -63,16 +63,18 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 
 ## NFRs, boundaries and coordination
 
+NFR-02, NFR-03, NFR-04, NFR-07
+
 NFR-02, NFR-03, NFR-04, NFR-07; T3c, T3e, T4a, T3g, T4d
 Audit already-implemented favourites code and retain compatible work. Rebuild tasks from requirements rather than recreating deleted issue references.
 
 ## Definition of done
 
-- [ ] Implement the related frontend, backend and meaningful unit/component/API integration tests under this issue; test PostgreSQL constraints/concurrency on actual PostgreSQL.
-- [ ] Private product routes require auth:sanctum, approved abilities and resource Policies. Test actual bearer expiry/revocation/permission behavior where relevant.
-- [ ] Update FormRequests/Resources/API docs and explicit frontend response types with contract changes. Future TypeScript generation is documentation only.
-- [ ] Apply shared transaction/revision/idempotency/audit rules to the affected actions. Schema changes are new reviewed migrations tested locally; never reset/reseed a hosted environment.
-- [ ] Use a short manual checklist for changed screens; automated browser/E2E suites are not required.
-- [ ] Attach actual test commands/results and relevant screenshots/provider/query/alert evidence; record personal sprint contribution. A document or fixture screenshot is not proof of implemented behavior.
+- [ ] Implement related frontend, backend and meaningful unit/component/API/PostgreSQL integration tests; all feature owners test their own changes.
+- [ ] Private routes use auth:sanctum and current account/resource Policies. Browser writes require CSRF; approved PAT endpoints additionally enforce abilities. Session-only endpoints reject PAT-only callers.
+- [ ] Update FormRequests/Resources/OpenAPI and explicit frontend types. Future TypeScript generation remains documentation only.
+- [ ] Apply transaction/revision/idempotency/audit rules to domain actions. Never store token secrets in replay records. Use reviewed migrations locally; never reset/reseed a hosted environment.
+- [ ] Use a short manual changed-screen checklist; no required automated browser/E2E suite.
+- [ ] Attach actual test commands/results and relevant evidence; specifications do not prove implementation.
 
-RNT-07 is a planning key, not a GitHub issue number. Deleted issues are not reused.
+RNT-07 is a planning key, not a GitHub number. Deleted issues are not reused.

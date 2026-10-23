@@ -1,32 +1,24 @@
-# WF-28 Register, sign in, obtain API access and manage profile
+# WF-28 Register, sign in and manage profile
 
-Actors: Guest; authenticated user; Supabase; Laravel.
-
-Requirements: FR01 FR02 FR04 FR05 FR06 FR43 FR49
+Actors: Guest; authenticated user; Next.js; Laravel. Requirements: FR01 FR02 FR04 FR05 FR06 FR43 FR49 FR90.
 
 ## Preconditions and trigger
 
-Configured Supabase project and RNT-01 Sanctum infrastructure. User registers, signs in, refreshes, recovers access or signs out.
+RNT-01 Fortify/Sanctum infrastructure, configured database sessions, mail and frontend/API domains. User registers, signs in, verifies email, recovers access or signs out.
 
 ## Main flow
 
-1. Register/confirm email/sign in or recover password through Supabase; no second Laravel password store.
-2. Send provider access JWT to the rate-limited Laravel identity-to-token endpoint. Verify signature, allowed algorithm, project issuer/audience, expiry, subject and account eligibility.
-3. Resolve one UUID profile; issue a finite Sanctum token with server-approved abilities and expiry no later than the verified identity token. Store only its hash.
-4. Use the Sanctum bearer token on private product APIs. Run `auth:sanctum`, required ability and current resource Policy. Public listing GET routes remain public.
-5. On eligible provider refresh, rotate this client session’s Laravel token and revoke the previous token. Account/role data is server-controlled.
-6. Successful logout revokes the Laravel token, signs out of the provider and clears private client state. Handle offline revocation failure honestly and bound remaining validity by expiry.
-7. After confirmed password recovery, authenticated server handling revokes the profile’s previous API tokens; fresh sign-in restores access.
+1. Next.js fetches `/sanctum/csrf-cookie` with credentials. Submit registration/login with cookies and matching `X-XSRF-TOKEN`.
+2. Fortify validates credentials; registration atomically creates users/profile with matching UUID and hashed password. Valid login rotates the session ID and sets its HttpOnly cookie. No personal token is created.
+3. Unverified accounts use only limited verification/account routes. After signed email verification, approved product operations are available subject to current Policies.
+4. Private browser API requests use `auth:sanctum`. All browser mutations require CSRF; server FormRequests provide 422 field errors. Owner/admin privilege is never taken from submitted fields.
+5. Password recovery uses Laravel broker links and allowlisted Next.js pages. Successful reset revokes all sessions/PATs and requires fresh login.
+6. CSRF-protected logout invalidates the current browser session, regenerates CSRF and clears account-private queries. Separately created API tokens remain until explicit revoke/expiry.
 
 ## Alternatives and failure flows
 
-Invalid/expired/revoked tokens return 401; missing ability or forbidden resource returns 403 (or documented non-disclosing 404). Reject forged admin scopes/actor IDs. Bounded trusted-JWKS refresh fails closed; never follow token-supplied key URLs. A provider JWT alone is not a private product API credential.
+401 means authentication expired/missing, 403 forbidden, 419 invalid browser CSRF, 422 validation, 429 throttled. Keep safe unsent input and require explicit resubmission after recovery. No token exchange or silent write replay. Failed server logout is not falsely shown as server revocation.
 
-## Postcondition
+## Postcondition and evidence
 
-One provider identity/profile; private API access exists only while a suitable Sanctum token and current Policy permit it. Tests exercise actual issued bearer tokens, not only helpers.
-
-
-## Delivery and evidence
-
-See the [traceability matrix](../06-acceptance/traceability-matrix.md) for responsible issues and all acceptance specifications. Private write actions use Sanctum abilities plus Policies; apply audit/idempotency/locking only where the domain action requires them. Manual screen checks complement unit/component/API integration tests; no required E2E suite.
+One Laravel user/profile account; session access depends on account status and current Policies. Test session rotation/logout, missing/mismatched CSRF and cross-account isolation. Manual UI checks complement unit/component/API integration tests; no required E2E automation. [Token management is separate](WF-29-manage-api-tokens.md).

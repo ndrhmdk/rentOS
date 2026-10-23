@@ -1,7 +1,7 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "project": "rentOS",
-  "prepared_date": "2026-10-22",
+  "prepared_date": "2026-10-23",
   "timezone": "Asia/Ho_Chi_Minh",
   "source_of_truth": {
     "functional_requirements": "https://docs.google.com/spreadsheets/d/1w33EYYbyNxTfkC-yxoUO5PwWIAbBhakI/edit?usp=drivesdk&ouid=106252598381185742228&rtpof=true&sd=true",
@@ -9,15 +9,15 @@
   },
   "counts": {
     "issues": 16,
-    "requirements": 81,
-    "acceptance_specifications": 329,
-    "active_P0_P1": 72,
+    "requirements": 83,
+    "acceptance_specifications": 343,
+    "active_P0_P1": 74,
     "deferred_P2": 8,
     "scope_rules_P3": 1
   },
   "members": {
     "Khai": {
-      "github_handle": "DangCongKhai",
+      "github_handle": null,
       "issues": [
         "RNT-01",
         "RNT-06",
@@ -26,7 +26,7 @@
       ]
     },
     "Kien": {
-      "github_handle": "ndrhmdk",
+      "github_handle": null,
       "issues": [
         "RNT-02",
         "RNT-05",
@@ -35,7 +35,7 @@
       ]
     },
     "Hien": {
-      "github_handle": "TruongHienTHMH",
+      "github_handle": null,
       "issues": [
         "RNT-03",
         "RNT-08",
@@ -44,7 +44,7 @@
       ]
     },
     "Tri": {
-      "github_handle": "tri13072005",
+      "github_handle": null,
       "issues": [
         "RNT-04",
         "RNT-07",
@@ -129,7 +129,7 @@
       "phase": 1,
       "owner": "Khai",
       "reviewer": "Kien",
-      "title": "Set up database, Sanctum, Telescope, API docs, seed data and CI/test rules",
+      "title": "Set up database, Fortify, Sanctum, Telescope, API docs and CI/test rules",
       "requirements": [
         "FR44",
         "FR74",
@@ -144,31 +144,33 @@
         "NFR-05"
       ],
       "depends_on": [],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/97",
-      "outcome": "Khai alone delivers the shared reproducible Laravel/Next.js/Supabase foundation, all initial migrations/seeds, LLM rules, CI/CD and future TypeScript setup documentation. This includes initial Sanctum, Scramble and Telescope installation/configuration.",
+      "github_url": null,
+      "outcome": "Khai delivers all shared initial migrations/seeds, Fortify/Sanctum session and token infrastructure, CSRF/CORS conventions, Scramble/Telescope, CI/CD, LLM/test guidance and future TypeScript setup documentation.",
       "backend": [
         "Bootstrap an unexposed laravel schema BEFORE Laravel migration history; configure direct PostgreSQL connection for migrations, local/hosted environment templates, SSL and separate deploy/runtime credentials. Use the direct endpoint only when the runner has connectivity; document an explicit session-pooler fallback if IPv6/IPv4 constraints prevent it. Do not silently use transaction pooling for migrations.",
-        "Create ALL approved MVP domain/support tables from the data dictionary, including favourite_properties, property_media, audit_logs, notification_outbox, notifications and idempotency_records, plus required Laravel internal tables. auth.users is provider-managed; optional P2 property_reviews stays deferred. Add UUID/composite FKs, partial uniqueness, GiST exclusion, immutable-contract/write-once confirmation triggers and commit invariants.",
-        "Create deterministic seeders/factories for owner, tenant and admin roles plus properties and units, moderation, reports, rental requests, contract/renewal and favourite examples. Use local Auth fixtures compatible with provider-managed auth.users. Never reseed hosted production.",
         "Publish shared schema, API error/pagination conventions and revision/idempotency/lock-order helpers early. Configure required Scramble API documentation for Laravel Resources/FormRequests; this is distinct from future TypeScript generator setup.",
         "Write AGENTS.md: coding conventions, allowed architecture, unit/component/API integration expectations; no automated browser suite required, real PostgreSQL concurrency tests, migration safety and the exact checks AI must pass before reporting completion.",
         "Own CI/CD configuration: PR lint/static/type/build and frontend/backend tests against disposable PostgreSQL/Supabase; reviewed main merges deploy matching code and serialized migrations after checks pass. Separate PR/deploy credentials, protect secrets, and provide worker/scheduler, failure and restore guidance.",
         "Write TYPESCRIPT_STRATEGY.md only for future Resources/FormRequests -> OpenAPI -> TypeScript setup. Include rationale, prerequisites, proposed commands, inference limits, maintenance and future CI drift checking. Do not install/configure/run the TypeScript generator or require generated artifacts in this issue.",
         "Requirement mapping: FR44 sets up API documentation; each endpoint owner maintains their documentation. FR74/FR75 establish shared retry, revision, transaction, audit and database safeguards here; every state-changing feature must apply and test them. FR76 is the written list of excluded MVP features, not an implementation deliverable.",
-        "Install/configure Laravel Sanctum as shared infrastructure and add its personal_access_tokens migration to the unexposed application schema. Use a UUID-compatible tokenable_id matching the user_profiles Auth UUID; keep token hashes, abilities and expiry. Configure the Authenticatable profile model/provider with HasApiTokens. Supabase remains the only password store. Hien owns token issuance, routes and lifecycle in RNT-03.",
         "Install a Laravel-compatible Telescope version, publish its provider/config/assets/migrations and configure storage on the private Laravel schema/connection. Enable request, exception, query and job watchers needed for development; configure query thresholds, filtering and scheduled telescope:prune retention. Document reproducible installation and environment settings.",
-        "Use Telescope locally for developers; keep shared/deployed access disabled by default. If enabled outside local, require a tested authentication/access-control path and restricted viewTelescope gate. Browser navigation does not automatically send the frontend Sanctum bearer token. Never expose a deployed APP_ENV=local dashboard. Hide bearer/cookie/password/recovery credentials and filter sensitive request/query/job data, contacts and contract contents."
+        "Create every approved MVP domain/support table plus Laravel users, sessions, password_reset_tokens and UUID-compatible personal_access_tokens in the private laravel schema. user_profiles.id references users.id; HasApiTokens belongs to the users Authenticatable model. Supabase supplies PostgreSQL/Storage only. Preserve all rental constraints; P2 reviews stay deferred.",
+        "Install/configure Fortify (web guard, headless forms, registration/password reset/email verification) and Sanctum (statefulApi middleware, abilities aliases). Configure database sessions, exact stateful frontend host:port list, explicit credentialed CORS and Laravel CSRF validation. Do not exempt api/* or login from CSRF.",
+        "Publish tested localhost and HTTPS sibling-subdomain environment templates. Include session cookie domain/Secure/HttpOnly/SameSite, mail/reset/verification URLs and allowed redirects. Unrelated default frontend/API domains require a tested same-origin proxy or shared-parent domain before release.",
+        "Create deterministic users/profile seeders with Laravel password hashes and verified fixture timestamps, plus browser-session and scoped/expired/revoked PAT test factories. Do not call Supabase Auth or reseed hosted production.",
+        "If existing accounts/data exist, provide a reviewed migration/backfill plan preserving UUIDs and references, verify account ownership and force Laravel password reset where necessary; invalidate legacy credentials and remove old auth.users FK/bridge only after backfill checks. Never copy unknown provider hashes blindly or delete domain records.",
+        "Keep Telescope local by default. Any enabled nonlocal dashboard uses a tested Laravel session and restricted viewTelescope gate; deny guests/ordinary users. Filter passwords, reset links, cookies, CSRF values, token secrets/hashes, contacts and contract data. Pruning is separate from immutable business audits."
       ],
       "frontend": [
         "Establish the supported Next.js app, design tokens, typed fetch client, TanStack Query providers and common error/loading/empty components while preserving implemented UI/assets.",
-        "Provide one shared API client boundary with explicit maintained TypeScript response types, safe error handling and frontend test configuration. Document future replacement by generated types without requiring generation now. Account screens and Sanctum/JWT identity integration belong to Hien in RNT-03."
+        "Provide one credentialed browser API client with JSON Accept and X-XSRF-TOKEN support, TanStack Query boundaries and explicit response types. Document 401/419 recovery without blind write retries. Hien owns account forms and token settings in RNT-03; TypeScript generator setup remains documentation only."
       ],
       "acceptance": [
         "A fresh local Supabase environment builds the complete MVP schema and deterministic representative seeds from committed scripts.",
         "PostgreSQL independently rejects overlapping blocked periods, inconsistent references and term/document mutation; adjacent periods are allowed and first legitimate confirmation metadata writes are allowed.",
-        "The browser cannot bypass Laravel through unintended Data API grants or access a private bucket; auth.users FKs resolve in local and CI setups.",
+        "The browser cannot bypass Laravel through unintended Data API grants or access a private bucket; users/profile UUID links resolve without any Supabase Auth dependency.",
         "All four teammates can pull the checkpoint and run migrations locally; configuration does not pretend search_path creates/moves existing tables.",
         "A single owner, Khai, delivers migrations/seeds, connection instructions, coding/LLM rules, CI/CD and TypeScript setup documentation in this grouped issue.",
         "PR CI fails on deliberate backend/frontend test and lint/typecheck errors; failed checks or migrations block hosted deployment. Main deployment is serialized and never resets/reseeds production.",
@@ -177,15 +179,18 @@
         "Closing RNT-01 proves shared safeguards and setup only. It does not claim all feature-specific FR74/FR75 scenarios are complete; those belong to the feature owners. FR76 is recorded as a project scope rule.",
         "Fresh and upgrade migrations create Sanctum token storage compatible with UUID profile IDs. API tokens and their hashes are not exposed through the Supabase Data API or logs; local/CI token fixtures support ability/expiry/revocation tests.",
         "A teammate follows setup instructions and sees a controlled local request, exception, query and queued-job record in Telescope. Scheduled pruning removes expired diagnostic entries without touching business audit/history data.",
-        "Shared/deployed Telescope access is disabled or explicitly restricted; guest/ordinary-user access is denied in non-local tests. Representative captured entries contain no Sanctum/Supabase tokens, passwords, private contacts or contract payloads."
+        "Shared/deployed Telescope access is disabled or explicitly restricted; guest/ordinary-user access is denied in non-local tests. Representative captured entries contain no session/CSRF/reset/API-token secrets, passwords, private contacts or contract payloads.",
+        "Fresh migrations and existing-data upgrade retain domain UUID links and create Laravel credential/session/reset/PAT storage; no browser login creates a PAT.",
+        "Local and deployment configuration exercises a session request with valid CSRF and denies a missing/mismatched-CSRF write; test harness does not silently bypass CSRF. Credentialed origins are explicit; secrets stay server-side."
       ],
       "tests": [
         "Real PostgreSQL integration tests for migration rebuild/upgrade, constraints, concurrent overlap/uniqueness and rollback invariants.",
         "Configuration/client component tests for shared error handling; smoke-test the frontend/backend scaffold without transferring feature tests from their owners.",
         "Exercise CI intentional-failure blocking and disposable migration/seed rebuild; record actual results and direct-connection preflight. Verify setup docs by a teammate walkthrough.",
-        "Configuration/integration tests for Telescope migration/storage, environment enable/disable, non-local access denial, filtering/redaction and scheduled pruning; record a short manual local-dashboard verification. No E2E suite required."
+        "Configuration/integration tests for Telescope migration/storage, environment enable/disable, non-local access denial, filtering/redaction and scheduled pruning; record a short manual local-dashboard verification. No E2E suite required.",
+        "Configuration and HTTP integration checks for Fortify routes, session rotation, CSRF enforcement, exact CORS/stateful domains, private auth tables and deterministic auth fixtures; Hien owns full account/token feature tests."
       ],
-      "boundaries": "NFR-02, NFR-03, NFR-06, NFR-07, NFR-05; T1a, T1b, T1c, T1d, T3a, T3g, T4c, T4d, T2a, T2b, T3c, T4b, T5a\nKhai is the sole initial shared-setup owner. Kien reviews. Other members consume the early schema/convention checkpoint and own their complete feature slices/tests; later feature schema changes use reviewed additive migrations. Hien owns authentication/profile implementation. RNT-13 tests and improves Khai\u2019s pipeline rather than assigning setup to another member. Future TypeScript generation is documentation only. Khai owns initial Telescope configuration (T5a). Tri uses that setup for diagnostics, correlation and real alert delivery in RNT-12; Telescope itself is not the alert-delivery implementation.",
+      "boundaries": "NFR-02, NFR-03, NFR-06, NFR-07, NFR-05; T1a, T1b, T1c, T1d, T3a, T3g, T4c, T4d, T2a, T2b, T3c, T4b, T5a\nKhai is the sole initial shared-setup owner. Kien reviews. Other members consume the early schema/convention checkpoint and own their complete feature slices/tests; later feature schema changes use reviewed additive migrations. Hien owns authentication/profile implementation. RNT-13 tests and improves Khai’s pipeline rather than assigning setup to another member. Future TypeScript generation is documentation only. Khai owns initial Telescope configuration (T5a). Tri uses that setup for diagnostics, correlation and real alert delivery in RNT-12; Telescope itself is not the alert-delivery implementation.\nAuthentication update: Khai owns package/schema/shared-client setup; Hien owns FR01/02/04/05/43/49/89/90 implementation. All members use and test browser CSRF on their forms; no extra micro-issues.",
       "body_file": "issues/RNT-01.md"
     },
     {
@@ -226,9 +231,9 @@
         "RNT-03",
         "RNT-04"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/100",
+      "github_url": null,
       "outcome": "Owners create and edit properties, units, photos and amenities, then separately create, submit and publish their rental listings.",
       "backend": [
         "Implement own-property/unit CRUD and archive, WHOLE_SPACE automatic unit and separate/bulk units with unique labels and independent READY/MAINTENANCE/RETIRED operational state.",
@@ -257,7 +262,7 @@
         "Unit tests for normalization, policy resolution, term validation and form interactions.",
         "PostgreSQL/API integration tests for ownership, scope, bulk rollback/idempotency, stale edits and archive/allocation races.",
         "Frontend component tests for property/unit/photo forms and a real Storage success/failure integration check; manually check changed owner screens.",
-        "API/component tests and manual UI checks for separate listing create/edit/submit/publish/hide/archive actions, one current listing per property, missing submission fields and updates without reapproval. Integrate first-publication approval with Tri\u2019s RNT-04; complete the owner journey using real APIs."
+        "API/component tests and manual UI checks for separate listing create/edit/submit/publish/hide/archive actions, one current listing per property, missing submission fields and updates without reapproval. Integrate first-publication approval with Tri’s RNT-04; complete the owner journey using real APIs."
       ],
       "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3f, T4a, T3g, T4d\nKien owns property/unit/photo management and owner listing creation/publication. Keep Create property and Create listing as separate flows/screens. Tri owns admin approval (RNT-04); Khai owns public landing/search/detail pages and their APIs (RNT-06). Scheduled deletion of unreferenced photo files after retention belongs to RNT-10.",
       "body_file": "issues/RNT-02.md"
@@ -267,7 +272,7 @@
       "phase": 1,
       "owner": "Hien",
       "reviewer": "Kien",
-      "title": "Register/sign in, issue Sanctum tokens and protect APIs with token permissions",
+      "title": "Implement account forms, session login, CSRF protection and API-token settings",
       "requirements": [
         "FR01",
         "FR02",
@@ -275,7 +280,9 @@
         "FR05",
         "FR06",
         "FR43",
-        "FR49"
+        "FR49",
+        "FR89",
+        "FR90"
       ],
       "nfrs": [
         "NFR-02",
@@ -287,38 +294,41 @@
       "depends_on": [
         "RNT-01"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/98",
-      "outcome": "Use Supabase for sign-in/email verification/recovery, then exchange verified identity for a Laravel Sanctum token. All private Laravel product endpoints require Sanctum token authentication plus permissions and resource authorization.",
+      "github_url": null,
+      "outcome": "Users register, verify email, sign in and recover access through Fortify; Next.js uses Sanctum browser sessions with CSRF. Users separately create and revoke scoped personal API tokens in Settings > API tokens.",
       "backend": [
-        "Implement a rate-limited token-issuance endpoint protected by verified Supabase access JWT: allowed algorithm/JWKS/signature, issuer, audience, expiry, subject and account/email eligibility. Resolve one profile keyed by the trusted subject; never accept client-supplied admin identity. Supabase JWT is accepted here for identity verification, not as a fallback on private product routes.",
-        "Issue real Sanctum personal access tokens using HasApiTokens/createToken and the UUID-compatible storage from RNT-01. Store hashes only. Assign a server-controlled ability allowlist such as profile:read/profile:update, properties:manage, rental-requests:manage and admin:moderate. Grant admin abilities only from trusted current is_admin; never accept arbitrary requested scopes or a default wildcard.",
-        "Protect private profile/property/listing/request/tenancy/report/notification APIs with auth:sanctum and explicit ability/abilities middleware or tokenCan checks. Every resource still uses Policies for actor ownership/participant access and current admin privilege; an ability alone never authorizes another user\u2019s resource. Keep public listing GET routes public.",
-        "Implement finite configured token expiry no later than the identity JWT expiry, per-client-session rotation/revocation and authenticated logout revocation. Refresh Supabase identity, then obtain a replacement Sanctum token for that session; revoke the previous session token. Logout revokes Laravel token before provider sign-out and clears client caches/tokens; if network revocation fails, show failure and bound remaining validity by expiry. Do not claim offline provider JWT validation instantly notices provider revocation.",
-        "Expose own-profile read/update and account endpoints with FormRequests/Resources. Document the issuance, refresh, revocation, 401 and 403 contracts in Scramble and publish the early auth:sanctum/ability convention for other feature owners."
+        "Implement Fortify registration/login/logout, signed email verification, password-broker recovery and current-user/profile APIs with users/profile atomic creation and normalized email uniqueness. Only Laravel owns passwords; keep is_admin server-controlled and verified/active-account checks current.",
+        "Use auth:sanctum and Policies for private APIs. Browser writes use Laravel CSRF; enforce session-only mode for token management, admin and all private routes outside the approved PAT matrix. Do not infer authorization from tokenCan for first-party sessions.",
+        "Implement GET/POST /api/v1/account/api-tokens and DELETE /api/v1/account/api-tokens/{id}, using browser-session-only authentication, verification, active-account checks and current-user scoping. Mutations require CSRF and recent password confirmation. Add form validation and rate limits.",
+        "Allow only account:read, favourites:read and favourites:write; expose the mapping in OpenAPI. Validate token name and expiry choices 1/7/30 days (proposed configurable default 30). Return plaintext once on create with no-store, store SHA-256 hash, and list metadata only. Never cache a creation secret for idempotent replay.",
+        "Revoke tokens by deleting the current user’s selected row. Ordinary browser logout invalidates only its session. Successful password reset/change or account suspension invalidates all sessions and PATs and rotates remember credentials; explicitly integrate these hooks rather than assuming Fortify does everything.",
+        "Add audit events for token creation/revocation/security actions containing actor, token id, abilities, expiry and outcome only. Configure diagnostic/request redaction; schedule expired-token pruning. Real enforcement must reject expiry before pruning.",
+        "Use Laravel mail/verification/reset routes with allowlisted Next.js URLs. With Fortify views disabled, configure password.reset URL generation and verification redirect; never reflect arbitrary return URLs. Reset redemption requires a valid reset token, not an existing browser login."
       ],
       "frontend": [
-        "Implement Supabase signup/email verification/sign-in/recovery and editable profile with tenant/owner navigation. After sign-in, send the Supabase access JWT to the Laravel issuance endpoint; use the returned Sanctum bearer token for private Laravel calls.",
-        "Keep the two token purposes explicit; no tokens in logs, URLs, analytics or shared query caches. Use a documented secure client-token transport/storage approach without assuming unrelated frontend/API domains share session cookies. Handle token refresh/rotation once for safe reads; never blindly replay non-idempotent writes.",
-        "On logout revoke the current Laravel token, sign out of Supabase and clear account data. Show useful expired-session and permission-denied feedback; a normal user cannot access admin pages/actions."
+        "Implement separate Next.js register/login/email-verification/forgot-password/reset-password/profile screens. Initialize CSRF before browser auth, use cookies and X-XSRF-TOKEN, show 422 field errors and 401/403/419/429 feedback. Keep tenant/owner navigation and normal-user admin denial.",
+        "Add Settings > API tokens: name field, approved ability checkboxes, expiry selector, recent-password-confirmation form, one-time secret display/copy, and metadata list with revoke confirmation. Explain that logout does not revoke these tokens. Clear the one-time secret on leaving; do not persist it in localStorage or TanStack caches.",
+        "Handle session expiry by clearing/cancelling account-private queries; retain safe unsent form input and ask for explicit resubmission after recovery. Do not automatically replay contract/favourite/other writes after an ambiguous network failure.",
+        "Give a cookie-free curl/Postman example for /api/v1/me and favourites. Demonstrate read-only success, denied write, explicit revoke and subsequent 401; public listing access needs no token."
       ],
       "acceptance": [
-        "Signup/sign-in/verification/reset/profile actions work with one Supabase identity and one UUID profile; Laravel stores no second password.",
-        "A valid verified Supabase JWT obtains a finite-lived Sanctum token; expired, forged, wrong-project or ineligible identity JWTs fail issuance. A Supabase JWT alone cannot call private product endpoints.",
-        "Private APIs enforce auth:sanctum. Missing/invalid/expired/revoked Sanctum tokens return 401. A valid token missing the required ability returns 403.",
-        "Demonstrate scope enforcement using a read-only token that reads the allowed resource but cannot write. Client-forged admin scopes are rejected; current admin/ownership Policies remain effective even with an ability-bearing token.",
-        "A user with properties:manage cannot edit another owner\u2019s property; a tenant cannot view another tenancy or contact list. Public listing browsing remains available without a token.",
-        "Refresh rotates only the authenticated client session\u2019s Laravel token; the previous token stops working. Successful logout revokes that Laravel token. Other sessions follow the explicitly documented revocation policy.",
-        "Integration tests exercise actual issued Sanctum token headers and database records, not only actingAs helpers. Verify hashed storage, finite expiry, revocation, 401/403 and safe error responses.",
-        "Scramble documents Supabase identity verification at issuance separately from Sanctum bearer security on product routes. Submit real token-management and permission evidence for course criterion T4b; no Sanctum waiver is assumed."
+        "Every FR01/02/04/05/43/49/89/90 acceptance specification is implemented and tested within its scope; one Laravel user/profile identity can both rent and own.",
+        "Browser login regenerates its session and creates zero personal tokens. Protected browser forms succeed with matching CSRF and fail without/mismatched CSRF before data/audit/outbox mutation.",
+        "Verified active users can create a named finite-lived allowed-scope PAT after recent password confirmation, see plaintext once, list metadata and revoke their own token. Foreign token IDs, wildcard/admin scopes and PAT-only management requests are denied.",
+        "Cookie-free real bearer calls enforce the documented scope matrix, current account and resource Policies; expired/revoked tokens return 401, missing ability returns 403. Personal tokens cannot invoke admin or session-only routes.",
+        "Ordinary logout invalidates the current browser session, while separately created PATs remain valid until explicit revocation/expiry. Reset or suspension invalidates all sessions/tokens; the UI states the difference.",
+        "Localhost and deployed sibling-domain flows pass the configuration checks; 419 recovery does not silently duplicate writes. Tokens, hashes, cookies, CSRF values, passwords and reset links do not enter logs/Telescope/caches.",
+        "Scramble documents session/CSRF and bearer paths separately. Evidence demonstrates the teacher’s CSRF/server-validation and Sanctum token-management/permission criteria without requiring an automated browser suite."
       ],
       "tests": [
-        "Unit tests for identity-claim validation, allowed ability selection, expiry bounds and client token/session state.",
-        "API/PostgreSQL integration tests for verified identity issuance, hashed UUID-linked token storage, real auth:sanctum bearer requests, read-only versus write permissions, denied admin scopes and ownership/participant checks.",
-        "API tests for expired/revoked/rotated tokens and logout revocation; component tests for sign-in, refresh/permission errors, logout and account switching. Manual UI checks only; no required E2E suite."
+        "Unit tests for normalized registration, validation, permitted scopes/expiry, account checks and token metadata serialization; frontend component tests for login, 419 recovery, create/copy-once/revoke and account switching.",
+        "API/PostgreSQL tests for user/profile atomicity, real login session rotation/logout, valid/missing/mismatched CSRF, protected writes and role/resource denial. Explicitly disable the Laravel testing CSRF bypass in a dedicated harness; merely enabling middleware is insufficient.",
+        "Real PAT issuance and cookie-free bearer tests for hash storage, ability denial, expiry, revocation, foreign token IDs, session-only routes, password-reset/suspension revocation and redaction. Do not substitute Sanctum::actingAs for all token integration tests.",
+        "Manual screen and deployed-origin checks plus curl/Postman demonstration with both success and denied token operations; no mandatory E2E automation."
       ],
-      "boundaries": "NFR-02, NFR-03, NFR-04, NFR-06, NFR-07; T3b, T3c, T4b, T4a, T3g, T4d\nHien implements Sanctum issuance, auth:sanctum endpoint protection, ability rules and token lifecycle under this existing grouped issue. Khai installs/configures the package/model/storage/test setup in RNT-01. Supabase remains the identity/password provider. Other members protect their own private routes and write their authorization tests using these conventions. Sanctum is mandatory under the teacher\u2019s Task 4 rubric.",
+      "boundaries": "Hien owns frontend + backend + tests for the complete account/token feature. Khai supplies initial Fortify/Sanctum/schema/CORS/client/Telescope setup in RNT-01. Admin account restrictions must call the shared session/token revocation service. Each feature owner applies CSRF and Policies; approved PAT endpoints are limited to current-user and favourites APIs.",
       "body_file": "issues/RNT-03.md"
     },
     {
@@ -342,12 +352,12 @@
         "RNT-01",
         "RNT-03"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/99",
+      "github_url": null,
       "outcome": "Admins inspect the complete first listing package and approve or reject the exact submitted content safely.",
       "backend": [
-        "Implement protected admin queue/detail and approve/reject endpoints using Hien\u2019s authentication/Policies and Khai\u2019s revision helpers. Return listing, property, units, selected photos and policies as one package.",
+        "Implement protected admin queue/detail and approve/reject endpoints using Hien’s authentication/Policies and Khai’s revision helpers. Return listing, property, units, selected photos and policies as one package.",
         "Lock and check expected listing/content revisions; require rejection reason; atomically persist review/audit/outbox outcomes. Seed pending/approved/rejected/stale examples independently of the owner UI.",
         "Maintain the Resource/FormRequest/OpenAPI contract and pagination/filter rules. Khai reviews privilege and locking decisions; Tri owns the implementation and tests."
       ],
@@ -402,9 +412,9 @@
         "RNT-06",
         "RNT-07"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/104",
+      "github_url": null,
       "outcome": "An owner turns a pending rental request into a reserved tenancy, and both parties manage the same immutable contract version through confirmation, correction and lifecycle actions.",
       "backend": [
         "Create original tenancy, immutable tenancy_contracts row, explicit owner acknowledgement, finite blocked interval and ACCEPTED rental request in one transaction. Enforce minimum original term of 3 calendar months, positive rent and nonnegative deposit; snapshot agreed policies.",
@@ -457,9 +467,9 @@
         "RNT-03",
         "RNT-04"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/101",
+      "github_url": null,
       "outcome": "Visitors use the landing page to browse public rental listings, search by location and dates, filter results and view listing details and available units.",
       "backend": [
         "Implement public search/detail Resources with text/address, price/capacity/canonical amenity filters on the SAME eligible unit for the WHOLE interval. Compute eligible counts/rent ranges from READY operational state and blocking tenancy dates; bounded pagination/eager loading.",
@@ -517,9 +527,9 @@
         "RNT-03",
         "RNT-06"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/102",
+      "github_url": null,
       "outcome": "A tenant saves properties and submits a pending rental request; owners discuss offline and manage the rental-request list without premature acceptance.",
       "backend": [
         "Implement authenticated rental request submit/own list/withdraw and owner rental-request list/reject with contact snapshots, complete desired start/end, same-property preferred-unit scope, one pending tenant/listing request, reasons and audit.",
@@ -535,7 +545,7 @@
         "Duplicate submit, stale withdrawal/reject and foreign-user contact access are rejected consistently; owner discussion never requires clicking Accept.",
         "Heart state survives reload, one user/property relation exists under repeated/concurrent saves and intended DELETE is idempotent even when the target becomes hidden.",
         "Hidden/suspended/archived saved targets disclose no title/photo/address/moderation reason; date unavailability alone does not delete the save.",
-        "Out-of-order/network responses and account switches cannot show stale hearts or another user\u2019s private list.",
+        "Out-of-order/network responses and account switches cannot show stale hearts or another user’s private list.",
         "Request status and private count/list reconcile with server state; badge counts stored relations including placeholders as a documented proposed default."
       ],
       "tests": [
@@ -569,9 +579,9 @@
         "RNT-04",
         "RNT-06"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/103",
+      "github_url": null,
       "outcome": "Authenticated users report listings, and admins investigate and hide harmful content using reasoned, audited decisions.",
       "backend": [
         "Implement reporter submit/own outcomes, required category/reason, throttling and unique live report; reporter can see only sanitized own outcomes.",
@@ -595,7 +605,7 @@
         "PostgreSQL/API tests for privacy, rate limit, unique live report, stale decisions and owner-edit versus suspension race.",
         "API integration tests for report/investigate/suspend/restore and public visibility; manually check reporter/admin forms and status feedback."
       ],
-      "boundaries": "NFR-02, NFR-03, NFR-04, NFR-07; T3c, T4a, T3g, T4d\nTri owns both layers and writes all relevant tests; Khai reviews privilege and transaction rules. Do not split admin backend into another member\u2019s implementation issue.",
+      "boundaries": "NFR-02, NFR-03, NFR-04, NFR-07; T3c, T4a, T3g, T4d\nTri owns both layers and writes all relevant tests; Khai reviews privilege and transaction rules. Do not split admin backend into another member’s implementation issue.",
       "body_file": "issues/RNT-08.md"
     },
     {
@@ -622,9 +632,9 @@
         "RNT-05",
         "RNT-10"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/107",
+      "github_url": null,
       "outcome": "A tenancy continues through new immutable renewal segments; failed/expired negotiations release only the temporary reservation they own.",
       "backend": [
         "Implement one pending renewal request, tenant withdrawal/owner reasoned rejection, owner consecutive RENEWAL proposals and corrections; versions reference the same tenancy and exact basis contract.",
@@ -675,9 +685,9 @@
         "RNT-05",
         "RNT-08"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/106",
+      "github_url": null,
       "outcome": "Deliver private notifications through Laravel workers and delete stored photo files left by abandoned uploads or owner removals, only after the retention period and a final reference check.",
       "backend": [
         "Configure database-backed Laravel Queue, worker/scheduler startup and deployment/restart guidance; process transactional outbox with stable event/recipient keys, leases and bounded retries/backoff.",
@@ -694,7 +704,7 @@
         "Only the recipient can list/read notifications or open an authorized target; repeated read is idempotent.",
         "After the documented retention period, the job deletes an abandoned/unreferenced photo file; re-running is safe. A file still referenced, or referenced again before deletion, is preserved. Existing cover photos and contract/history records remain accessible.",
         "The scheduler and worker actually run in the chosen environment and have documented restart/failed-job recovery.",
-        "Notification list/read states and owner photo upload/removal states show loading/failure/retry correctly and do not expose another account\u2019s data."
+        "Notification list/read states and owner photo upload/removal states show loading/failure/retry correctly and do not expose another account’s data."
       ],
       "tests": [
         "Unit/component tests for event mapping, payload redaction, inbox/read states and links.",
@@ -727,21 +737,22 @@
         "RNT-07",
         "RNT-09"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/109",
+      "github_url": null,
       "outcome": "Aged rental requests are rejected only when no eligible full-period unit exists; cached discovery remains fresh and private.",
       "backend": [
         "Implement the >=15-day pending-rental request job using current full-interval availability across eligible alternatives, after reaping due holds under the common lock order. Preferred unit is soft; visibility is not proof of occupation.",
         "Implement public response caching/revalidation with fresh visibility checks and invalidation after publish/hide/archive/suspend/edit; keep private contacts/favourites/contracts in account-scoped private responses.",
-        "Measure/eager-load/index listing queries and bound pagination; record local query counts/plans and validate hosted timing separately without inventing latency budgets."
+        "Measure/eager-load/index listing queries and bound pagination; record local query counts/plans and validate hosted timing separately without inventing latency budgets.",
+        "Exclude session/CSRF/password-reset/API-token management and one-time token secrets from shared response caches; clear prior-account private browser data on session logout."
       ],
       "frontend": [
         "Show auto-rejection reason/status in tenant/owner rental-request lists and refresh availability/counts after relevant mutations.",
         "Implement responsive images, lazy noncritical resources, race-safe filter/search responses and account-private heart hydration with failure/retry states."
       ],
       "acceptance": [
-        "Age alone or another tenant\u2019s acceptance never rejects a pending rental request if an eligible alternate unit fits the whole desired interval.",
+        "Age alone or another tenant’s acceptance never rejects a pending rental request if an eligible alternate unit fits the whole desired interval.",
         "Partial availability, maintenance and real blocking reservations prevent false matches; hidden listing status alone cannot establish occupation.",
         "Ageing versus withdrawal/proposal/expiry races produce one valid audited outcome and retried jobs are idempotent.",
         "Hidden/suspended content is not served through a stale shared cache; owner restore does not bypass owner publication.",
@@ -780,14 +791,15 @@
         "RNT-03",
         "RNT-08"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/105",
+      "github_url": null,
       "outcome": "Developers/admins can diagnose real failures and receive critical, slow-query and server-resource alerts without exposing private data.",
       "backend": [
-        "Use Khai\u2019s RNT-01 Telescope setup to investigate errors, slow queries and failed jobs. Add structured correlation IDs across HTTP/jobs/audit and verify sensitive data remains filtered; do not duplicate package installation/configuration here.",
+        "Use Khai’s RNT-01 Telescope setup to investigate errors, slow queries and failed jobs. Add structured correlation IDs across HTTP/jobs/audit and verify sensitive data remains filtered; do not duplicate package installation/configuration here.",
         "Implement critical-error reporting and configurable deduplicated individual slow-query alerts; distinguish these from cumulative request DB-time warnings.",
-        "Configure CPU/memory/disk/network monitoring and threshold alerts for the actual app/worker host; document managed-provider visibility limits, worker health, fallback logging and actionable recovery guidance."
+        "Configure CPU/memory/disk/network monitoring and threshold alerts for the actual app/worker host; document managed-provider visibility limits, worker health, fallback logging and actionable recovery guidance.",
+        "Verify Telescope and logs redact session/CSRF cookies, X-XSRF-TOKEN, Authorization, passwords, reset links and one-time API-token responses; diagnostic access uses an approved session/admin gate if enabled nonlocally."
       ],
       "frontend": [
         "Implement consistent safe error pages/toasts/field feedback with correlation reference and appropriate retry/re-authentication actions.",
@@ -823,7 +835,9 @@
         "FR75",
         "FR81",
         "FR84",
-        "FR86"
+        "FR86",
+        "FR89",
+        "FR90"
       ],
       "nfrs": [
         "NFR-02",
@@ -836,15 +850,15 @@
         "RNT-10",
         "RNT-12"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/110",
+      "github_url": null,
       "outcome": "Agreement flows survive hostile/stale/concurrent input, and reviewed merges migrate/deploy the same tested revision safely.",
       "backend": [
         "Close observed security/integrity defects across original and renewal APIs using real participant, hash, lock, revision and replay rules; review private storage/download grants and public Data API exposure.",
-        "Verify Khai\u2019s RNT-01 CI/CD to test schema rebuild plus upgrade of the prior state; merged deployment uses environment secrets, direct DB connectivity preflight, one database concurrency group with cancel-in-progress=false and migrate --force before matching app/worker deployment.",
+        "Verify Khai’s RNT-01 CI/CD to test schema rebuild plus upgrade of the prior state; merged deployment uses environment secrets, direct DB connectivity preflight, one database concurrency group with cancel-in-progress=false and migrate --force before matching app/worker deployment.",
         "Document compatible additive/backfill/remove releases, failed-migration recovery and backup/restore rehearsal in a disposable environment; do not assume batch-wide rollback or auto-run destructive resets.",
-        "Verify private routes use auth:sanctum with required abilities and Policies; test actual bearer token expiry/revocation and rejection of the wrong token type. Do not accept Supabase JWTs directly on private product routes or treat JWT verification as replacing Sanctum."
+        "Verify private routes use Sanctum session or explicitly allowed PAT mode, current Policies and CSRF for browser mutations. Prove missing CSRF denial, session invalidation, token expiry/revocation and denial of PAT access to admin/session-only actions. Review no provider JWT bridge remains."
       ],
       "frontend": [
         "Check account/session recovery, stale contract forms and participant-only contract links; fix confirmed errors with frontend component and API regression tests.",
@@ -856,12 +870,14 @@
         "Two hosted deployment attempts cannot migrate concurrently or cancel a migration in progress.",
         "Hosted deployment runs only reviewed migrations and matching code; no migrate:fresh/reset/demo reseed occurs.",
         "A fresh setup and previous-schema upgrade both pass; backup/restore and migration failure recovery are documented with actual rehearsal evidence.",
-        "Security fixes include backend and frontend regression tests and updated API documentation and response types."
+        "Security fixes include backend and frontend regression tests and updated API documentation and response types.",
+        "A missing/mismatched CSRF request cannot mutate domain data; revoked session/PAT replay fails after reset/suspension; real PAT read/write/admin denial evidence is recorded."
       ],
       "tests": [
         "Feature unit tests for any changed authorization/state logic plus frontend recovery components.",
         "Real PostgreSQL concurrency and upgrade tests, API negative tests and manual checks of owner/tenant contract screens.",
-        "CI/deployment failure rehearsal, connection preflight and disposable restore evidence."
+        "CI/deployment failure rehearsal, connection preflight and disposable restore evidence.",
+        "Integrated CSRF/cookie/CORS tests with bypass disabled; real token scope/revocation and password-reset/suspension invalidation tests, plus manual deployed-origin verification."
       ],
       "boundaries": "NFR-02, NFR-03, NFR-06, NFR-07; T1d, T2a, T3g, T4d, T4b\nDo not postpone RNT-01/05/09 tests to this phase. This issue fixes integrated-release defects and proves the release process, rather than collecting untested code.",
       "body_file": "issues/RNT-13.md"
@@ -906,9 +922,9 @@
         "RNT-06",
         "RNT-10"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/108",
+      "github_url": null,
       "outcome": "Verify owner property, unit, photo and listing actions; fix reproducible errors; remove repeated database lookups and avoid downloading full-resolution photos for small cards.",
       "backend": [
         "Inspect query counts/plans for owner property and unit/listing lists on a fixed seeded dataset. Replace repeated per-row relationship queries with eager loading, paginate collection endpoints, and add an index only where a query plan demonstrates the need. Record before/after counts and the same test inputs.",
@@ -970,9 +986,9 @@
         "RNT-09",
         "RNT-11"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/112",
+      "github_url": null,
       "outcome": "Discovery, favourites and rental requests remain coherent through full rental/renewal flows, and explicit API contracts plus both coverage reports are trustworthy.",
       "backend": [
         "Fix discovered search/request/favourite pagination, privacy, availability and serialization defects; verify actual Resource responses against exported OpenAPI, especially conditional fields/JSONB/decimal/date/nullability.",
@@ -995,9 +1011,10 @@
         "Focused unit/component tests for discovered search/cache/type/UI defects.",
         "API response, authorization and PostgreSQL integration tests for tenant actions; use a short manual UI checklist for navigation across screens.",
         "Separate measured frontend/business and backend API coverage plus a deliberately failing response-contract test.",
-        "Component/API tests for combined location/date/amenity search and location URL persistence; manually verify reload/back navigation."
+        "Component/API tests for combined location/date/amenity search and location URL persistence; manually verify reload/back navigation.",
+        "Component/API regression checks cover token-settings one-time display and revoke, session account switching and 401/419 form recovery without automatic duplicate writes."
       ],
-      "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3e, T3g, T4d, T6c\nCoverage is a team result, not permission to transfer everyone\u2019s testing to Hien. Full-stack defects remain the responsibility of their owning feature developer.",
+      "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3e, T3g, T4d, T6c\nCoverage is a team result, not permission to transfer everyone’s testing to Hien. Full-stack defects remain the responsibility of their owning feature developer.",
       "body_file": "issues/RNT-15.md"
     },
     {
@@ -1033,26 +1050,27 @@
         "RNT-14",
         "RNT-15"
       ],
-      "publication": "Published",
+      "publication": "Draft",
       "delivery_status": "Planned",
-      "github_url": "https://github.com/ndrhmdk/rentOS/issues/111",
+      "github_url": null,
       "outcome": "Admin workflows are secure and accessible, and the marker/team can reproduce the application and inspect genuine implementation evidence.",
       "backend": [
         "Fix discovered moderation/report validation, authorization, stale-decision and privacy defects; keep reviewed transitions/audit consistent with owner/public eligibility.",
         "Finish root README covering actual tools/setup, env names, schema/migration/seed/worker/scheduler, ERD, API types/docs, tests, monitoring and lecturer evidence.",
-        "Collect evidence links from all four members and verify each member\u2019s own five sprint self-reports. Document deadline/penalty policy rather than creating fake contribution records."
+        "Collect evidence links from all four members and verify each member’s own five sprint self-reports. Document deadline/penalty policy rather than creating fake contribution records."
       ],
       "frontend": [
         "Repair admin queue/detail/forms across keyboard/mobile and server failure states, integrating actual endpoints rather than fixture-only demos.",
-        "Capture actual sanitized screens and assemble <=10-minute >=720p MP4 demo with each member\u2019s real feature/test contributions and accessible public/unlisted link."
+        "Capture actual sanitized screens and assemble <=10-minute >=720p MP4 demo with each member’s real feature/test contributions and accessible public/unlisted link."
       ],
       "acceptance": [
         "Admin UI and direct API calls pass normal-user denial, stale revision, reason validation and reporter privacy regressions.",
         "Keyboard focus/labels, loading/empty/error/retry states and pagination work on implemented review/report screens.",
         "A clean-machine setup rehearsal follows the README successfully, with resolving ERD/docs/type/test links and no secret values.",
         "The video meets duration/quality/access rules and shows implemented workflows plus real tests/alerts/performance evidence.",
-        "Each of four members provides five truthful sprint reports; D checks links/completeness but does not write or claim others\u2019 contributions.",
-        "Submission and known limitations match actual code/test/evidence state, including any unresolved printed-rubric substitutions."
+        "Each of four members provides five truthful sprint reports; D checks links/completeness but does not write or claim others’ contributions.",
+        "Submission and known limitations match actual code/test/evidence state, including any unresolved printed-rubric substitutions.",
+        "Final demonstration includes a CSRF-protected browser form (valid and rejected submission), token settings create/revoke and cookie-free scoped-token allowed/denied/401 examples; all claims link to actual implementation evidence."
       ],
       "tests": [
         "Focused unit/component tests for final admin/accessibility defects.",
@@ -2369,6 +2387,61 @@
         "FR88-AC10"
       ],
       "scope_rule": false
+    },
+    "FR89": {
+      "priority": "P0 Must",
+      "module": "M01-identity-access",
+      "primary_issues": [
+        "RNT-03"
+      ],
+      "verification_issues": [
+        "RNT-13"
+      ],
+      "case_ids": [
+        "FR89-AC01",
+        "FR89-AC02",
+        "FR89-AC03",
+        "FR89-AC04",
+        "FR89-AC05",
+        "FR89-AC06",
+        "FR89-AC07",
+        "FR89-AC08"
+      ],
+      "scope_rule": false
+    },
+    "FR90": {
+      "priority": "P0 Must",
+      "module": "M01-identity-access",
+      "primary_issues": [
+        "RNT-03"
+      ],
+      "verification_issues": [
+        "RNT-13"
+      ],
+      "case_ids": [
+        "FR90-AC01",
+        "FR90-AC02",
+        "FR90-AC03",
+        "FR90-AC04",
+        "FR90-AC05",
+        "FR90-AC06"
+      ],
+      "scope_rule": false
     }
+  },
+  "authentication": {
+    "identity": "Laravel Fortify",
+    "browser": "Sanctum SPA session + CSRF",
+    "non_browser": "Explicit user-created Sanctum PAT",
+    "supabase_auth_used": false,
+    "token_abilities": [
+      "account:read",
+      "favourites:read",
+      "favourites:write"
+    ],
+    "token_management": "browser session only; recent password confirmation + CSRF for mutations",
+    "primary_issue": "RNT-03",
+    "setup_issue": "RNT-01",
+    "shared_parent_domain_required": true
   }
 }

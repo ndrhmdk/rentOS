@@ -16,3 +16,7 @@ Primary implementation references: https://supabase.com/docs/guides/database/con
 
 
 Primary implementation references: https://supabase.com/docs/guides/database/connecting-to-postgres and https://supabase.com/docs/guides/getting-started/quickstarts/laravel. The private-schema bootstrap/direct-runner policy is this project’s selected migration workflow; provider connection details and installed Laravel configuration must be verified.
+
+## Authentication deployment prerequisite
+
+Use controlled sibling subdomains with HTTPS and exact credentialed CORS/stateful-host settings, or a deliberately tested same-origin proxy. Verify session/CSRF cookies, login/logout/reset links and no private caching. Configure Laravel mail, database sessions and expired-token/session pruning; Supabase Auth is not used. Follow [authentication setup](../07-architecture/authentication-setup.md).

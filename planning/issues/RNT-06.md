@@ -8,26 +8,26 @@ Visitors use the landing page to browse public rental listings, search by locati
 
 ## Ownership and order
 
-- Phase 2: Listing browsing, rental requests, contracts and reports
+- Phase 2.
 - Implementation: **Khai** (frontend + backend + own tests).
 - Reviewer: **Kien**.
-- Prerequisites for final integration: [RNT-02](RNT-02.md) (GitHub #100), [RNT-03](RNT-03.md) (GitHub #98), [RNT-04](RNT-04.md) (GitHub #99).
-- Publication: Draft; delivery: Planned; actual GitHub URL: https://github.com/ndrhmdk/rentOS/issues/101.
+- Prerequisites: [RNT-02](RNT-02.md), [RNT-03](RNT-03.md), [RNT-04](RNT-04.md).
+- Publication: Draft; actual GitHub issue URL not recorded.
 
-A prerequisite gates closure/integration, not all early work: use agreed contracts, factories and local fixtures after the shared schema/auth checkpoint. This is one grouped issue; internal checklists/multiple PRs do not require extra micro-issues.
+Dependencies gate final integration; fixtures and agreed contracts allow earlier independent work. This remains one grouped issue with internal checklists and multiple PRs if useful.
 
 ## Functional requirements
 
 - **FR19 — Search listings by location and date-based availability** (P0 Must): Search public eligible listings by text/address and paginated filters. Query units whose full desired interval has no blocking tenancy overlap. Without dates use today through each unit minimum rental term; label this default. Never use property RENTED or a stored availability count. Include a location input searching stored property address, ward, district and city. Trim/collapse whitespace and match case-insensitively while preserving Vietnamese text. Combine location AND other filters; dates/unit filters must match one eligible unit throughout the requested interval. Preserve filters in URL/pagination; clear location independently. Maps/GPS/radius/geocoding remain deferred.
-  - Full cases: [FR19 (6 cases)](../../docs/06-acceptance/test-scenarios.md#fr19)
+  - [All 6 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr19)
 - **FR20 — Filter eligible units for the full requested interval** (P0 Must): Support price, area, type, amenities, occupants and controlled policy filters on the same available unit. Start/end dates are both required when filtering dates; inclusive end is converted to [start,end+1day). Amenity filters use canonical catalog keys with enabled=true on eligible units/property scope; distinguish shared laundry from an in-unit washing machine. Custom descriptions never automatically match standard filters (FR87).
-  - Full cases: [FR20 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr20)
-- **FR21 — Display listing details and eligible unit cards** (P0 Must): Show shared photos, advertised rules, unit photos/specifications/prices and date-qualified availability. Owner contact rental request form has contact name/phone/message and desired date range. Never display agreement documents or other prospects contact details. Display canonical localized amenity labels with owner details, separating shared property facilities, private unit features and additional custom text (FR87).
-  - Full cases: [FR21 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr21)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr20)
+- **FR21 — Display listing details and eligible unit cards** (P0 Must): Show shared gallery, advertised rules, unit photos/specifications/prices and date-qualified availability. Owner contact enquiry form has contact name/phone/message and desired date range. Never display agreement documents or other prospects contact details. Display canonical localized amenity labels with owner details, separating shared property facilities, private unit features and additional custom text (FR87).
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr21)
 - **FR40 — Public listing REST resources** (P0 Must): Expose GET listing collection/detail using one public eligibility service; include safe unit/media/policy DTOs, pagination and errors.
-  - Full cases: [FR40 (3 cases)](../../docs/06-acceptance/test-scenarios.md#fr40)
+  - [All 3 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr40)
 - **FR77 — Calculate availability counts and rent ranges** (P0 Must): For each selected interval, eligible unit has complete required listing data, is READY, marketed, nonarchived, minimum-duration compliant and has no overlap with blocking tenancy envelope. Pending-confirmation holds count as blocked until explicit expiry release. Count and rent range derive from same qualifying query. Without dates use each unit minimum term from today.
-  - Full cases: [FR77 (4 cases)](../../docs/06-acceptance/test-scenarios.md#fr77)
+  - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr77)
 
 ## Backend deliverables
 
@@ -61,16 +61,18 @@ A prerequisite gates closure/integration, not all early work: use agreed contrac
 
 ## NFRs, boundaries and coordination
 
+NFR-01, NFR-02, NFR-03, NFR-04, NFR-07
+
 NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3e, T4a, T3g, T4d
 Khai owns the complete browsing frontend/API/tests. Kien owns owner listing create/edit/submit/publish actions in RNT-02; Tri owns admin approval in RNT-04. Location means stored address/ward/district/city search; maps/GPS/radius/geocoding stay deferred. Browsing creates no reservation. RNT-11 improves search performance and applies the 15-day rule.
 
 ## Definition of done
 
-- [ ] Implement the related frontend, backend and meaningful unit/component/API integration tests under this issue; test PostgreSQL constraints/concurrency on actual PostgreSQL.
-- [ ] Private product routes require auth:sanctum, approved abilities and resource Policies. Test actual bearer expiry/revocation/permission behavior where relevant.
-- [ ] Update FormRequests/Resources/API docs and explicit frontend response types with contract changes. Future TypeScript generation is documentation only.
-- [ ] Apply shared transaction/revision/idempotency/audit rules to the affected actions. Schema changes are new reviewed migrations tested locally; never reset/reseed a hosted environment.
-- [ ] Use a short manual checklist for changed screens; automated browser/E2E suites are not required.
-- [ ] Attach actual test commands/results and relevant screenshots/provider/query/alert evidence; record personal sprint contribution. A document or fixture screenshot is not proof of implemented behavior.
+- [ ] Implement related frontend, backend and meaningful unit/component/API/PostgreSQL integration tests; all feature owners test their own changes.
+- [ ] Private routes use auth:sanctum and current account/resource Policies. Browser writes require CSRF; approved PAT endpoints additionally enforce abilities. Session-only endpoints reject PAT-only callers.
+- [ ] Update FormRequests/Resources/OpenAPI and explicit frontend types. Future TypeScript generation remains documentation only.
+- [ ] Apply transaction/revision/idempotency/audit rules to domain actions. Never store token secrets in replay records. Use reviewed migrations locally; never reset/reseed a hosted environment.
+- [ ] Use a short manual changed-screen checklist; no required automated browser/E2E suite.
+- [ ] Attach actual test commands/results and relevant evidence; specifications do not prove implementation.
 
-RNT-06 is a planning key, not a GitHub issue number. Deleted issues are not reused.
+RNT-06 is a planning key, not a GitHub number. Deleted issues are not reused.
