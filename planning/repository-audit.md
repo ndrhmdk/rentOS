@@ -1,51 +1,23 @@
-# Repository audit
+# Repository audit — source implementation unverified
 
-Audit date: 20 October 2026. Repository `ndrhmdk/rentOS` at `https://github.com/ndrhmdk/rentOS`. Default branch `develop`. Local branch `project_guidance_setup` tracking `origin/project_guidance_setup` at commit `08f2177` (`feat: add design guidance`). Earlier commits on the branch are `44c127f` and `a0d2ac5`, both message `initial commit`.
+## Evidence available
 
-## What was checked
-- Root `README.md`, `backend/README.md`, `backend/AGENTS.md`, `backend/composer.json`, `frontend/package.json`, `backend/routes/api.php`, `backend/phpunit.xml`, and migrations under `backend/database/migrations`.
-- `docs/README.md`, `docs/08-project/*` except two linked files that are not on disk, the acceptance catalogue and traceability matrix, API design, data model, data dictionary, business rules, state transitions, security design, and the module PRDs needed for contracts.
-- `design/` brand and UI notes. `.github/PULL_REQUEST_TEMPLATE.md`. No `.github/workflows` file.
-- `gh auth status` as `DangCongKhai`. `gh repo view` for `ndrhmdk/rentOS`. Permissions from the API: pull, push, and triage are true; admin and maintain are false. Issues are enabled. Open and closed issue lists were empty. Open and closed pull requests were empty. Collaborators: `ndrhmdk` admin, `DangCongKhai` write. Labels are the GitHub defaults. Milestones: none.
-- Working tree is dirty: `docs/` and root `frontend/` are untracked, `CONTRIBUTING.md` is deleted, and the committed `backend/frontend` Vite trees are deleted locally and not committed.
+The current functional workbook, live task Sheet, previous domain/course specification and the user’s two folder-structure screenshots were inspected to prepare this package. The 16 planning issues were reconstructed from the current Sheet; deleted GitHub issues were not used. No GitHub publishing or repository source changes were performed.
 
-## Implementation status
-| Area | Status | Evidence |
-| --- | --- | --- |
-| Product domain | Missing | No property, listing, tenancy, report, or favourite models or routes |
-| API | Partial skeleton | `GET /api/health` only in `backend/routes/api.php` |
-| Identity | Missing, with a conflicting skeleton | Integer `users` table and `laravel/sanctum` are installed. No JWT guard. No `user_profiles` |
-| Database | Framework only | Users, cache, jobs, personal access tokens. `phpunit.xml` sets `DB_CONNECTION=sqlite` |
-| Frontend | Missing product UI | Untracked Vite React app at `frontend/`. Spec requires Next.js. Nested Vite apps exist in git HEAD under `backend/frontend` |
-| Tests | Skeleton only | `backend/tests/Unit/ExampleTest.php` and `backend/tests/Feature/ExampleTest.php` |
-| CI | Missing | No workflow files |
-| Favourites | Missing | Specified as FR88. No `favourite_properties` code |
-| Docs | Present locally, unpublished | `docs/` is untracked. `docs/08-project/source-register.md` and `local-ai-issue-prompt.md` are linked from `docs/08-project/README.md` and are not on disk |
-| GitHub issues | None | Empty issue list before this backlog |
+## Evidence not available
 
-Nothing in the application tree is classified as implemented and verified for a product FR.
+No current repository checkout, branch/commit, file tree, lockfiles, route list, migration history, test output, CI run, deployed URL, issue list or collaborator handles were inspected. Therefore no code feature is marked implemented/missing solely from these docs. The screenshot of a planning folder shows a desired structure, not proof that any listed code or issue exists.
 
-## Stack decisions
-The spec and course note require Next.js, Laravel, and Supabase Postgres, Auth, and Storage. The root README still says React. Sanctum is installed and must not become a second identity store. Printed rubric rows T3a (Blade/Livewire) and T4b (Sanctum) have no lecturer file in the repo. CSRF demonstration for a bearer client is also unresolved. Those are RENT-001 and RENT-002. Other work is not blocked.
+## Required local audit before coding/publication
 
-## Course rows
-Every printed row in `docs/08-project/course-compliance.md` is required. Product P2 is not a reason to drop Telescope, coverage, or the demo. T1c is this backlog. The other rows have implementation issues. Five sprint weeks are the teacher's template. Remaining capacity and real sprint dates were not found.
+- Inspect actual AGENTS.md and existing docs/planning before merging this package; preserve compatible implementation and merge the root README links.
+- Verify git remotes/branch state, actual Next.js/Laravel versions, package managers, monorepo paths and env templates. This project uses Laravel; do not import the separate Prisma/full-Next.js design.
+- Inspect migrations/private-schema bootstrap, provider-managed auth/storage references, favourite uniqueness, UUID tokenable links, overlap/immutable/write-once/deferred constraints and actual seeds.
+- Inspect real Sanctum issuance/auth:sanctum/abilities/Policies, token lifecycle and privacy; Scramble output; Telescope configuration/access/filtering/pruning; workers/scheduler and monitoring/alert delivery.
+- Inspect implemented frontend and actual Resources/contracts. Check TanStack Query versus server-cache boundaries and account switching. Type generation remains future documentation only.
+- Run documented unit/component/API/PostgreSQL checks and capture actual coverage, query/image measurements and operational evidence. Do not install E2E automation solely for this plan.
+- Record audit findings with real file paths/commits/test commands and map only remaining work into these existing coherent issues. Preserve actual statuses/URLs if already published; never fabricate or restore deleted issue IDs.
 
-## Intentionally not scheduled as build work
-| ID | Priority | Reason |
-| --- | --- | --- |
-| FR03 | P2 | Google sign-in |
-| FR16 | P2 | Dedicated changes-requested state |
-| FR22, FR23 | P2 | Interactive map |
-| FR24 | P2 | Geocoding |
-| FR36, FR37, FR79 | P2 | Property reviews and review moderation |
-| FR76 | P3 | Excluded MVP scope record, not a feature to build |
+## Audit status
 
-Retired numbers FR53, FR54, FR58, and FR62–FR65 are not reused.
-
-## Unknowns
-- Which person is Member A, B, C, or D. Issues stay unassigned.
-- How many days remain, and each person's capacity.
-- Which machine will run the worker and the CPU, memory, disk, and network collector.
-- The lecturer's written answer on T3a, T4b, and the CSRF demo.
-- Whether the 48 hour hold and the favourite placeholder rules stay at the documented defaults. The issues implement those defaults and mark them configurable.
+Planning/document consistency: validated in this package. Repository implementation audit: not performed. Live deployment and application acceptance: not verified.

@@ -5,7 +5,7 @@ Actors: Owner
 Requirements: FR07 FR08
 
 ## Preconditions and trigger
-Authenticated owner creates physical inventory, not a public advertisement. Trigger is the named user action or due system evaluation.
+Authenticated owner creates physical properties and units, not a public advertisement. Trigger is the named user action or due system evaluation.
 
 ## Main flow
 1. Enter property fields and WHOLE_SPACE/SEPARATE_UNITS.
@@ -22,3 +22,8 @@ Property exists without property approval or public listing.
 
 ## Consistency boundary
 Use current revisions/Policies and the shared actions; state-changing flows capture audit/outbox/replay where required. A read/favourite is never an allocation authority.
+
+
+## Delivery and evidence
+
+See the [traceability matrix](../06-acceptance/traceability-matrix.md) for responsible issues and all acceptance specifications. Private write actions use Sanctum abilities plus Policies; apply audit/idempotency/locking only where the domain action requires them. Manual screen checks complement unit/component/API integration tests; no required E2E suite.

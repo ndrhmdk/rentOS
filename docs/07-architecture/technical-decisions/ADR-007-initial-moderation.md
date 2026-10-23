@@ -1,7 +1,11 @@
-# One initial package review and later audit/reporting
+# Initial listing approval and later reporting
 
-Status: specified design, implementation unverified.
+Status: agreed project design; implementation unverified.
 
-Decision: Capture exact first-review revisions. Keep initial approval after ordinary valid edits; audit changes. Admin suspension independent and owner cannot clear it. No property/photo review states.
+## Decision and reason
 
-Consequences: tests and issue acceptance must reference this behavior; record any approved change here and update affected PRDs/workflows/data/API/acceptance together.
+Approve only first listing package with current content revisions. Properties/photos have no moderation state; later valid edits are direct and audited. Reports/admin inspection drive independent suspension; edits cannot clear it. Owner hiding and admin suspension remain independent; restore does not automatically republish owner-hidden content.
+
+## Consequences and validation
+
+Apply the owning module requirements and acceptance scenarios; update the related API/data/workflow/issue documents together if the decision changes. Record actual implementation tests and evidence rather than treating this ADR as proof of working code.

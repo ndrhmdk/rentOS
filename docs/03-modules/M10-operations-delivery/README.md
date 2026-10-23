@@ -1,10 +1,11 @@
-# M10 Engineering operations and course delivery
- Primary owner: Member-A. Required reviewer: Member-B. This is a proposed allocation, not verified GitHub assignment.
+# M10-operations-delivery: Shared setup, API docs, monitoring, tests and release
 
- Git workflow, CI, migrations/seeds, Scramble, unit/integration coverage, logging/alerts, server metrics, resource loading, cache and demo/report evidence.
+Khai owns the complete initial engineering setup in RNT-01, including Sanctum, Scramble and Telescope. Each owner implements and tests their feature frontend/backend.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: Course-required work cannot be dropped just because an earlier product FR had P1 priority.
+Primary contributors: Khai, Tri. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: No assumed deployment provider, paid tier, installed versions or unapproved stack substitution.
+- [RNT-01](../../../planning/issues/RNT-01.md) — Khai
+- [RNT-12](../../../planning/issues/RNT-12.md) — Tri
+- [RNT-16](../../../planning/issues/RNT-16.md) — Tri

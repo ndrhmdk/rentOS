@@ -1,4 +1,5 @@
 # Problem statement
-Prospects need consistent property/unit information and period-specific availability before calling owners. Owners need to distinguish physical inventory, advertisement content, pending enquiries, temporary reservations and mutually confirmed agreements. A mutable single lease record or a global OCCUPIED flag loses these distinctions and can misrepresent future availability.
 
-The project solves these workflows for a course-sized MVP. It does not validate property ownership documents, adjudicate legal disputes or prove a document's legal signature.
+Rental advertisements, unit availability and negotiated agreements can disagree when owners manage multiple spaces and dates. A manual “rented” flag cannot express future or adjacent tenancies. Discussion can be mistaken for acceptance, and overwriting a contract loses the terms each person actually approved.
+
+rentOS must provide clear pending/request/proposal/confirmation states, date-qualified availability, immutable agreement history and controlled public visibility without imposing repeated property/photo approval. The application records participant acknowledgement; it does not establish legal ownership or operate a verified e-signature/payment platform.

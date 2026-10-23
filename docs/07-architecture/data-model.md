@@ -1,29 +1,35 @@
-# Data model and database enforcement
-Read [dictionary](data-dictionary.md) and [full Mermaid source](database-schema.mmd). All domain primary/foreign keys are UUIDs. `auth_users` denotes managed auth.users only; framework queue/cache and provider internals are not this ERD's complete migrations. property_reviews remains P2 deferred. Do not create contract_versions/contract_confirmations, separate image tables, amenity catalog tables or policy join tables.
+# Data model and database-enforced integrity
 
-## Required constraints
-- Normalized unit label unique per property; one current nonarchived listing per property.
-- One PENDING rental enquiry per tenant/listing; one PENDING renewal request per tenancy; one tenancy per accepted enquiry.
-- GiST EXCLUDE on same unit and intersecting finite blocked dates for PENDING_CONFIRMATION/CONFIRMED/ACTIVE. Convert inclusive end to exclusive end+1day. Do not keep old global UNIQUE(unit_id) allocated rule. No time-dependent index predicate.
-- Contract version_number unique per tenancy; predecessor/basis/pending/latest pointers reference the same tenancy through composite FKs and consistency triggers.
-- Submitted contract terms/hash/object immutable; only authorized write-once confirmation metadata changes permitted. Owner acknowledged explicitly at insert; tenant confirms OR rejects exact current row/hash before deadline, never both. No blanket trigger that prevents the legitimate first tenant acknowledgement.
-- Renewal request may link many unconfirmed corrections; only one mutually confirmed fulfillment through locked action/deferred invariant. Do not UNIQUE the versions' renewal_request_id.
-- Scope consistency between property, unit media, preferred unit, cover and tenancy/request tenant. Deferred commit validation for accepted links, confirmations and projected ranges.
-- Append-only safe audit log; transactional outbox and replay identity uniqueness; one live report per reporter/listing.
+Read [all fields](data-dictionary.md) and [Mermaid relationships](database-schema.mmd). The diagram is not an executable migration or proof that a constraint exists. PostgreSQL migrations must implement the rules below.
 
-## Favourite extension
-```sql
-CREATE TABLE favourite_properties (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL REFERENCES user_profiles(id),
-    property_id uuid NOT NULL REFERENCES properties(id),
-    created_at timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT favourite_properties_user_property_unique UNIQUE (user_id, property_id)
-);
-CREATE INDEX favourite_properties_user_pagination
-    ON favourite_properties(user_id, created_at DESC, id DESC);
-```
-Use migrations/namespaces matching real repo schema. Authenticated actor is derived server-side. Save/remove is synchronous and idempotent. Account/property deletion policy follows shared privacy/retention policy; normal archival retains bookmarks with unavailable placeholders. Do not introduce soft-deletion complexity to this simple join by default.
+| Rule | Domain | Constraint/action | Implementation |
+| --- | --- | --- | --- |
+| K01 | Identity/authorization | PK profile.id→auth.users.id; is_admin server-only | Verify provider JWT at identity-to-token issuance only. Private product APIs require auth:sanctum, token abilities and ownership/participant/admin Policies. App/token tables are not directly exposed to frontend Data API access. |
+| K02 | Unit labels | UNIQUE(property_id,lower(btrim(label))) | One automatic whole-space unit; referenced units archived rather than destroyed. |
+| K03 | Listings | UNIQUE property_id WHERE archived_at IS NULL | Initial review only; submitted snapshot revision checked under property lock. |
+| K04 | Pending rental requests | UNIQUE(tenant_id,listing_id) WHERE status=PENDING | ACCEPTED request has exactly one tenancy by deferred consistency trigger. |
+| K05 | Unit periods | GiST EXCLUDE unit_id WITH =, daterange(blocked_start_date,blocked_end_date+1, [)) WITH && | Predicate status in PENDING_CONFIRMATION/CONFIRMED/ACTIVE; CHECK finite nonnull ordered blocking endpoints. |
+| K06 | Confirmed/pending projections | Composite FK (id,pending_contract_id)→tenancy_contracts(tenancy_id,id) | Same for latest_confirmed pointer; confirmed/blocked span reflects exact approved segments; deferred trigger. |
+| K07 | Version uniqueness | UNIQUE(tenancy_id,version_number); UNIQUE(tenancy_id,id) | Self predecessor/basis composite FK in same tenancy; no confirmed amendment MVP. |
+| K08 | Append-only agreement records | Trigger blocks agreement term/document changes and deletion; permits only authorized write-once confirmation metadata | Owner acknowledgement set at insertion; tenant confirmation/rejection null-to-value once; existing decisions never rewritten. Private object path/hash immutable. |
+| K09 | Embedded contract confirmations | tenant_confirmed_at and tenant_rejected_at mutually exclusive; owner_confirmed_at required | Actor must match tenancy participant; exact current contract/hash/deadline checked under tenancy lock. Write-once updates, rejection reason required. No confirmation table. |
+| K10 | Renewal requests | UNIQUE(tenancy_id) WHERE status=PENDING | Many proposed versions can share renewal_request_id; do NOT make that FK unique. One confirmed fulfillment enforced by locked action+deferred trigger. |
+| K11 | Renewal dates | new segment.start_date=confirmed_end_date+1 | Only consecutive fixed periods. Expand envelope through pending end before asking tenant to confirm; GiST guards future conflicts. |
+| K12 | Lock order | property→unit UUID order→request/tenancy→renewal | All properties and units-changing actions including cron/bulk/status changes participate; bounded deadlock retries. |
+| K13 | Deadlines | Compare server now to confirmation_expires_at under tenancy lock | Exclusion predicate never uses time. Stale expiry jobs recheck exact version/deadline. |
+| K14 | Reports | UNIQUE(reporter_id,listing_id) WHERE status in OPEN/REVIEWING | No automatic takedown from report count alone; admin suspension independently audited. |
+| K15 | Media scope | Composite FK (property_id,unit_id)→units(property_id,id) | Same-property nondeleted selected shared cover validated through deferred trigger/action; no review/replacement chain. |
+| K16 | Atomic events/replay | UNIQUE(actor_id,action,client_operation_id); UNIQUE inbox recipient/event_key | Domain+audit+outbox+operation outcome commit together; request hash mismatch409; notifications after commit. |
+| K17 | Temporal terms | Contract values valid; start/end finite; end>=start; rent>0; deposit>=0 | No overlap between mutually confirmed segments in same tenancy; correction versions may overlap historical unconfirmed versions. |
+| K18 | Commit invariants | Deferred trigger validates accepted links, mutual confirmations and span projections | Direct SQL cannot commit accepted request without tenancy, fulfilled renewal without mutual version, or inconsistent blocked envelope. |
+| K19 | Amenity JSONB schema and scope | CHECK root object/schema_version/standard object/custom array; Laravel validates catalog keys, allowed scope, enabled boolean, details/custom string limits. Missing key means not advertised. | Default {"schema_version":1,"standard":{},"custom":[]}. Revision-checked saves and common property content lock; audit changes. API rejects unknown standard keys/owner_label. Catalog aliases are explicit; custom labels never auto-create shared keys. Optional GIN indexing only for actual query workload. |
+| K20 | Sanctum token protection | UNIQUE(token hash); UUID-compatible tokenable_id; finite expires_at; trusted profile morph type | Store hash only. auth:sanctum plus server-approved abilities and resource Policies; revoke on successful logout/rotation. Test actual bearer requests, 401/403 and expired/revoked tokens. |
+| K21 | Private favourites | PRIMARY KEY/UNIQUE(user_id,property_id); both UUID FKs | PUT intended-state save idempotent; DELETE idempotent including hidden targets. Private list/count; unavailable placeholders reveal no hidden details; favourites reserve no unit. |
 
-## JSONB defaults
-Amenities default to `{"schema_version":1,"standard":{},"custom":[]}`. Validate root schema, catalog scope/enabled/details/custom limits in Laravel. Policies retain property defaults/shared_rules and unit overrides/additional_rules. Keep numeric rent/deposit/duration/occupants typed. Canonical stable keys make JSONB bounded descriptive attributes compatible with a relational core; document this deliberate normalization exception rather than claiming JSONB itself is relational normalization.
+## Contract and interval semantics
+
+Inclusive user DATE endpoints are compared as `[start, end+1 day)`; adjacent bookings are permitted. The original minimum term is three calendar months, not a fixed 90-day guess. Tenancies carry confirmed and blocked span projections. A pending original blocks only its proposed span; a pending renewal extends the blocking envelope without changing the current agreed terms. Action paths and deferred checks keep those projections consistent with the exact immutable contract rows.
+
+`personal_access_tokens.tokenable_id` is a UUID morph association to the profile model. It is not automatically a conventional PostgreSQL FK just because an ERD draws a link. Constrain the allowed model/morph type and explicitly enforce profile/token integrity/deletion behavior. Store hashes, finite expiry and approved abilities; do not expose token records through Data API grants.
+
+Supabase auth/storage remain provider-managed. Bootstrap the private application schema before Laravel creates migration history. No independent Prisma schema/migration owner belongs in this Laravel project.

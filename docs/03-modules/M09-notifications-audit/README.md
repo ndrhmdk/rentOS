@@ -1,10 +1,9 @@
-# M09 Notifications and audit delivery
- Primary owner: Member-B. Required reviewer: Member-A. This is a proposed allocation, not verified GitHub assignment.
+# M09-notifications-audit: Private notifications, audit history and queued delivery
 
- Transactional outbox, private in-app inbox where supported, event deduplication and after-commit worker delivery.
+Business audit history is committed with domain changes. A running worker delivers private notifications from committed events.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: No rolled-back success notice, private links, retry leases and worker duplicate safety.
+Primary contributors: Khai. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: No viewing reminders; logs/outbox remain distinct from notifications; real email transport optional unless chosen for external-API evidence.
+- [RNT-10](../../../planning/issues/RNT-10.md) — Khai

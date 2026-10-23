@@ -1,7 +1,11 @@
-# Controlled JSONB descriptive attributes
+# Controlled standard/custom JSONB amenities
 
-Status: specified design, implementation unverified.
+Status: agreed project design; implementation unverified.
 
-Decision: Use relational core plus bounded descriptive JSONB. Policies inherit permitted defaults; standard amenity keys/scopes/catalog labels remain stable, custom text is display-only. Snapshot actual contract agreement.
+## Decision and reason
 
-Consequences: tests and issue acceptance must reference this behavior; record any approved change here and update affected PRDs/workflows/data/API/acceptance together.
+Use the relational core plus bounded property/unit policy and amenity JSONB. Code-managed allowlisted canonical keys and explicit aliases drive filters; custom descriptions stay local/display-only. Normalize custom labels with NFC/trim/whitespace and case-fold local dedup; preserve accents. Automatic global slugification does not identify synonyms. Snapshot actually agreed policies in immutable contracts.
+
+## Consequences and validation
+
+Apply the owning module requirements and acceptance scenarios; update the related API/data/workflow/issue documents together if the decision changes. Record actual implementation tests and evidence rather than treating this ADR as proof of working code.

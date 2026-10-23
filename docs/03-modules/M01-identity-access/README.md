@@ -1,10 +1,10 @@
-# M01 Identity and access
- Primary owner: Member-A. Required reviewer: Member-C. This is a proposed allocation, not verified GitHub assignment.
+# M01-identity-access: Identity, profiles and API permissions
 
- Supabase identity, profile bootstrap, dual tenant/owner navigation and server resource authorization.
+Register/sign in through Supabase; exchange verified identity for a finite Sanctum token. Private Laravel APIs require auth:sanctum, required token abilities and ownership/participant/admin Policies.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: JWT verification, account/session isolation and admin privilege boundaries.
+Primary contributors: Hien. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: No second password store; Google OAuth is deferred; Sanctum rubric substitution is unresolved.
+- [RNT-03](../../../planning/issues/RNT-03.md) — Hien
+- [RNT-13](../../../planning/issues/RNT-13.md) — Khai
