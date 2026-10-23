@@ -4,7 +4,7 @@ Read [all fields](data-dictionary.md) and [Mermaid relationships](database-schem
 
 | Rule | Domain | Constraint/action | Implementation |
 | --- | --- | --- | --- |
-| K01 | Identity/authorization | user_profiles.id PK/FK → users.id; normalized users.email UNIQUE; is_admin server-only | Laravel Fortify owns credentials and users.name. The database creates the same-UUID profile and synchronizes only users.name → user_profiles.full_name; profile contact/admin/status remain independently controlled. auth:sanctum accepts browser sessions or approved scoped PATs. Policies enforce current account and resource permissions; browser writes require CSRF. App/auth tables remain unexposed. |
+| K01 | Identity/authorization | user_profiles.id PK/FK → users.id; normalized users.email UNIQUE; user_profiles.email UNIQUE; is_admin server-only | Laravel Fortify owns credentials and users.name. The database creates the same-UUID profile and synchronizes users.name → user_profiles.full_name and users.email → user_profiles.email. Profile phone/admin/status remain independently controlled. auth:sanctum accepts browser sessions or approved scoped PATs. Policies enforce current account and resource permissions; browser writes require CSRF. App/auth tables remain unexposed. |
 | K02 | Unit labels | UNIQUE(property_id,lower(btrim(label))) | One automatic whole-space unit; referenced units archived rather than destroyed. |
 | K03 | Listings | UNIQUE property_id WHERE archived_at IS NULL | Initial review only; submitted snapshot revision checked under property lock. |
 | K04 | Pending rental requests | UNIQUE(tenant_id,listing_id) WHERE status=PENDING | ACCEPTED request has exactly one tenancy by deferred consistency trigger. |

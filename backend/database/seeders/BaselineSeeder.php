@@ -12,9 +12,9 @@ class BaselineSeeder extends Seeder
 {
     public const int USER_COUNT = 10;
 
-    public const int PROPERTY_COUNT = 20;
+    public const int PROPERTY_COUNT = 100;
 
-    public const int PUBLISHED_PROPERTY_COUNT = 16;
+    public const int PUBLISHED_PROPERTY_COUNT = 100;
 
     public const string ADMIN_USER_ID = '10000000-0000-4000-8000-000000000001';
 
@@ -43,9 +43,22 @@ class BaselineSeeder extends Seeder
     private const string FIXED_TIMESTAMP = '2026-01-01 00:00:00+00';
 
     /**
-     * @var array<int, string>
+     * Stable demo people. Emails stay fixed so teammates can sign in with the documented accounts.
+     *
+     * @var array<int, array{name: string, email: string, phone: string}>
      */
-    private const array DISTRICTS = ['Hai Chau', 'Thanh Khe', 'Son Tra', 'Ngu Hanh Son', 'Lien Chieu'];
+    private const array PEOPLE = [
+        1 => ['name' => 'Mai Anh Tran', 'email' => 'admin@rentos.test', 'phone' => '+84905111201'],
+        2 => ['name' => 'Quoc Huy Le', 'email' => 'owner1@rentos.test', 'phone' => '+84913120418'],
+        3 => ['name' => 'Thu Ha Nguyen', 'email' => 'owner2@rentos.test', 'phone' => '+84935670822'],
+        4 => ['name' => 'Minh Khoa Pham', 'email' => 'owner3@rentos.test', 'phone' => '+84907884516'],
+        5 => ['name' => 'Bao Ngoc Vo', 'email' => 'owner4@rentos.test', 'phone' => '+84983881207'],
+        6 => ['name' => 'Duc Thinh Hoang', 'email' => 'owner5@rentos.test', 'phone' => '+84965440931'],
+        7 => ['name' => 'Lan Chi Dang', 'email' => 'tenant1@example.com', 'phone' => '+84902337654'],
+        8 => ['name' => 'Hoang Nam Bui', 'email' => 'tenant2@example.com', 'phone' => '+84914559028'],
+        9 => ['name' => 'Thanh Tam Ly', 'email' => 'tenant3@example.com', 'phone' => '+84936772190'],
+        10 => ['name' => 'Gia Han Truong', 'email' => 'tenant4@example.com', 'phone' => '+84981220463'],
+    ];
 
     /**
      * @return array<int, string>
@@ -105,6 +118,7 @@ class BaselineSeeder extends Seeder
 
         for ($number = 1; $number <= self::PUBLISHED_PROPERTY_COUNT; $number++) {
             $propertyId = self::id('20000000', $number);
+            $place = self::place($number);
             $fixtures[] = [
                 'id' => self::id('40000000', $number),
                 'property_id' => $propertyId,
@@ -112,7 +126,7 @@ class BaselineSeeder extends Seeder
                 'client_operation_id' => self::id('42000000', $number),
                 'source_file' => 'published-property-gallery-01.png',
                 'storage_path' => "properties/{$propertyId}/gallery-01.png",
-                'caption' => "Shared view for demo property {$number}",
+                'caption' => "Street view of {$place['name']}",
                 'sort_order' => 0,
             ];
             $fixtures[] = [
@@ -122,7 +136,7 @@ class BaselineSeeder extends Seeder
                 'client_operation_id' => self::id('43000000', $number),
                 'source_file' => 'published-property-unit-01.png',
                 'storage_path' => "properties/{$propertyId}/unit-01.png",
-                'caption' => "Unit photo for demo property {$number}",
+                'caption' => "{$place['unit_label']} at {$place['name']}",
                 'sort_order' => 1,
             ];
         }
@@ -152,19 +166,9 @@ class BaselineSeeder extends Seeder
     private function seedUsersAndProfiles(): void
     {
         for ($number = 1; $number <= self::USER_COUNT; $number++) {
-            $role = match (true) {
-                $number === 1 => 'admin',
-                $number <= 6 => 'owner',
-                default => 'tenant',
-            };
-            $email = $role === 'tenant'
-                ? 'tenant'.($number - 6).'@example.com'
-                : ($role === 'admin' ? 'admin@rentos.test' : 'owner'.($number - 1).'@rentos.test');
-            $name = match ($role) {
-                'admin' => 'RentOS Admin',
-                'owner' => 'Demo Owner '.($number - 1),
-                default => 'Demo Tenant '.($number - 6),
-            };
+            $person = self::PEOPLE[$number];
+            $email = $person['email'];
+            $name = $person['name'];
             $id = self::id('10000000', $number);
             $attributes = [
                 'name' => $name,
@@ -187,8 +191,9 @@ class BaselineSeeder extends Seeder
                 ['id' => $id],
                 [
                     'full_name' => $name,
-                    'phone' => sprintf('+849000000%02d', $number),
-                    'is_admin' => $role === 'admin',
+                    'email' => $email,
+                    'phone' => $person['phone'],
+                    'is_admin' => $number === 1,
                     'account_status' => 'ACTIVE',
                     'created_at' => self::FIXED_TIMESTAMP,
                     'updated_at' => self::FIXED_TIMESTAMP,
@@ -199,23 +204,13 @@ class BaselineSeeder extends Seeder
 
     private function seedProperties(): void
     {
-        $amenities = json_encode([
-            'schema_version' => 1,
-            'standard' => ['wifi' => true],
-            'custom' => [],
-        ], JSON_THROW_ON_ERROR);
-        $policies = json_encode([
-            'schema_version' => 1,
-            'pets' => 'WITH_APPROVAL',
-            'smoking' => 'NOT_ALLOWED',
-            'shared_rules' => ['Quiet hours after 22:00'],
-        ], JSON_THROW_ON_ERROR);
         $ownerIds = array_map(
             fn (int $number): string => self::id('10000000', $number),
             range(2, 6),
         );
 
         for ($number = 1; $number <= self::PROPERTY_COUNT; $number++) {
+            $place = self::place($number);
             $published = $number <= self::PUBLISHED_PROPERTY_COUNT;
 
             DB::table('properties')->updateOrInsert(
@@ -223,21 +218,28 @@ class BaselineSeeder extends Seeder
                 [
                     'owner_id' => $ownerIds[($number - 1) % count($ownerIds)],
                     'client_operation_id' => self::id('21000000', $number),
-                    'name' => sprintf('Demo Property %02d', $number),
-                    'property_type' => $number % 2 === 0 ? 'APARTMENT' : 'HOUSE',
-                    'rental_arrangement' => 'SEPARATE_UNITS',
-                    'address_line' => $published ? "{$number} Bach Dang Street" : null,
-                    'ward' => $published ? 'Hai Chau I' : null,
-                    'district' => $published ? self::DISTRICTS[($number - 1) % count(self::DISTRICTS)] : null,
-                    'city' => 'Da Nang',
-                    'description' => $published
-                        ? 'A complete demo rental property for local testing.'
-                        : 'An intentionally incomplete draft property.',
-                    'shared_amenities' => $amenities,
-                    'policies' => $policies,
+                    'name' => $place['name'],
+                    'property_type' => $place['property_type'],
+                    'rental_arrangement' => $place['rental_arrangement'],
+                    'address_line' => $published ? $place['address_line'] : null,
+                    'ward' => $published ? $place['ward'] : null,
+                    'district' => $published ? $place['district'] : null,
+                    'city' => $place['city'],
+                    'description' => $place['description'],
+                    'shared_amenities' => json_encode([
+                        'schema_version' => 1,
+                        'standard' => $place['shared_amenities'],
+                        'custom' => [],
+                    ], JSON_THROW_ON_ERROR),
+                    'policies' => json_encode([
+                        'schema_version' => 1,
+                        'pets' => $place['pets'],
+                        'smoking' => $place['smoking'],
+                        'shared_rules' => $place['rules'],
+                    ], JSON_THROW_ON_ERROR),
                     'content_revision' => 1,
-                    'latitude' => $published ? 16.06 + ($number / 1000) : null,
-                    'longitude' => $published ? 108.22 + ($number / 1000) : null,
+                    'latitude' => $published ? $place['latitude'] : null,
+                    'longitude' => $published ? $place['longitude'] : null,
                     'archived_at' => null,
                     'created_at' => self::FIXED_TIMESTAMP,
                     'updated_at' => self::FIXED_TIMESTAMP,
@@ -248,13 +250,8 @@ class BaselineSeeder extends Seeder
 
     private function seedUnits(): void
     {
-        $amenities = json_encode([
-            'schema_version' => 1,
-            'standard' => ['air_conditioning' => true],
-            'custom' => [],
-        ], JSON_THROW_ON_ERROR);
-
         for ($number = 1; $number <= self::PROPERTY_COUNT; $number++) {
+            $place = self::place($number);
             $published = $number <= self::PUBLISHED_PROPERTY_COUNT;
 
             DB::table('units')->updateOrInsert(
@@ -262,19 +259,23 @@ class BaselineSeeder extends Seeder
                 [
                     'property_id' => self::id('20000000', $number),
                     'client_operation_id' => self::id('31000000', $number),
-                    'label' => 'Unit 101',
-                    'unit_kind' => 'STUDIO',
-                    'description' => $published ? 'Furnished demo unit ready to market.' : null,
-                    'floor' => '1',
-                    'area_m2' => $published ? 28 + $number : null,
-                    'bedrooms' => 1,
-                    'bathrooms' => 1,
-                    'bathroom_arrangement' => 'PRIVATE',
-                    'amenities' => $amenities,
-                    'advertised_monthly_rent' => $published ? 5000000 + ($number * 100000) : null,
-                    'deposit' => $published ? 5000000 : null,
-                    'minimum_rental_months' => 3,
-                    'max_occupants' => $published ? 2 : null,
+                    'label' => $place['unit_label'],
+                    'unit_kind' => $place['unit_kind'],
+                    'description' => $published ? $place['unit_description'] : null,
+                    'floor' => $place['floor'],
+                    'area_m2' => $published ? $place['area_m2'] : null,
+                    'bedrooms' => $place['bedrooms'],
+                    'bathrooms' => $place['bathrooms'],
+                    'bathroom_arrangement' => $place['bathroom_arrangement'],
+                    'amenities' => json_encode([
+                        'schema_version' => 1,
+                        'standard' => $place['unit_amenities'],
+                        'custom' => [],
+                    ], JSON_THROW_ON_ERROR),
+                    'advertised_monthly_rent' => $published ? $place['rent'] : null,
+                    'deposit' => $published ? $place['deposit'] : null,
+                    'minimum_rental_months' => $place['minimum_rental_months'],
+                    'max_occupants' => $published ? $place['max_occupants'] : null,
                     'operational_status' => 'READY',
                     'is_marketed' => $published,
                     'policy_overrides' => '{}',
@@ -329,15 +330,14 @@ class BaselineSeeder extends Seeder
     private function seedListings(): void
     {
         for ($number = 1; $number <= self::PROPERTY_COUNT; $number++) {
+            $place = self::place($number);
             $id = self::id('50000000', $number);
             $published = $number <= self::PUBLISHED_PROPERTY_COUNT;
             $base = [
                 'property_id' => self::id('20000000', $number),
                 'client_operation_id' => self::id('51000000', $number),
-                'title' => sprintf('Demo Listing %02d', $number),
-                'description' => $published
-                    ? 'Published demo listing for local browsing.'
-                    : 'Draft listing retained for owner editing.',
+                'title' => $place['listing_title'],
+                'description' => $place['listing_description'],
                 'cover_media_id' => $published ? self::id('40000000', $number) : null,
                 'review_reason' => null,
                 'archived_at' => null,
@@ -421,6 +421,143 @@ class BaselineSeeder extends Seeder
                 ['created_at' => self::FIXED_TIMESTAMP],
             );
         }
+    }
+
+    /**
+     * Neighbourhood anchors spread across Vietnam. Four properties are placed around each one.
+     *
+     * @var array<int, array{city: string, district: string, ward: string, street: string, latitude: float, longitude: float, rent_base: int}>
+     */
+    private const array AREAS = [
+        ['city' => 'Ha Noi', 'district' => 'Hoan Kiem', 'ward' => 'Hang Bac', 'street' => 'Hang Bac', 'latitude' => 21.0285, 'longitude' => 105.8542, 'rent_base' => 12000000],
+        ['city' => 'Ha Noi', 'district' => 'Tay Ho', 'ward' => 'Quang An', 'street' => 'Quang An', 'latitude' => 21.0583, 'longitude' => 105.8230, 'rent_base' => 15000000],
+        ['city' => 'Ha Noi', 'district' => 'Cau Giay', 'ward' => 'Dich Vong', 'street' => 'Xuan Thuy', 'latitude' => 21.0362, 'longitude' => 105.7906, 'rent_base' => 11000000],
+        ['city' => 'Ha Noi', 'district' => 'Dong Da', 'ward' => 'Kham Thien', 'street' => 'Kham Thien', 'latitude' => 21.0150, 'longitude' => 105.8270, 'rent_base' => 9000000],
+        ['city' => 'Hai Phong', 'district' => 'Ngo Quyen', 'ward' => 'May To', 'street' => 'Le Hong Phong', 'latitude' => 20.8561, 'longitude' => 106.6822, 'rent_base' => 7000000],
+        ['city' => 'Ha Long', 'district' => 'Bai Chay', 'ward' => 'Bai Chay', 'street' => 'Ha Long', 'latitude' => 20.9560, 'longitude' => 107.0440, 'rent_base' => 8000000],
+        ['city' => 'Hue', 'district' => 'Phu Hoi', 'ward' => 'Phu Hoi', 'street' => 'Chu Van An', 'latitude' => 16.4637, 'longitude' => 107.5909, 'rent_base' => 6000000],
+        ['city' => 'Hue', 'district' => 'Thuan Hoa', 'ward' => 'Thuan Hoa', 'street' => 'Nguyen Hue', 'latitude' => 16.4760, 'longitude' => 107.5480, 'rent_base' => 5500000],
+        ['city' => 'Da Nang', 'district' => 'Hai Chau', 'ward' => 'Hai Chau I', 'street' => 'Bach Dang', 'latitude' => 16.0678, 'longitude' => 108.2208, 'rent_base' => 8000000],
+        ['city' => 'Da Nang', 'district' => 'Son Tra', 'ward' => 'Phuoc My', 'street' => 'Vo Nguyen Giap', 'latitude' => 16.0830, 'longitude' => 108.2460, 'rent_base' => 10000000],
+        ['city' => 'Da Nang', 'district' => 'Lien Chieu', 'ward' => 'Hoa Khanh Bac', 'street' => 'Nguyen Luong Bang', 'latitude' => 16.0740, 'longitude' => 108.1500, 'rent_base' => 4500000],
+        ['city' => 'Da Nang', 'district' => 'Ngu Hanh Son', 'ward' => 'Hoa Hai', 'street' => 'Truong Sa', 'latitude' => 15.9950, 'longitude' => 108.2650, 'rent_base' => 9000000],
+        ['city' => 'Hoi An', 'district' => 'Minh An', 'ward' => 'Minh An', 'street' => 'Nguyen Thai Hoc', 'latitude' => 15.8771, 'longitude' => 108.3260, 'rent_base' => 8500000],
+        ['city' => 'Hoi An', 'district' => 'Cam An', 'ward' => 'Cam An', 'street' => 'Cua Dai', 'latitude' => 15.8890, 'longitude' => 108.3530, 'rent_base' => 7500000],
+        ['city' => 'Quang Ngai', 'district' => 'Quang Ngai', 'ward' => 'Tran Phu', 'street' => 'Hung Vuong', 'latitude' => 15.1214, 'longitude' => 108.8044, 'rent_base' => 4000000],
+        ['city' => 'Quy Nhon', 'district' => 'Quy Nhon', 'ward' => 'Nguyen Van Cu', 'street' => 'Xuan Dieu', 'latitude' => 13.7820, 'longitude' => 109.2190, 'rent_base' => 5500000],
+        ['city' => 'Nha Trang', 'district' => 'Loc Tho', 'ward' => 'Loc Tho', 'street' => 'Tran Phu', 'latitude' => 12.2388, 'longitude' => 109.1967, 'rent_base' => 9000000],
+        ['city' => 'Nha Trang', 'district' => 'Vinh Hoa', 'ward' => 'Vinh Hoa', 'street' => 'Pham Van Dong', 'latitude' => 12.2700, 'longitude' => 109.1980, 'rent_base' => 7000000],
+        ['city' => 'Da Lat', 'district' => 'Da Lat', 'ward' => 'Ward 1', 'street' => 'Tran Phu', 'latitude' => 11.9404, 'longitude' => 108.4583, 'rent_base' => 8000000],
+        ['city' => 'Phan Thiet', 'district' => 'Phan Thiet', 'ward' => 'Duc Thang', 'street' => 'Nguyen Tat Thanh', 'latitude' => 10.9289, 'longitude' => 108.1021, 'rent_base' => 6000000],
+        ['city' => 'Vung Tau', 'district' => 'Vung Tau', 'ward' => 'Ward 1', 'street' => 'Thuy Van', 'latitude' => 10.3460, 'longitude' => 107.0843, 'rent_base' => 10000000],
+        ['city' => 'Ho Chi Minh City', 'district' => 'District 1', 'ward' => 'Ben Nghe', 'street' => 'Nguyen Hue', 'latitude' => 10.7769, 'longitude' => 106.7009, 'rent_base' => 18000000],
+        ['city' => 'Ho Chi Minh City', 'district' => 'District 3', 'ward' => 'Vo Thi Sau', 'street' => 'Vo Van Tan', 'latitude' => 10.7840, 'longitude' => 106.6840, 'rent_base' => 14000000],
+        ['city' => 'Ho Chi Minh City', 'district' => 'Thu Duc', 'ward' => 'Linh Trung', 'street' => 'Hoang Dieu 2', 'latitude' => 10.8500, 'longitude' => 106.7700, 'rent_base' => 9000000],
+        ['city' => 'Ho Chi Minh City', 'district' => 'District 7', 'ward' => 'Tan Phong', 'street' => 'Nguyen Van Linh', 'latitude' => 10.7290, 'longitude' => 106.7220, 'rent_base' => 16000000],
+        ['city' => 'Can Tho', 'district' => 'Ninh Kieu', 'ward' => 'An Hoi', 'street' => 'Hai Ba Trung', 'latitude' => 10.0340, 'longitude' => 105.7880, 'rent_base' => 5000000],
+    ];
+
+    /**
+     * @return array{
+     *     name: string,
+     *     listing_title: string,
+     *     listing_description: string,
+     *     property_type: string,
+     *     rental_arrangement: string,
+     *     address_line: string,
+     *     ward: string,
+     *     district: string,
+     *     city: string,
+     *     description: string,
+     *     latitude: string,
+     *     longitude: string,
+     *     pets: string,
+     *     smoking: string,
+     *     rules: array<int, string>,
+     *     shared_amenities: array<string, bool>,
+     *     unit_label: string,
+     *     unit_kind: string,
+     *     unit_description: string,
+     *     floor: string,
+     *     area_m2: int,
+     *     bedrooms: int,
+     *     bathrooms: int,
+     *     bathroom_arrangement: string,
+     *     unit_amenities: array<string, bool>,
+     *     rent: int,
+     *     deposit: int,
+     *     minimum_rental_months: int,
+     *     max_occupants: int
+     * }
+     */
+    private static function place(int $number): array
+    {
+        $areas = self::AREAS;
+        $index = $number - 1;
+        $area = $areas[$index % count($areas)];
+        $slot = intdiv($index, count($areas));
+        $houseNumber = 12 + (($number * 17) % 160);
+        $latitude = $area['latitude'] + ($slot * 0.018) + ((($number % 3) - 1) * 0.007);
+        $longitude = $area['longitude'] + ($slot * 0.021) + ((($number % 4) - 1) * 0.008);
+        $propertyType = ['HOUSE', 'APARTMENT', 'APARTMENT_BUILDING'][$number % 3];
+        $whole = $number % 2 === 0;
+        $unitKind = match ($propertyType) {
+            'HOUSE' => $whole ? 'HOUSE' : 'ROOM',
+            'APARTMENT_BUILDING' => $number % 4 === 0 ? 'APARTMENT' : 'STUDIO',
+            default => $whole ? 'APARTMENT' : 'STUDIO',
+        };
+        $bedrooms = match ($unitKind) {
+            'STUDIO' => 0,
+            'ROOM' => 1,
+            'APARTMENT' => 1 + ($number % 2),
+            default => 2 + ($number % 2),
+        };
+        $areaM2 = match ($unitKind) {
+            'ROOM' => 16 + ($number % 8),
+            'STUDIO' => 24 + ($number % 12),
+            'APARTMENT' => 48 + ($number % 25),
+            default => 80 + ($number % 40),
+        };
+        $rent = $area['rent_base'] + ($slot * 700000) + (($number % 5) * 250000);
+        $label = match ($unitKind) {
+            'HOUSE' => 'Whole house',
+            'ROOM' => 'Room '.chr(65 + ($number % 4)),
+            'STUDIO' => 'Studio '.(($number % 12) + 1),
+            default => 'Flat '.(($number % 20) + 101),
+        };
+        $name = "{$houseNumber} {$area['street']}, {$area['district']}";
+
+        return [
+            'name' => $name,
+            'listing_title' => "{$label} on {$area['street']}, {$area['city']}",
+            'listing_description' => "A {$unitKind} rental at {$houseNumber} {$area['street']}, {$area['ward']}, {$area['city']}.",
+            'property_type' => $propertyType,
+            'rental_arrangement' => $whole ? 'WHOLE_SPACE' : 'SEPARATE_UNITS',
+            'address_line' => "{$houseNumber} {$area['street']}",
+            'ward' => $area['ward'],
+            'district' => $area['district'],
+            'city' => $area['city'],
+            'description' => "Rental property in {$area['ward']}, {$area['district']}, {$area['city']}.",
+            'latitude' => number_format($latitude, 7, '.', ''),
+            'longitude' => number_format($longitude, 7, '.', ''),
+            'pets' => ['NOT_ALLOWED', 'WITH_APPROVAL', 'ALLOWED'][$number % 3],
+            'smoking' => $number % 4 === 0 ? 'OUTDOOR_ONLY' : 'NOT_ALLOWED',
+            'rules' => ['Quiet hours after 22:00'],
+            'shared_amenities' => ['wifi' => true, 'parking' => $number % 2 === 0],
+            'unit_label' => $label,
+            'unit_kind' => $unitKind,
+            'unit_description' => "{$label} with {$bedrooms} bedroom(s) at {$name}.",
+            'floor' => (string) (1 + ($number % 15)),
+            'area_m2' => $areaM2,
+            'bedrooms' => $bedrooms,
+            'bathrooms' => $bedrooms === 0 ? 1 : min($bedrooms, 2),
+            'bathroom_arrangement' => $unitKind === 'ROOM' ? 'SHARED' : 'PRIVATE',
+            'unit_amenities' => ['air_conditioning' => true, 'washing_machine' => $areaM2 >= 40],
+            'rent' => $rent,
+            'deposit' => $rent * ($number % 2 === 0 ? 2 : 1),
+            'minimum_rental_months' => [3, 6, 12][$number % 3],
+            'max_occupants' => max(1, $bedrooms === 0 ? 2 : $bedrooms + 1),
+        ];
     }
 
     private static function id(string $prefix, int $number): string

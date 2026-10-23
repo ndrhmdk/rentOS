@@ -8,7 +8,7 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Laravel Authenticatable user UUID; profile uses the same UUID. |
 | name | text |  | No |  | Fortify registration/account name input and trigger source for user_profiles.full_name. users.name is the authoritative authentication-side copy; the database synchronizes only full_name after insert/name update and never overwrites profile phone/admin/status fields. |
-| email | text | UNIQUE | No |  | Normalized lowercase email; never duplicated in user_profiles. |
+| email | text | UNIQUE | No |  | Normalized lowercase login email. The profile trigger copies it to user_profiles.email. |
 | email_verified_at | timestamptz |  | Yes |  | Set only by valid Laravel email verification. |
 | password | varchar(255) |  | No |  | Laravel Hash password hash; hidden from every Resource/log. |
 | remember_token | varchar(100) |  | Yes |  | Laravel remember credential; remember-me disabled initially; rotate on password reset. |
@@ -21,6 +21,7 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK,FK | No |  | PK/FK to users.id; one profile per Laravel account; preserve existing domain UUIDs. |
 | full_name | text |  | No |  | Validated display/contact name |
+| email | text | UNIQUE | No |  | Same address as users.email. Copied when the account is created and when the login email changes. |
 | phone | text |  | Yes |  | Optional contact number; not OTP ownership verification |
 | is_admin | boolean |  | No | false | Trusted server-managed moderation privilege |
 | account_status | text |  | No | ACTIVE | ACTIVE or SUSPENDED |

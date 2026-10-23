@@ -3,7 +3,7 @@ erDiagram
     users {
         uuid id PK "Laravel Authenticatable user UUID; profile uses the same UUID."
         text name  "Fortify registration name; trigger source synchronized to user_profiles.full_name."
-        text email UK "Normalized lowercase email; never duplicated in user_profiles."
+        text email UK "Normalized lowercase login email. Copied to user_profiles.email."
         timestamptz email_verified_at  "Set only by valid Laravel email verification."
         varchar255 password  "Laravel Hash password hash; hidden from every Resource/log."
         varchar100 remember_token  "Laravel remember credential; remember-me disabled initially; rotate on password reset."
@@ -13,6 +13,7 @@ erDiagram
     user_profiles {
         uuid id PK,FK "PK/FK to users.id; one profile per Laravel account; preserve existing domain UUIDs."
         text full_name  "Validated display/contact name"
+        text email UK "Same address as users.email. Copied on account create and email change."
         text phone  "Optional contact number; not OTP ownership verification"
         boolean is_admin  "Trusted server-managed moderation privilege"
         text account_status  "ACTIVE or SUSPENDED"
