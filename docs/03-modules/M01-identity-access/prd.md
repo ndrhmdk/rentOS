@@ -16,7 +16,7 @@ Laravel Fortify owns account credentials and email flows. Next.js uses Sanctum s
 
 **Priority:** P0 Must. **Actors:** Guest. **Delivery:** Primary: RNT-03.
 
-Register through Laravel Fortify. Create users and user_profiles atomically with the same UUID, a normalized unique email, hashed password and is_admin=false. Confirm email before protected product writes or API-token creation. One user can rent and own; no phone OTP or role-selection step.
+Register through Laravel Fortify. Create one users row with a normalized unique email, hashed password and is_admin=false. Confirm email before protected product writes or API-token creation. One user can rent and own; no phone OTP or role-selection step.
 
 Acceptance: [4 cases for FR01](../../06-acceptance/test-scenarios.md#fr01); IDs FR01-AC01, FR01-AC02, FR01-AC03, FR01-AC04.
 
@@ -48,7 +48,7 @@ Acceptance: [3 cases for FR04](../../06-acceptance/test-scenarios.md#fr04); IDs 
 
 **Priority:** P0 Must. **Actors:** User; Admin. **Delivery:** Primary: RNT-03.
 
-Private routes require auth:sanctum and current account/ownership/participant/admin Policies. Browser requests use sessions and CSRF; approved token-enabled endpoints additionally enforce personal-token abilities. Sanctum tokenCan returns true for first-party sessions, so it never replaces Policies. Current user_profiles.is_admin is server-managed; personal API tokens cannot call admin or token-management routes.
+Private routes require auth:sanctum and current account/ownership/participant/admin Policies. Browser requests use sessions and CSRF; approved token-enabled endpoints additionally enforce personal-token abilities. Sanctum tokenCan returns true for first-party sessions, so it never replaces Policies. Current users.is_admin is server-managed; personal API tokens cannot call admin or token-management routes.
 
 Acceptance: [4 cases for FR05](../../06-acceptance/test-scenarios.md#fr05); IDs FR05-AC01, FR05-AC02, FR05-AC03, FR05-AC04.
 

@@ -39,7 +39,6 @@ return new class extends Migration
     private function revisionChecks(): array
     {
         return [
-            'user_profiles' => 'user_profiles_revision_check',
             'properties' => 'properties_revision_check',
             'units' => 'units_revision_check',
             'property_media' => 'property_media_revision_check',

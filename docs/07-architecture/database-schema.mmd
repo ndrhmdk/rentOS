@@ -1,24 +1,17 @@
 erDiagram
     direction TB
     users {
-        uuid id PK "Laravel Authenticatable user UUID; profile uses the same UUID."
-        text name  "Fortify registration name; trigger source synchronized to user_profiles.full_name."
-        text email UK "Normalized lowercase login email. Copied to user_profiles.email."
+        uuid id PK "Laravel Authenticatable user UUID. Domain rows reference this id."
+        text name  "Display name."
+        text email UK "Normalized lowercase login email."
         timestamptz email_verified_at  "Set only by valid Laravel email verification."
         varchar255 password  "Laravel Hash password hash; hidden from every Resource/log."
         varchar100 remember_token  "Laravel remember credential; remember-me disabled initially; rotate on password reset."
+        text phone  "Optional contact number; not OTP ownership verification."
+        boolean is_admin  "Trusted server-managed moderation privilege."
+        text account_status  "ACTIVE or SUSPENDED."
         timestamptz created_at  "Account creation time."
         timestamptz updated_at  "Account update time."
-    }
-    user_profiles {
-        uuid id PK,FK "PK/FK to users.id; one profile per Laravel account; preserve existing domain UUIDs."
-        text full_name  "Validated display/contact name"
-        text email UK "Same address as users.email. Copied on account create and email change."
-        text phone  "Optional contact number; not OTP ownership verification"
-        boolean is_admin  "Trusted server-managed moderation privilege"
-        text account_status  "ACTIVE or SUSPENDED"
-        timestamptz created_at  "Record creation time in UTC"
-        timestamptz updated_at  "Last record update time in UTC"
     }
     properties {
         uuid id PK "Application UUID"
@@ -271,7 +264,7 @@ erDiagram
         timestamptz updated_at  "Framework update time."
     }
     favourite_properties {
-        uuid user_id PK,FK "References user_profiles.id; actor derives from authenticated Laravel user with matching profile UUID."
+        uuid user_id PK,FK "References users.id."
         uuid property_id PK,FK "References properties.id; composite PK/UNIQUE(user_id,property_id)."
         timestamptz created_at  "First save time; repeat intended-state save does not duplicate row."
     }
@@ -289,26 +282,25 @@ erDiagram
         timestamptz created_at  "Password broker token expiry/throttle timestamp."
     }
 
-    user_profiles ||--o{ properties : owns
+    users ||--o{ properties : owns
     properties ||--o{ units : contains
     properties ||--o{ property_media : photos
     units o|--o{ property_media : unit_photos
     properties ||--o{ listings : advertises
-    user_profiles ||--o{ rental_requests : applies
+    users ||--o{ rental_requests : applies
     listings ||--o{ rental_requests : receives
     rental_requests ||--o| tenancies : proposal_outcome
     units ||--o{ tenancies : dated_relationship
-    user_profiles ||--o{ tenancies : tenant
+    users ||--o{ tenancies : tenant
     tenancies ||--o{ tenancy_contracts : immutable_versions
     tenancies ||--o{ tenancy_renewal_requests : renewal_discussion
     tenancy_renewal_requests o|--o{ tenancy_contracts : proposed_segment
     listings ||--o{ listing_reports : reported
-    user_profiles ||--o{ listing_reports : reports
-    user_profiles ||--o{ favourite_properties : private_saves
+    users ||--o{ listing_reports : reports
+    users ||--o{ favourite_properties : private_saves
     properties ||--o{ favourite_properties : saved_property
-    user_profiles ||--o{ notifications : private_recipient
+    users ||--o{ notifications : private_recipient
     tenancies ||--o| property_reviews : deferred_P2
-    users ||--|| user_profiles : has_profile
     users o|--o{ sessions : authenticates
     users ||--o{ personal_access_tokens : tokenable_morph
     users ||--o| password_reset_tokens : email_lookup

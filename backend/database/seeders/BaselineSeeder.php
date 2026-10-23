@@ -154,7 +154,7 @@ class BaselineSeeder extends Seeder
         }
 
         DB::transaction(function (): void {
-            $this->seedUsersAndProfiles();
+            $this->seedUsers();
             $this->seedProperties();
             $this->seedUnits();
             $this->seedMedia();
@@ -163,17 +163,18 @@ class BaselineSeeder extends Seeder
         });
     }
 
-    private function seedUsersAndProfiles(): void
+    private function seedUsers(): void
     {
         for ($number = 1; $number <= self::USER_COUNT; $number++) {
             $person = self::PEOPLE[$number];
-            $email = $person['email'];
-            $name = $person['name'];
             $id = self::id('10000000', $number);
             $attributes = [
-                'name' => $name,
-                'email' => $email,
+                'name' => $person['name'],
+                'email' => $person['email'],
                 'email_verified_at' => self::FIXED_TIMESTAMP,
+                'phone' => $person['phone'],
+                'is_admin' => $number === 1,
+                'account_status' => 'ACTIVE',
                 'updated_at' => self::FIXED_TIMESTAMP,
             ];
 
@@ -186,19 +187,6 @@ class BaselineSeeder extends Seeder
                     'created_at' => self::FIXED_TIMESTAMP,
                 ]);
             }
-
-            DB::table('user_profiles')->updateOrInsert(
-                ['id' => $id],
-                [
-                    'full_name' => $name,
-                    'email' => $email,
-                    'phone' => $person['phone'],
-                    'is_admin' => $number === 1,
-                    'account_status' => 'ACTIVE',
-                    'created_at' => self::FIXED_TIMESTAMP,
-                    'updated_at' => self::FIXED_TIMESTAMP,
-                ],
-            );
         }
     }
 

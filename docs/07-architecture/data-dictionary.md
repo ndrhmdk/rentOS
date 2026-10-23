@@ -1,32 +1,22 @@
 # Database dictionary
 
-Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID references remain unchanged. Authentication tables are in the private application schema; Supabase is PostgreSQL/Storage only.
+One `users` row is the account. Domain foreign keys point at `users.id`. Supabase is PostgreSQL and Storage only.
 
 ## users
 
 | Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | uuid | PK | No | gen_random_uuid() | Laravel Authenticatable user UUID; profile uses the same UUID. |
-| name | text |  | No |  | Fortify registration/account name input and trigger source for user_profiles.full_name. users.name is the authoritative authentication-side copy; the database synchronizes only full_name after insert/name update and never overwrites profile phone/admin/status fields. |
-| email | text | UNIQUE | No |  | Normalized lowercase login email. The profile trigger copies it to user_profiles.email. |
+| id | uuid | PK | No | gen_random_uuid() | Laravel Authenticatable user UUID. Domain rows reference this id. |
+| name | text |  | No |  | Display name from registration or account settings. |
+| email | text | UNIQUE | No |  | Normalized lowercase login email. |
 | email_verified_at | timestamptz |  | Yes |  | Set only by valid Laravel email verification. |
 | password | varchar(255) |  | No |  | Laravel Hash password hash; hidden from every Resource/log. |
 | remember_token | varchar(100) |  | Yes |  | Laravel remember credential; remember-me disabled initially; rotate on password reset. |
+| phone | text |  | Yes |  | Optional contact number; not OTP ownership verification. |
+| is_admin | boolean |  | No | false | Trusted server-managed moderation privilege. |
+| account_status | text |  | No | ACTIVE | ACTIVE or SUSPENDED. |
 | created_at | timestamptz |  | No | now() | Account creation time. |
 | updated_at | timestamptz |  | No | now() | Account update time. |
-
-## user_profiles
-
-| Column | Type | Key | Nullable | Default | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| id | uuid | PK,FK | No |  | PK/FK to users.id; one profile per Laravel account; preserve existing domain UUIDs. |
-| full_name | text |  | No |  | Validated display/contact name |
-| email | text | UNIQUE | No |  | Same address as users.email. Copied when the account is created and when the login email changes. |
-| phone | text |  | Yes |  | Optional contact number; not OTP ownership verification |
-| is_admin | boolean |  | No | false | Trusted server-managed moderation privilege |
-| account_status | text |  | No | ACTIVE | ACTIVE or SUSPENDED |
-| created_at | timestamptz |  | No | now() | Record creation time in UTC |
-| updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 
 ## properties
 
@@ -327,7 +317,7 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 
 | Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| user_id | uuid | PK,FK | No |  | References user_profiles.id; actor derives from authenticated Laravel user with matching profile UUID. |
+| user_id | uuid | PK,FK | No |  | References users.id. |
 | property_id | uuid | PK,FK | No |  | References properties.id; composite PK/UNIQUE(user_id,property_id). |
 | created_at | timestamptz |  | No | now() | First save time; repeat intended-state save does not duplicate row. |
 

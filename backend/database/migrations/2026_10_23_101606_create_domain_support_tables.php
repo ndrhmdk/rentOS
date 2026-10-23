@@ -30,8 +30,8 @@ return new class extends Migration
 
             $table->unique(['reporter_id', 'client_operation_id']);
             $table->foreign('listing_id')->references('id')->on('listings');
-            $table->foreign('reporter_id')->references('id')->on('user_profiles');
-            $table->foreign('reviewed_by')->references('id')->on('user_profiles');
+            $table->foreign('reporter_id')->references('id')->on('users');
+            $table->foreign('reviewed_by')->references('id')->on('users');
         });
 
         Schema::create('audit_logs', function (Blueprint $table) {
@@ -48,7 +48,7 @@ return new class extends Migration
 
             $table->index(['entity_type', 'entity_id']);
             $table->index('correlation_id');
-            $table->foreign('actor_id')->references('id')->on('user_profiles');
+            $table->foreign('actor_id')->references('id')->on('users');
         });
 
         Schema::create('notification_outbox', function (Blueprint $table) {
@@ -67,7 +67,7 @@ return new class extends Migration
             $table->timestampTz('updated_at')->useCurrent();
 
             $table->index(['status', 'next_attempt_at']);
-            $table->foreign('recipient_id')->references('id')->on('user_profiles');
+            $table->foreign('recipient_id')->references('id')->on('users');
         });
 
         Schema::create('notifications', function (Blueprint $table) {
@@ -82,7 +82,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
 
             $table->unique(['recipient_id', 'event_key']);
-            $table->foreign('recipient_id')->references('id')->on('user_profiles');
+            $table->foreign('recipient_id')->references('id')->on('users');
         });
 
         Schema::create('idempotency_records', function (Blueprint $table) {
@@ -96,7 +96,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
 
             $table->unique(['actor_id', 'action', 'client_operation_id']);
-            $table->foreign('actor_id')->references('id')->on('user_profiles');
+            $table->foreign('actor_id')->references('id')->on('users');
         });
         DB::statement('ALTER TABLE idempotency_records ADD COLUMN result_ids uuid[] NOT NULL');
 
@@ -106,7 +106,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
 
             $table->primary(['user_id', 'property_id']);
-            $table->foreign('user_id')->references('id')->on('user_profiles')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->foreign('property_id')->references('id')->on('properties')->cascadeOnDelete();
         });
     }

@@ -15,12 +15,8 @@ return new class extends Migration
         DB::unprepared(<<<'SQL'
             ALTER TABLE users
                 ADD CONSTRAINT users_name_not_blank CHECK (btrim(name) <> ''),
-                ADD CONSTRAINT users_email_normalized CHECK (email = lower(btrim(email)));
-
-            ALTER TABLE user_profiles
-                ADD CONSTRAINT user_profiles_full_name_not_blank CHECK (btrim(full_name) <> ''),
-                ADD CONSTRAINT user_profiles_account_status_check CHECK (account_status IN ('ACTIVE', 'SUSPENDED')),
-                ADD CONSTRAINT user_profiles_revision_check CHECK (revision >= 1);
+                ADD CONSTRAINT users_email_normalized CHECK (email = lower(btrim(email))),
+                ADD CONSTRAINT users_account_status_check CHECK (account_status IN ('ACTIVE', 'SUSPENDED'));
 
             ALTER TABLE properties
                 ADD CONSTRAINT properties_name_not_blank CHECK (btrim(name) <> ''),
@@ -310,41 +306,6 @@ return new class extends Migration
                     FOREIGN KEY (tenancy_id, basis_contract_id)
                     REFERENCES tenancy_contracts (tenancy_id, id)
                     DEFERRABLE INITIALLY DEFERRED;
-            SQL);
-
-        DB::unprepared(<<<'SQL'
-            CREATE OR REPLACE FUNCTION public.create_user_profile()
-            RETURNS trigger
-            LANGUAGE plpgsql
-            AS $$
-            BEGIN
-                INSERT INTO user_profiles (id, full_name)
-                VALUES (NEW.id, NEW.name);
-                RETURN NEW;
-            END;
-            $$;
-
-            CREATE OR REPLACE FUNCTION public.sync_user_profile_name()
-            RETURNS trigger
-            LANGUAGE plpgsql
-            AS $$
-            BEGIN
-                UPDATE user_profiles
-                SET full_name = NEW.name, updated_at = CURRENT_TIMESTAMP
-                WHERE id = NEW.id;
-                RETURN NEW;
-            END;
-            $$;
-
-            CREATE TRIGGER users_create_profile
-                AFTER INSERT ON users
-                FOR EACH ROW EXECUTE FUNCTION public.create_user_profile();
-
-            CREATE TRIGGER users_sync_profile_name
-                AFTER UPDATE OF name ON users
-                FOR EACH ROW
-                WHEN (OLD.name IS DISTINCT FROM NEW.name)
-                EXECUTE FUNCTION public.sync_user_profile_name();
             SQL);
 
         DB::unprepared(<<<'SQL'
@@ -1270,9 +1231,6 @@ return new class extends Migration
             DROP TRIGGER IF EXISTS listings_lifecycle_guard ON listings;
             DROP TRIGGER IF EXISTS tenancy_contracts_guard_delete ON tenancy_contracts;
             DROP TRIGGER IF EXISTS tenancy_contracts_guard_insert_update ON tenancy_contracts;
-            DROP TRIGGER IF EXISTS users_sync_profile_name ON users;
-            DROP TRIGGER IF EXISTS users_create_profile ON users;
-
             DROP FUNCTION IF EXISTS public.reject_audit_log_mutation();
             DROP FUNCTION IF EXISTS public.validate_renewal_request_trigger();
             DROP FUNCTION IF EXISTS public.validate_renewal_request(uuid);
@@ -1286,8 +1244,6 @@ return new class extends Migration
             DROP FUNCTION IF EXISTS public.validate_listing_cover(uuid);
             DROP FUNCTION IF EXISTS public.guard_listing_lifecycle();
             DROP FUNCTION IF EXISTS public.guard_tenancy_contract();
-            DROP FUNCTION IF EXISTS public.sync_user_profile_name();
-            DROP FUNCTION IF EXISTS public.create_user_profile();
 
             ALTER TABLE tenancy_contracts
                 DROP CONSTRAINT IF EXISTS tenancy_contracts_basis_same_parent_fk,
@@ -1419,12 +1375,8 @@ return new class extends Migration
                 DROP CONSTRAINT IF EXISTS properties_type_check,
                 DROP CONSTRAINT IF EXISTS properties_name_not_blank;
 
-            ALTER TABLE user_profiles
-                DROP CONSTRAINT IF EXISTS user_profiles_revision_check,
-                DROP CONSTRAINT IF EXISTS user_profiles_account_status_check,
-                DROP CONSTRAINT IF EXISTS user_profiles_full_name_not_blank;
-
             ALTER TABLE users
+                DROP CONSTRAINT IF EXISTS users_account_status_check,
                 DROP CONSTRAINT IF EXISTS users_email_normalized,
                 DROP CONSTRAINT IF EXISTS users_name_not_blank;
             SQL);

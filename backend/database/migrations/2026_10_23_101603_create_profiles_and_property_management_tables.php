@@ -12,24 +12,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_profiles', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->text('full_name');
-            $table->text('phone')->nullable();
-            $table->boolean('is_admin')->default(false);
-            $table->text('account_status')->default('ACTIVE');
-            $table->integer('revision')->default(1);
-            $table->timestampTz('created_at')->useCurrent();
-            $table->timestampTz('updated_at')->useCurrent();
-
-            $table->foreign('id')->references('id')->on('users')->cascadeOnDelete();
-        });
-        DB::statement(
-            'INSERT INTO user_profiles (id, full_name)
-             SELECT id, name FROM users
-             ON CONFLICT (id) DO NOTHING',
-        );
-
         Schema::create('properties', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->uuid('owner_id');
@@ -55,7 +37,7 @@ return new class extends Migration
             $table->integer('revision')->default(1);
 
             $table->unique(['owner_id', 'client_operation_id']);
-            $table->foreign('owner_id')->references('id')->on('user_profiles');
+            $table->foreign('owner_id')->references('id')->on('users');
         });
 
         Schema::create('units', function (Blueprint $table) {
@@ -112,7 +94,7 @@ return new class extends Migration
             $table->unique(['uploaded_by', 'client_operation_id']);
             $table->unique(['property_id', 'id']);
             $table->foreign('property_id')->references('id')->on('properties');
-            $table->foreign('uploaded_by')->references('id')->on('user_profiles');
+            $table->foreign('uploaded_by')->references('id')->on('users');
             $table->foreign(['property_id', 'unit_id'])
                 ->references(['property_id', 'id'])
                 ->on('units');
@@ -127,6 +109,5 @@ return new class extends Migration
         Schema::dropIfExists('property_media');
         Schema::dropIfExists('units');
         Schema::dropIfExists('properties');
-        Schema::dropIfExists('user_profiles');
     }
 };

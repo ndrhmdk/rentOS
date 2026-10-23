@@ -39,8 +39,8 @@ return new class extends Migration
             $table->unique(['property_id', 'client_operation_id']);
             $table->unique(['property_id', 'id']);
             $table->foreign('property_id')->references('id')->on('properties');
-            $table->foreign('reviewed_by')->references('id')->on('user_profiles');
-            $table->foreign('admin_suspended_by')->references('id')->on('user_profiles');
+            $table->foreign('reviewed_by')->references('id')->on('users');
+            $table->foreign('admin_suspended_by')->references('id')->on('users');
             $table->foreign(['property_id', 'cover_media_id'])
                 ->references(['property_id', 'id'])
                 ->on('property_media');
@@ -67,7 +67,7 @@ return new class extends Migration
 
             $table->unique(['tenant_id', 'client_operation_id']);
             $table->foreign('listing_id')->references('id')->on('listings');
-            $table->foreign('tenant_id')->references('id')->on('user_profiles');
+            $table->foreign('tenant_id')->references('id')->on('users');
             $table->foreign('preferred_unit_id')->references('id')->on('units');
         });
     }

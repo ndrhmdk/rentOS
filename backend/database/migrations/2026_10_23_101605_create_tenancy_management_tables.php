@@ -36,9 +36,9 @@ return new class extends Migration
 
             $table->unique(['owner_id', 'client_operation_id']);
             $table->foreign('unit_id')->references('id')->on('units');
-            $table->foreign('tenant_id')->references('id')->on('user_profiles');
+            $table->foreign('tenant_id')->references('id')->on('users');
             $table->foreign('rental_request_id')->references('id')->on('rental_requests');
-            $table->foreign('owner_id')->references('id')->on('user_profiles');
+            $table->foreign('owner_id')->references('id')->on('users');
         });
 
         Schema::create('tenancy_renewal_requests', function (Blueprint $table) {
@@ -59,7 +59,7 @@ return new class extends Migration
             $table->unique(['tenancy_id', 'client_operation_id']);
             $table->unique(['tenancy_id', 'id']);
             $table->foreign('tenancy_id')->references('id')->on('tenancies');
-            $table->foreign('reviewed_by')->references('id')->on('user_profiles');
+            $table->foreign('reviewed_by')->references('id')->on('users');
         });
 
         Schema::create('tenancy_contracts', function (Blueprint $table) {
@@ -88,7 +88,7 @@ return new class extends Migration
             $table->unique(['tenancy_id', 'version_number']);
             $table->unique(['tenancy_id', 'id']);
             $table->foreign('tenancy_id')->references('id')->on('tenancies');
-            $table->foreign('created_by')->references('id')->on('user_profiles');
+            $table->foreign('created_by')->references('id')->on('users');
         });
     }
 

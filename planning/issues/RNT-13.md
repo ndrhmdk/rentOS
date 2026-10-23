@@ -18,7 +18,7 @@ Dependencies gate final integration; fixtures and agreed contracts allow earlier
 
 ## Functional requirements
 
-- **FR05 — Enforce account and resource permissions** (P0 Must): Private routes require auth:sanctum and current account/ownership/participant/admin Policies. Browser requests use sessions and CSRF; approved token-enabled endpoints additionally enforce personal-token abilities. Sanctum tokenCan returns true for first-party sessions, so it never replaces Policies. Current user_profiles.is_admin is server-managed; personal API tokens cannot call admin or token-management routes.
+- **FR05 — Enforce account and resource permissions** (P0 Must): Private routes require auth:sanctum and current account/ownership/participant/admin Policies. Browser requests use sessions and CSRF; approved token-enabled endpoints additionally enforce personal-token abilities. Sanctum tokenCan returns true for first-party sessions, so it never replaces Policies. Current users.is_admin is server-managed; personal API tokens cannot call admin or token-management routes.
   - [All 4 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr05)
 - **FR33 — Enforce nonoverlapping unit rental periods** (P0 Must): PostgreSQL GiST exclusion constraint on tenancies(unit_id, daterange(blocked_start_date, blocked_end_date+1, [))) for PENDING_CONFIRMATION/CONFIRMED/ACTIVE. Different nonoverlapping future tenancies on one unit are permitted. Blocking envelope includes confirmed span plus any proposed renewal extension.
   - [All 5 acceptance cases](../../docs/06-acceptance/test-scenarios.md#fr33)

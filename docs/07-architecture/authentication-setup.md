@@ -17,7 +17,7 @@ Do not create a token during browser login, store a login token in localStorage,
 
 Migrate into the existing `public` schema. Use the agreed direct Supabase PostgreSQL connection for reviewed migrations. Keep runtime and deployment credentials separate. Do not use Supabase Auth.
 
-Create `users` with UUID PK, Fortify `name`, normalized unique email, password hash, email verification time and framework timestamps/remember field. `user_profiles.id` is both PK and FK to `users.id`; retain profile display/contact/admin fields there. The database creates the profile after user insertion and synchronizes `users.name` to `user_profiles.full_name` and `users.email` to `user_profiles.email` when the account is created or those fields change. It does not overwrite profile phone, admin, or status fields. Register the Laravel `User` Authenticatable model as the provider; implement `MustVerifyEmail`, UUID behavior, `Notifiable` and `HasApiTokens`, and hide password/remember credentials in serialization. Do not return the whole model as `/me`.
+Create one `users` row with a UUID primary key, name, normalized unique email, password hash, email verification time, phone, server-managed `is_admin`, `account_status`, and the framework timestamps and remember field. Register the Laravel `User` Authenticatable model as the provider; implement `MustVerifyEmail`, UUID behavior, `Notifiable` and `HasApiTokens`, and hide password/remember credentials in serialization. Do not return the whole model as `/me`.
 
 Create `sessions` with nullable UUID `user_id` (guest CSRF sessions exist), `password_reset_tokens` and Sanctum `personal_access_tokens` with UUID-compatible `tokenable_id` referring to User. The morph association is not an automatic PostgreSQL FK: restrict its model/type and explicitly enforce integrity/deletion. See the [dictionary](data-dictionary.md).
 
@@ -94,7 +94,7 @@ await api.post('/login', { email, password });
 const me = await api.get('/api/v1/me');
 
 // Subsequent browser mutations include session cookies and X-XSRF-TOKEN.
-await api.patch('/api/v1/profile', { full_name, revision });
+await api.patch('/api/v1/profile', { name, phone });
 await api.post('/logout');
 ```
 

@@ -19,6 +19,9 @@ return new class extends Migration
             $table->timestampTz('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->text('phone')->nullable();
+            $table->boolean('is_admin')->default(false);
+            $table->text('account_status')->default('ACTIVE');
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('updated_at')->useCurrent();
         });

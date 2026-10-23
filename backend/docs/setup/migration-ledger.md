@@ -9,8 +9,7 @@ The baseline includes PostgreSQL checks, partial and expression indexes, same-pa
 
 | Table | Scope | Reason |
 | --- | --- | --- |
-| `users` | Implemented baseline | Laravel Authenticatable accounts with UUID primary keys. |
-| `user_profiles` | Implemented baseline | One-to-one domain profile for each Laravel user. |
+| `users` | Implemented baseline | Laravel account: login, name, phone, admin flag, and account status. Domain foreign keys point here. |
 | `properties` | Implemented baseline | Core managed rental property record. |
 | `units` | Implemented baseline | Rentable spaces belonging to properties. |
 | `property_media` | Implemented baseline | Stored property/unit media metadata and lifecycle state. |
