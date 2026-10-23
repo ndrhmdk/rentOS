@@ -4,7 +4,7 @@ Status: agreed project design; implementation unverified.
 
 ## Decision and reason
 
-Khai delivers initial complete schema/seeds and common tooling. Everyone uses committed migrations locally; feature owners request/review later additive migrations. Bootstrap private schema before migration history; prefer reachable direct connection with SSL and documented session fallback. CI uses isolated test DBs; reviewed main deploy serializes matching migrations/app/workers. No hosted destructive reset/reseed.
+Khai delivers initial complete schema/seeds and common tooling. Everyone uses committed migrations locally; feature owners request/review later additive migrations. Application tables live in the existing `public` schema. Prefer a reachable direct connection with SSL and a documented session fallback. CI uses isolated test DBs; reviewed main deploy serializes matching migrations/app/workers. No hosted destructive reset/reseed.
 
 ## Consequences and validation
 

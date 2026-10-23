@@ -129,7 +129,7 @@
       "phase": 1,
       "owner": "Khai",
       "reviewer": "Kien",
-      "title": "Set up database, Fortify, Sanctum, Telescope, API docs and CI/test rules",
+      "title": "Set up database, seed data, Telescope, Scramble and CI",
       "requirements": [
         "FR44",
         "FR74",
@@ -144,19 +144,22 @@
         "NFR-05"
       ],
       "depends_on": [],
-      "publication": "Draft",
+      "publication": {
+        "state": "Published",
+        "github_url": "https://github.com/ndrhmdk/rentOS/issues/97"
+      },
       "delivery_status": "Planned",
-      "github_url": null,
-      "outcome": "Khai delivers all shared initial migrations/seeds, Fortify/Sanctum session and token infrastructure, CSRF/CORS conventions, Scramble/Telescope, CI/CD, LLM/test guidance and future TypeScript setup documentation.",
+      "github_url": "https://github.com/ndrhmdk/rentOS/issues/97",
+      "outcome": "Khai sets up the Laravel and Supabase foundation: connection docs, MVP tables and constraints, demo seed data, local Telescope, API docs, and basic CI. Authentication stays in RNT-03.",
       "backend": [
-        "Bootstrap an unexposed laravel schema BEFORE Laravel migration history; configure direct PostgreSQL connection for migrations, local/hosted environment templates, SSL and separate deploy/runtime credentials. Use the direct endpoint only when the runner has connectivity; document an explicit session-pooler fallback if IPv6/IPv4 constraints prevent it. Do not silently use transaction pooling for migrations.",
+        "Configure the direct PostgreSQL connection for migrations, local/hosted environment templates, SSL and separate deploy/runtime credentials. Application tables live in the existing public schema. Use the direct endpoint only when the runner has connectivity; document an explicit session-pooler fallback if IPv6/IPv4 constraints prevent it. Do not silently use transaction pooling for migrations.",
         "Publish shared schema, API error/pagination conventions and revision/idempotency/lock-order helpers early. Configure required Scramble API documentation for Laravel Resources/FormRequests; this is distinct from future TypeScript generator setup.",
         "Write AGENTS.md: coding conventions, allowed architecture, unit/component/API integration expectations; no automated browser suite required, real PostgreSQL concurrency tests, migration safety and the exact checks AI must pass before reporting completion.",
         "Own CI/CD configuration: PR lint/static/type/build and frontend/backend tests against disposable PostgreSQL/Supabase; reviewed main merges deploy matching code and serialized migrations after checks pass. Separate PR/deploy credentials, protect secrets, and provide worker/scheduler, failure and restore guidance.",
         "Write TYPESCRIPT_STRATEGY.md only for future Resources/FormRequests -> OpenAPI -> TypeScript setup. Include rationale, prerequisites, proposed commands, inference limits, maintenance and future CI drift checking. Do not install/configure/run the TypeScript generator or require generated artifacts in this issue.",
         "Requirement mapping: FR44 sets up API documentation; each endpoint owner maintains their documentation. FR74/FR75 establish shared retry, revision, transaction, audit and database safeguards here; every state-changing feature must apply and test them. FR76 is the written list of excluded MVP features, not an implementation deliverable.",
-        "Install a Laravel-compatible Telescope version, publish its provider/config/assets/migrations and configure storage on the private Laravel schema/connection. Enable request, exception, query and job watchers needed for development; configure query thresholds, filtering and scheduled telescope:prune retention. Document reproducible installation and environment settings.",
-        "Create every approved MVP domain/support table plus Laravel users, sessions, password_reset_tokens and UUID-compatible personal_access_tokens in the private laravel schema. user_profiles.id references users.id; HasApiTokens belongs to the users Authenticatable model. Supabase supplies PostgreSQL/Storage only. Preserve all rental constraints; P2 reviews stay deferred.",
+        "Install a Laravel-compatible Telescope version, publish its provider/config/assets/migrations and configure storage on the application PostgreSQL connection. Enable request, exception, query and job watchers needed for development; configure query thresholds, filtering and scheduled telescope:prune retention. Document reproducible installation and environment settings.",
+        "Create every approved MVP domain/support table plus Laravel users, sessions, password_reset_tokens and UUID-compatible personal_access_tokens in the public schema. user_profiles.id references users.id; HasApiTokens belongs to the users Authenticatable model. Supabase supplies PostgreSQL/Storage only. Preserve all rental constraints; P2 reviews stay deferred.",
         "Install/configure Fortify (web guard, headless forms, registration/password reset/email verification) and Sanctum (statefulApi middleware, abilities aliases). Configure database sessions, exact stateful frontend host:port list, explicit credentialed CORS and Laravel CSRF validation. Do not exempt api/* or login from CSRF.",
         "Publish tested localhost and HTTPS sibling-subdomain environment templates. Include session cookie domain/Secure/HttpOnly/SameSite, mail/reset/verification URLs and allowed redirects. Unrelated default frontend/API domains require a tested same-origin proxy or shared-parent domain before release.",
         "Create deterministic users/profile seeders with Laravel password hashes and verified fixture timestamps, plus browser-session and scoped/expired/revoked PAT test factories. Do not call Supabase Auth or reseed hosted production.",
@@ -190,8 +193,9 @@
         "Configuration/integration tests for Telescope migration/storage, environment enable/disable, non-local access denial, filtering/redaction and scheduled pruning; record a short manual local-dashboard verification. No E2E suite required.",
         "Configuration and HTTP integration checks for Fortify routes, session rotation, CSRF enforcement, exact CORS/stateful domains, private auth tables and deterministic auth fixtures; Hien owns full account/token feature tests."
       ],
-      "boundaries": "NFR-02, NFR-03, NFR-06, NFR-07, NFR-05; T1a, T1b, T1c, T1d, T3a, T3g, T4c, T4d, T2a, T2b, T3c, T4b, T5a\nKhai is the sole initial shared-setup owner. Kien reviews. Other members consume the early schema/convention checkpoint and own their complete feature slices/tests; later feature schema changes use reviewed additive migrations. Hien owns authentication/profile implementation. RNT-13 tests and improves Khai’s pipeline rather than assigning setup to another member. Future TypeScript generation is documentation only. Khai owns initial Telescope configuration (T5a). Tri uses that setup for diagnostics, correlation and real alert delivery in RNT-12; Telescope itself is not the alert-delivery implementation.\nAuthentication update: Khai owns package/schema/shared-client setup; Hien owns FR01/02/04/05/43/49/89/90 implementation. All members use and test browser CSRF on their forms; no extra micro-issues.",
-      "body_file": "issues/RNT-01.md"
+      "boundaries": "NFR-02, NFR-03, NFR-06, NFR-07, NFR-05; T1a, T1b, T1c, T1d, T3a, T3g, T4c, T4d, T2a, T2b, T3c, T4b, T5a\nKhai is the sole initial shared-setup owner. Kien reviews. Other members consume the early schema/convention checkpoint and own their complete feature slices/tests; later feature schema changes use reviewed additive migrations. Hien owns authentication/profile implementation. RNT-13 tests and improves Khai\u2019s pipeline rather than assigning setup to another member. Future TypeScript generation is documentation only. Khai owns initial Telescope configuration (T5a). Tri uses that setup for diagnostics, correlation and real alert delivery in RNT-12; Telescope itself is not the alert-delivery implementation.\nAuthentication update: Khai owns package/schema/shared-client setup; Hien owns FR01/02/04/05/43/49/89/90 implementation. All members use and test browser CSRF on their forms; no extra micro-issues.",
+      "body_file": "issues/RNT-01.md",
+      "body": "<!-- rentos-backlog-v2: RNT-01 -->\n\n# RNT-01: Set up database, seed data, Telescope, Scramble and CI\n\n## Outcome\n\nKhai sets up the shared Laravel/Supabase foundation so teammates can migrate, seed, and start feature work. Authentication (Fortify and Sanctum) belongs to RNT-03.\n\n## Ownership and order\n\n- Phase 1.\n- Implementation: **Khai**.\n- Reviewer: **Kien**.\n- Prerequisites: None.\n- GitHub: https://github.com/ndrhmdk/rentOS/issues/97\n\n## Scope\n\n- Document how to connect Laravel to a local or personal remote Supabase Postgres database.\n- Create the current MVP tables and useful constraints. Later feature owners add additive migrations only when a feature needs a schema change.\n- Seed key tables for local testing: about 10 users and at least 20 properties, with units and listings. Do not reseed production.\n- Install Telescope for local debugging and document how to open it.\n- Install Scramble and write `TYPESCRIPT_STRATEGY.md` for a later OpenAPI-to-TypeScript step. Do not run a type generator now.\n- Write short `backend/AGENTS.md` and `frontend/AGENTS.md`. Tests should cover feature and business behavior, not setup configuration.\n- Add a basic CI workflow that runs frontend lint/typecheck/build and backend tests.\n\n## Out of scope\n\n- Fortify, Sanctum, CSRF, CORS, and session-cookie setup. Those belong to RNT-03.\n- Feature screens and feature business rules.\n- Deploy pipelines.\n- Generated TypeScript clients.\n\n## Done when\n\n- [ ] A teammate can copy the env example, migrate, and seed a personal Supabase or local Postgres database.\n- [ ] Seed data includes about 10 users and at least 20 properties with units and listings.\n- [ ] Telescope is installed and documented for local use.\n- [ ] Scramble is installed and the TypeScript strategy is documented.\n- [ ] Frontend and backend agent docs say to test feature behavior.\n- [ ] CI runs the frontend checks and backend tests.\n\nRNT-01 is a planning key, not a GitHub issue number.\n"
     },
     {
       "key": "RNT-02",
@@ -262,7 +266,7 @@
         "Unit tests for normalization, policy resolution, term validation and form interactions.",
         "PostgreSQL/API integration tests for ownership, scope, bulk rollback/idempotency, stale edits and archive/allocation races.",
         "Frontend component tests for property/unit/photo forms and a real Storage success/failure integration check; manually check changed owner screens.",
-        "API/component tests and manual UI checks for separate listing create/edit/submit/publish/hide/archive actions, one current listing per property, missing submission fields and updates without reapproval. Integrate first-publication approval with Tri’s RNT-04; complete the owner journey using real APIs."
+        "API/component tests and manual UI checks for separate listing create/edit/submit/publish/hide/archive actions, one current listing per property, missing submission fields and updates without reapproval. Integrate first-publication approval with Tri\u2019s RNT-04; complete the owner journey using real APIs."
       ],
       "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3f, T4a, T3g, T4d\nKien owns property/unit/photo management and owner listing creation/publication. Keep Create property and Create listing as separate flows/screens. Tri owns admin approval (RNT-04); Khai owns public landing/search/detail pages and their APIs (RNT-06). Scheduled deletion of unreferenced photo files after retention belongs to RNT-10.",
       "body_file": "issues/RNT-02.md"
@@ -303,7 +307,7 @@
         "Use auth:sanctum and Policies for private APIs. Browser writes use Laravel CSRF; enforce session-only mode for token management, admin and all private routes outside the approved PAT matrix. Do not infer authorization from tokenCan for first-party sessions.",
         "Implement GET/POST /api/v1/account/api-tokens and DELETE /api/v1/account/api-tokens/{id}, using browser-session-only authentication, verification, active-account checks and current-user scoping. Mutations require CSRF and recent password confirmation. Add form validation and rate limits.",
         "Allow only account:read, favourites:read and favourites:write; expose the mapping in OpenAPI. Validate token name and expiry choices 1/7/30 days (proposed configurable default 30). Return plaintext once on create with no-store, store SHA-256 hash, and list metadata only. Never cache a creation secret for idempotent replay.",
-        "Revoke tokens by deleting the current user’s selected row. Ordinary browser logout invalidates only its session. Successful password reset/change or account suspension invalidates all sessions and PATs and rotates remember credentials; explicitly integrate these hooks rather than assuming Fortify does everything.",
+        "Revoke tokens by deleting the current user\u2019s selected row. Ordinary browser logout invalidates only its session. Successful password reset/change or account suspension invalidates all sessions and PATs and rotates remember credentials; explicitly integrate these hooks rather than assuming Fortify does everything.",
         "Add audit events for token creation/revocation/security actions containing actor, token id, abilities, expiry and outcome only. Configure diagnostic/request redaction; schedule expired-token pruning. Real enforcement must reject expiry before pruning.",
         "Use Laravel mail/verification/reset routes with allowlisted Next.js URLs. With Fortify views disabled, configure password.reset URL generation and verification redirect; never reflect arbitrary return URLs. Reset redemption requires a valid reset token, not an existing browser login."
       ],
@@ -320,7 +324,7 @@
         "Cookie-free real bearer calls enforce the documented scope matrix, current account and resource Policies; expired/revoked tokens return 401, missing ability returns 403. Personal tokens cannot invoke admin or session-only routes.",
         "Ordinary logout invalidates the current browser session, while separately created PATs remain valid until explicit revocation/expiry. Reset or suspension invalidates all sessions/tokens; the UI states the difference.",
         "Localhost and deployed sibling-domain flows pass the configuration checks; 419 recovery does not silently duplicate writes. Tokens, hashes, cookies, CSRF values, passwords and reset links do not enter logs/Telescope/caches.",
-        "Scramble documents session/CSRF and bearer paths separately. Evidence demonstrates the teacher’s CSRF/server-validation and Sanctum token-management/permission criteria without requiring an automated browser suite."
+        "Scramble documents session/CSRF and bearer paths separately. Evidence demonstrates the teacher\u2019s CSRF/server-validation and Sanctum token-management/permission criteria without requiring an automated browser suite."
       ],
       "tests": [
         "Unit tests for normalized registration, validation, permitted scopes/expiry, account checks and token metadata serialization; frontend component tests for login, 419 recovery, create/copy-once/revoke and account switching.",
@@ -357,7 +361,7 @@
       "github_url": null,
       "outcome": "Admins inspect the complete first listing package and approve or reject the exact submitted content safely.",
       "backend": [
-        "Implement protected admin queue/detail and approve/reject endpoints using Hien’s authentication/Policies and Khai’s revision helpers. Return listing, property, units, selected photos and policies as one package.",
+        "Implement protected admin queue/detail and approve/reject endpoints using Hien\u2019s authentication/Policies and Khai\u2019s revision helpers. Return listing, property, units, selected photos and policies as one package.",
         "Lock and check expected listing/content revisions; require rejection reason; atomically persist review/audit/outbox outcomes. Seed pending/approved/rejected/stale examples independently of the owner UI.",
         "Maintain the Resource/FormRequest/OpenAPI contract and pagination/filter rules. Khai reviews privilege and locking decisions; Tri owns the implementation and tests."
       ],
@@ -545,7 +549,7 @@
         "Duplicate submit, stale withdrawal/reject and foreign-user contact access are rejected consistently; owner discussion never requires clicking Accept.",
         "Heart state survives reload, one user/property relation exists under repeated/concurrent saves and intended DELETE is idempotent even when the target becomes hidden.",
         "Hidden/suspended/archived saved targets disclose no title/photo/address/moderation reason; date unavailability alone does not delete the save.",
-        "Out-of-order/network responses and account switches cannot show stale hearts or another user’s private list.",
+        "Out-of-order/network responses and account switches cannot show stale hearts or another user\u2019s private list.",
         "Request status and private count/list reconcile with server state; badge counts stored relations including placeholders as a documented proposed default."
       ],
       "tests": [
@@ -605,7 +609,7 @@
         "PostgreSQL/API tests for privacy, rate limit, unique live report, stale decisions and owner-edit versus suspension race.",
         "API integration tests for report/investigate/suspend/restore and public visibility; manually check reporter/admin forms and status feedback."
       ],
-      "boundaries": "NFR-02, NFR-03, NFR-04, NFR-07; T3c, T4a, T3g, T4d\nTri owns both layers and writes all relevant tests; Khai reviews privilege and transaction rules. Do not split admin backend into another member’s implementation issue.",
+      "boundaries": "NFR-02, NFR-03, NFR-04, NFR-07; T3c, T4a, T3g, T4d\nTri owns both layers and writes all relevant tests; Khai reviews privilege and transaction rules. Do not split admin backend into another member\u2019s implementation issue.",
       "body_file": "issues/RNT-08.md"
     },
     {
@@ -704,7 +708,7 @@
         "Only the recipient can list/read notifications or open an authorized target; repeated read is idempotent.",
         "After the documented retention period, the job deletes an abandoned/unreferenced photo file; re-running is safe. A file still referenced, or referenced again before deletion, is preserved. Existing cover photos and contract/history records remain accessible.",
         "The scheduler and worker actually run in the chosen environment and have documented restart/failed-job recovery.",
-        "Notification list/read states and owner photo upload/removal states show loading/failure/retry correctly and do not expose another account’s data."
+        "Notification list/read states and owner photo upload/removal states show loading/failure/retry correctly and do not expose another account\u2019s data."
       ],
       "tests": [
         "Unit/component tests for event mapping, payload redaction, inbox/read states and links.",
@@ -752,7 +756,7 @@
         "Implement responsive images, lazy noncritical resources, race-safe filter/search responses and account-private heart hydration with failure/retry states."
       ],
       "acceptance": [
-        "Age alone or another tenant’s acceptance never rejects a pending rental request if an eligible alternate unit fits the whole desired interval.",
+        "Age alone or another tenant\u2019s acceptance never rejects a pending rental request if an eligible alternate unit fits the whole desired interval.",
         "Partial availability, maintenance and real blocking reservations prevent false matches; hidden listing status alone cannot establish occupation.",
         "Ageing versus withdrawal/proposal/expiry races produce one valid audited outcome and retried jobs are idempotent.",
         "Hidden/suspended content is not served through a stale shared cache; owner restore does not bypass owner publication.",
@@ -796,7 +800,7 @@
       "github_url": null,
       "outcome": "Developers/admins can diagnose real failures and receive critical, slow-query and server-resource alerts without exposing private data.",
       "backend": [
-        "Use Khai’s RNT-01 Telescope setup to investigate errors, slow queries and failed jobs. Add structured correlation IDs across HTTP/jobs/audit and verify sensitive data remains filtered; do not duplicate package installation/configuration here.",
+        "Use Khai\u2019s RNT-01 Telescope setup to investigate errors, slow queries and failed jobs. Add structured correlation IDs across HTTP/jobs/audit and verify sensitive data remains filtered; do not duplicate package installation/configuration here.",
         "Implement critical-error reporting and configurable deduplicated individual slow-query alerts; distinguish these from cumulative request DB-time warnings.",
         "Configure CPU/memory/disk/network monitoring and threshold alerts for the actual app/worker host; document managed-provider visibility limits, worker health, fallback logging and actionable recovery guidance.",
         "Verify Telescope and logs redact session/CSRF cookies, X-XSRF-TOKEN, Authorization, passwords, reset links and one-time API-token responses; diagnostic access uses an approved session/admin gate if enabled nonlocally."
@@ -856,7 +860,7 @@
       "outcome": "Agreement flows survive hostile/stale/concurrent input, and reviewed merges migrate/deploy the same tested revision safely.",
       "backend": [
         "Close observed security/integrity defects across original and renewal APIs using real participant, hash, lock, revision and replay rules; review private storage/download grants and public Data API exposure.",
-        "Verify Khai’s RNT-01 CI/CD to test schema rebuild plus upgrade of the prior state; merged deployment uses environment secrets, direct DB connectivity preflight, one database concurrency group with cancel-in-progress=false and migrate --force before matching app/worker deployment.",
+        "Verify Khai\u2019s RNT-01 CI/CD to test schema rebuild plus upgrade of the prior state; merged deployment uses environment secrets, direct DB connectivity preflight, one database concurrency group with cancel-in-progress=false and migrate --force before matching app/worker deployment.",
         "Document compatible additive/backfill/remove releases, failed-migration recovery and backup/restore rehearsal in a disposable environment; do not assume batch-wide rollback or auto-run destructive resets.",
         "Verify private routes use Sanctum session or explicitly allowed PAT mode, current Policies and CSRF for browser mutations. Prove missing CSRF denial, session invalidation, token expiry/revocation and denial of PAT access to admin/session-only actions. Review no provider JWT bridge remains."
       ],
@@ -1014,7 +1018,7 @@
         "Component/API tests for combined location/date/amenity search and location URL persistence; manually verify reload/back navigation.",
         "Component/API regression checks cover token-settings one-time display and revoke, session account switching and 401/419 form recovery without automatic duplicate writes."
       ],
-      "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3e, T3g, T4d, T6c\nCoverage is a team result, not permission to transfer everyone’s testing to Hien. Full-stack defects remain the responsibility of their owning feature developer.",
+      "boundaries": "NFR-01, NFR-02, NFR-03, NFR-04, NFR-07; T3e, T3g, T4d, T6c\nCoverage is a team result, not permission to transfer everyone\u2019s testing to Hien. Full-stack defects remain the responsibility of their owning feature developer.",
       "body_file": "issues/RNT-15.md"
     },
     {
@@ -1057,18 +1061,18 @@
       "backend": [
         "Fix discovered moderation/report validation, authorization, stale-decision and privacy defects; keep reviewed transitions/audit consistent with owner/public eligibility.",
         "Finish root README covering actual tools/setup, env names, schema/migration/seed/worker/scheduler, ERD, API types/docs, tests, monitoring and lecturer evidence.",
-        "Collect evidence links from all four members and verify each member’s own five sprint self-reports. Document deadline/penalty policy rather than creating fake contribution records."
+        "Collect evidence links from all four members and verify each member\u2019s own five sprint self-reports. Document deadline/penalty policy rather than creating fake contribution records."
       ],
       "frontend": [
         "Repair admin queue/detail/forms across keyboard/mobile and server failure states, integrating actual endpoints rather than fixture-only demos.",
-        "Capture actual sanitized screens and assemble <=10-minute >=720p MP4 demo with each member’s real feature/test contributions and accessible public/unlisted link."
+        "Capture actual sanitized screens and assemble <=10-minute >=720p MP4 demo with each member\u2019s real feature/test contributions and accessible public/unlisted link."
       ],
       "acceptance": [
         "Admin UI and direct API calls pass normal-user denial, stale revision, reason validation and reporter privacy regressions.",
         "Keyboard focus/labels, loading/empty/error/retry states and pagination work on implemented review/report screens.",
         "A clean-machine setup rehearsal follows the README successfully, with resolving ERD/docs/type/test links and no secret values.",
         "The video meets duration/quality/access rules and shows implemented workflows plus real tests/alerts/performance evidence.",
-        "Each of four members provides five truthful sprint reports; D checks links/completeness but does not write or claim others’ contributions.",
+        "Each of four members provides five truthful sprint reports; D checks links/completeness but does not write or claim others\u2019 contributions.",
         "Submission and known limitations match actual code/test/evidence state, including any unresolved printed-rubric substitutions.",
         "Final demonstration includes a CSRF-protected browser form (valid and rejected submission), token settings create/revoke and cookie-free scoped-token allowed/denied/401 examples; all claims link to actual implementation evidence."
       ],

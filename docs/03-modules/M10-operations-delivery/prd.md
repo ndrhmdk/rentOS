@@ -6,7 +6,7 @@ Khai owns the complete initial engineering setup in RNT-01, including Sanctum, S
 
 ## Scope and screens/actions
 
-- Local per-developer Supabase; complete Laravel migrations/seeders through direct PostgreSQL where reachable; private laravel schema bootstrapped before migration history.
+- Local per-developer Supabase; complete Laravel migrations/seeders through direct PostgreSQL where reachable. Application tables live in the existing `public` schema.
 - PR CI runs lint/type/build/unit/component/API/PostgreSQL checks. Reviewed main deploy serializes migrations and matching app/worker release; no hosted reset/reseed.
 - Telescope setup/access/filtering/pruning is RNT-01; Tri implements diagnostics/correlation and actual alerts in RNT-12. TypeScript generator setup is documentation only; no mandatory E2E.
 

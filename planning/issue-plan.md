@@ -6,7 +6,7 @@ Exactly 16 grouped issues, four per named member. All feature owners implement f
 
 | Member | Issue | Complete outcome | Integration prerequisites |
 | --- | --- | --- | --- |
-| Khai | [RNT-01](issues/RNT-01.md) | Set up database, Fortify, Sanctum, Telescope, API docs and CI/test rules | None |
+| Khai | [RNT-01](issues/RNT-01.md) | Set up database, seed data, Telescope, Scramble and CI | None |
 | Kien | [RNT-02](issues/RNT-02.md) | Manage properties, units, photos, amenities and owner listings | RNT-01, RNT-03, RNT-04 |
 | Hien | [RNT-03](issues/RNT-03.md) | Implement account forms, session login, CSRF protection and API-token settings | RNT-01 |
 | Tri | [RNT-04](issues/RNT-04.md) | Admin reviews and approves listings before first publication | RNT-01, RNT-03 |

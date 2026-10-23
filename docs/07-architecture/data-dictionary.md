@@ -7,6 +7,7 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
 | id | uuid | PK | No | gen_random_uuid() | Laravel Authenticatable user UUID; profile uses the same UUID. |
+| name | text |  | No |  | Fortify registration/account name input and trigger source for user_profiles.full_name. users.name is the authoritative authentication-side copy; the database synchronizes only full_name after insert/name update and never overwrites profile phone/admin/status fields. |
 | email | text | UNIQUE | No |  | Normalized lowercase email; never duplicated in user_profiles. |
 | email_verified_at | timestamptz |  | Yes |  | Set only by valid Laravel email verification. |
 | password | varchar(255) |  | No |  | Laravel Hash password hash; hidden from every Resource/log. |
@@ -18,12 +19,11 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 
 | Column | Type | Key | Nullable | Default | Meaning |
 | --- | --- | --- | --- | --- | --- |
-| id | uuid | PK,FK | No |  | PK/FK to laravel.users.id; one profile per Laravel account; preserve existing domain UUIDs. |
+| id | uuid | PK,FK | No |  | PK/FK to users.id; one profile per Laravel account; preserve existing domain UUIDs. |
 | full_name | text |  | No |  | Validated display/contact name |
 | phone | text |  | Yes |  | Optional contact number; not OTP ownership verification |
 | is_admin | boolean |  | No | false | Trusted server-managed moderation privilege |
 | account_status | text |  | No | ACTIVE | ACTIVE or SUSPENDED |
-| revision | integer |  | No | 1 | Optimistic concurrency version |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 
@@ -50,7 +50,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | archived_at | timestamptz |  | Yes |  | Archive instead of destructive delete |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
-| revision | integer |  | No | 1 | Stale property write version |
 
 ## units
 
@@ -75,7 +74,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | operational_status | text |  | No | READY | READY MAINTENANCE RETIRED |
 | is_marketed | boolean |  | No | false | Explicit owner advertising choice; enable only with complete required unit data |
 | policy_overrides | jsonb |  | No | {} | Allowed enum overrides and additional_rules |
-| revision | integer |  | No | 1 | Stale write check |
 | archived_at | timestamptz |  | Yes |  | Preserve historical references |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
@@ -93,7 +91,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | caption | text |  | Yes |  | Owner caption; plain text, audited |
 | sort_order | integer |  | No | 0 | Gallery order |
 | is_selected_for_listing | boolean |  | No | true | Display intent independent of approval |
-| revision | integer |  | No | 1 | Stale gallery edit protection |
 | purged_at | timestamptz |  | Yes |  | Storage file deletion confirmed |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
@@ -114,7 +111,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | cover_media_id | uuid | FK | Yes |  | Selected nondeleted same-property shared media; required to publish |
 | moderation_status | text |  | No | DRAFT | DRAFT PENDING APPROVED REJECTED |
 | publication_status | text |  | No | DRAFT | DRAFT PUBLISHED HIDDEN |
-| revision | integer |  | No | 1 | Listing optimistic revision; initial submission snapshot |
 | submitted_revision | integer |  | Yes |  | Listing revision awaiting review |
 | submitted_at | timestamptz |  | Yes |  | Review request time |
 | reviewed_by | uuid | FK | Yes |  | Admin reviewer |
@@ -142,7 +138,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | message | text |  | No |  | Enquiry text |
 | status | text |  | No | PENDING | PENDING ACCEPTED REJECTED WITHDRAWN; ACCEPTED means tenancy proposal committed |
 | outcome_reason | text |  | Yes |  | Required rejection/automatic closure explanation |
-| revision | integer |  | No | 1 | Concurrent state guard |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 | contact_name | text |  | No |  | Private submitted contact snapshot |
@@ -163,7 +158,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | status | text |  | No | PENDING_CONFIRMATION | PENDING_CONFIRMATION AWAITING_REVISION CONFIRMED ACTIVE EXPIRED CANCELLED ENDED |
 | actual_ended_at | timestamptz |  | Yes |  | Actual move-out/end or cancellation action |
 | end_reason | text |  | Yes |  | Required when ending/cancelling |
-| revision | integer |  | No | 1 | Concurrent lifecycle guard |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 | owner_id | uuid | FK | No |  | Manager party snapshot for contract confirmation |
@@ -190,7 +184,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | reviewed_by | uuid | FK | Yes |  | Owner for rejection; acceptance derives from final mutual confirmation |
 | reviewed_at | timestamptz |  | Yes |  | Outcome time |
 | review_reason | text |  | Yes |  | Required for rejection |
-| revision | integer |  | No | 1 | Terminal action concurrency |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 
@@ -235,7 +228,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | internal_notes | text |  | Yes |  | Admin only investigation details |
 | reviewed_by | uuid | FK | Yes |  | Admin deciding |
 | reviewed_at | timestamptz |  | Yes |  | Decision time |
-| revision | integer |  | No | 1 | Concurrent reviewer guard |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 
@@ -298,7 +290,6 @@ Laravel accounts use users UUIDs, shared by user_profiles. Domain UUID reference
 | reviewed_by | uuid | FK | Yes |  | Admin reviewer |
 | reviewed_at | timestamptz |  | Yes |  | Decision time |
 | review_reason | text |  | Yes |  | Required on rejection/removal |
-| revision | integer |  | No | 1 | Submitted content guard |
 | created_at | timestamptz |  | No | now() | Record creation time in UTC |
 | updated_at | timestamptz |  | No | now() | Last record update time in UTC |
 
