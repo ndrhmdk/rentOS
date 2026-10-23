@@ -6,7 +6,7 @@ Application and framework tables live in PostgreSQL's `public` schema, which is 
 
 ## Requirements
 
-- PHP 8.3 or newer with `pdo_pgsql`
+- PHP 8.4 or newer with `pdo_pgsql`
 - Composer
 - PostgreSQL client tools
 - Node.js and npm for Vite assets
