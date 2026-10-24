@@ -1,23 +1,17 @@
 # Project glossary
 
+See [domain terminology](../02-domain/terminology.md) for product names.
+
 | Term | Meaning |
 | --- | --- |
-| Property | Owner-managed physical container |
-| Unit | Independently rentable space |
-| Listing | Property-level public advertisement |
-| PENDING enquiry | Offline discussion continues; no reservation |
-| ACCEPTED enquiry | A tenancy proposal committed; not necessarily mutual agreement |
-| Contract version | One immutable submitted row in tenancy_contracts |
-| Confirmation | Write-once party timestamp on the exact contract row/hash |
-| Confirmed span | Projection of consecutive mutually confirmed segments |
-| Blocked span | Confirmed span plus current proposed original/renewal hold |
-| Operational status | READY/MAINTENANCE/RETIRED; separate from period availability |
-| Favourite | Private persisted property bookmark |
-| Admin suspension | Restriction owner cannot clear |
-| Submission revision | Snapshot checked only for first review |
-| Publication | Owner choice separate from moderation and availability |
-| Product priority | Preserved P0/P1/P2/P3 feature scope |
-| Course required | Printed rubric/submission evidence independent of product priority |
-| Planning alias | Member-A/B/C/D, not a real GitHub handle |
-| Implemented | Only if repository/code/tests substantiate it |
-| Definition of done | Integrated behavior, tests/docs and reviewed issue-linked PR evidence |
+| FR | Stable functional requirement identifier; gaps are historical, not missing features |
+| AC | Acceptance specification, not an executed test result |
+| RNT-xx | Planning key for a grouped issue; not a GitHub issue number |
+| Primary issue | First implementation owner; later verification does not transfer ownership |
+| Revision | Expected version of mutable content, checked to reject stale writes |
+| Idempotency key | Actor/action-scoped create/retry intent; different payload with same key is rejected |
+| Outbox | Committed event record delivered by a worker after business commit |
+| Telescope pruning | Deletion of old diagnostic entries, distinct from business audit history and stored photo-file deletion |
+| Server cache invalidation | Remove/version Laravel cache data after relevant committed changes |
+| Query invalidation | Mark/refetch matching TanStack Query data in the current client |
+| P2 | Deferred feature, not an MVP implementation/test obligation |

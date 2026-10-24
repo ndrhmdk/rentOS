@@ -1,125 +1,87 @@
-# Issue plan
+# Four-phase issue plan
 
-Implementable issues only. Epics below are groupings, not extra GitHub issues and not duplicate checklists.
+Exactly 16 grouped issues, four per named member. All feature owners implement frontend/backend and their tests. Khai owns all initial shared setup in RNT-01; reviewers do not take over implementation. Issue count does not prove equal effort: reassess capacity at the actual schema/auth checkpoint without inventing deadlines.
 
-## Critical path
-Supabase wiring and profiles → inventory schema and exclusion constraint → JWT and policies → property, unit, media, listing draft → first review and publish → public search → enquiry → proposal and exact-version confirmation → renewal hold and scheduled expiry → reports and suspension → coverage, monitoring, README, and demo.
+## Phase 1: Shared setup, accounts, properties and admin approval
 
-Favourites branch after profiles, properties, and the visibility rule, without waiting for renewals. Admin screens can start on typed fixtures after the Next.js shell exists. They are done only when they call the reviewed admin endpoints.
-
-## Epics
-- Platform and evidence: RENT-001–RENT-005
-- Identity: RENT-006–RENT-017
-- Inventory: RENT-018–RENT-029
-- Listing review and publication: RENT-030–RENT-038
-- Discovery and favourites: RENT-039–RENT-043
-- Enquiries and tenancies: RENT-044–RENT-055
-- Renewals: RENT-056–RENT-058
-- Reports and admin UI: RENT-059–RENT-066
-- Operations and submission: RENT-067–RENT-086
-
-## Tentative load
-Estimates are developer-days for sequencing. They are not a claim that five weeks remain, and they are not a sprint commitment.
-
-| Alias | Issues | Tentative days | Role |
+| Member | Issue | Complete outcome | Integration prerequisites |
 | --- | --- | --- | --- |
-| A | 29 | 34.0 | Identity, schema races, tenancy, jobs, monitoring, CI |
-| B | 26 | 29.5 | Inventory, storage, listing actions, search, reports backend |
-| C | 20 | 19.0 | Next.js tenant and owner flows, favourites, UI coverage |
-| D | 11 | 5.5 | Admin queue, detail, reason forms, fixtures, UI tests, screenshots |
+| Khai | [RNT-01](issues/RNT-01.md) | Set up database, seed data, Telescope, Scramble and CI | None |
+| Kien | [RNT-02](issues/RNT-02.md) | Manage properties, units, photos, amenities and owner listings | RNT-01, RNT-03, RNT-04 |
+| Hien | [RNT-03](issues/RNT-03.md) | Implement account forms, session login, CSRF protection and API-token settings | RNT-01 |
+| Tri | [RNT-04](issues/RNT-04.md) | Admin reviews and approves listings before first publication | RNT-01, RNT-03 |
 
-Member A is the critical path because reservation, confirmation, and course operations sit there. Member B reviews that work and owns the owner-domain backend. The day totals are not balanced to equal issue counts. Member D stays on bounded admin UI so authorization and SQL locks are not assigned as beginner tasks. After real handles and capacity are known, the team can move pairing, not the privilege boundary.
+## Phase 2: Listing browsing, rental requests, contracts and reports
 
-## Ordered issues
-| ID | Title | Owner | Reviewer | Risk | Days | Depends on |
-| --- | --- | --- | --- | --- | --- | --- |
-| RENT-001 | Record lecturer evidence for Next.js and JWT substitutions | A | B | high | 0.5 | — |
-| RENT-003 | Add issue-linked branches, pull requests, and CI | A | B | medium | 1 | — |
-| RENT-004 | Create the Next.js frontend shell | C | A | medium | 1 | — |
-| RENT-005 | Wire Laravel to Supabase Postgres, Auth, and Storage | A | B | high | 1 | — |
-| RENT-082 | File Member A sprint self-reports | A | B | low | 0.5 | — |
-| RENT-083 | File Member B sprint self-reports | B | A | low | 0.5 | — |
-| RENT-084 | File Member C sprint self-reports | C | A | low | 0.5 | — |
-| RENT-085 | File Member D sprint self-reports | D | B | low | 0.5 | — |
-| RENT-006 | Add user_profiles keyed to Supabase Auth | A | B | high | 1 | RENT-005 |
-| RENT-067 | Bootstrap the queue worker and scheduler | A | B | medium | 1 | RENT-005 |
-| RENT-072 | Install Telescope for restricted diagnostics | A | B | medium | 0.5 | RENT-005 |
-| RENT-073 | Log errors and send a critical alert | A | B | medium | 1 | RENT-005 |
-| RENT-075 | Monitor CPU, memory, disk, and network | A | B | medium | 1 | RENT-005 |
-| RENT-007 | Migrate properties, units, media, and listings | B | A | high | 2 | RENT-006 |
-| RENT-012 | Verify Supabase JWTs in Laravel | A | B | high | 2 | RENT-005, RENT-006 |
-| RENT-008 | Migrate enquiries, tenancies, contracts, and exclusion | A | B | high | 2 | RENT-007 |
-| RENT-009 | Migrate reports, audit logs, notifications, and outbox | B | A | medium | 1 | RENT-006, RENT-007 |
-| RENT-010 | Migrate favourite_properties | B | A | medium | 0.5 | RENT-006, RENT-007 |
-| RENT-002 | Agree the CSRF demonstration for bearer authentication | A | B | high | 0.5 | RENT-012 |
-| RENT-013 | Bootstrap and update the signed-in profile | A | B | medium | 1 | RENT-012 |
-| RENT-011 | Seed public, hidden, suspended, and saved scenarios | B | A | medium | 1 | RENT-007, RENT-008, RENT-009, RENT-010 |
-| RENT-014 | Build registration, login, logout, and reset screens | C | A | medium | 1 | RENT-004, RENT-013 |
-| RENT-016 | Enforce resource and admin policies | A | B | high | 1 | RENT-013 |
-| RENT-015 | Add tenant and owner dashboard shells | C | A | low | 0.5 | RENT-014 |
-| RENT-017 | Add idempotency keys, revisions, and the error schema | A | B | high | 1 | RENT-016 |
-| RENT-035 | Build the admin first-review queue | D | B | low | 0.5 | RENT-004, RENT-015 |
-| RENT-062 | Build the admin report queue | D | A | low | 0.5 | RENT-004, RENT-015 |
-| RENT-018 | Add owner property create, update, and archive | B | A | medium | 1 | RENT-007, RENT-017 |
-| RENT-036 | Build the admin first-review detail | D | B | low | 0.5 | RENT-035 |
-| RENT-063 | Build the admin report detail | D | A | low | 0.5 | RENT-062 |
-| RENT-019 | Build property create and edit screens | C | B | low | 1 | RENT-015, RENT-018 |
-| RENT-020 | Add unit create, bulk create, edit, and operational status | B | A | high | 1.5 | RENT-018 |
-| RENT-030 | Create and edit the property listing draft | B | A | medium | 1 | RENT-018 |
-| RENT-071 | Generate OpenAPI with Scramble | A | B | medium | 1 | RENT-012, RENT-018 |
-| RENT-021 | Build unit management screens | C | B | low | 1 | RENT-019, RENT-020 |
-| RENT-022 | Store property and unit photos in Supabase Storage | B | A | high | 1.5 | RENT-005, RENT-020 |
-| RENT-026 | Edit controlled property and unit policies | B | A | medium | 1 | RENT-020 |
-| RENT-027 | Manage standard and custom amenities | B | A | medium | 1.5 | RENT-020 |
-| RENT-080 | Replace the root README with the submission overview | A | C | medium | 1 | RENT-011, RENT-071 |
-| RENT-023 | Select, reorder, and remove gallery images | B | A | medium | 1 | RENT-022 |
-| RENT-028 | Build policy and amenity editing screens | C | B | low | 1 | RENT-021, RENT-026, RENT-027 |
-| RENT-029 | Audit property, unit, and policy changes | B | A | medium | 1 | RENT-009, RENT-018, RENT-020, RENT-026, RENT-027 |
-| RENT-024 | Build the owner gallery screen | C | B | low | 0.5 | RENT-021, RENT-023 |
-| RENT-025 | Clean orphaned and deleted media safely | B | A | medium | 0.5 | RENT-023, RENT-067 |
-| RENT-031 | Submit the initial listing package | B | A | high | 1 | RENT-030, RENT-023, RENT-026, RENT-027 |
-| RENT-032 | Approve or reject the initial listing package | B | A | high | 1.5 | RENT-031, RENT-016 |
-| RENT-033 | Publish, hide, and archive a listing | B | A | high | 1 | RENT-032 |
-| RENT-037 | Build admin approve and reject reason forms | D | A | medium | 0.5 | RENT-036, RENT-032 |
-| RENT-034 | Build the owner listing draft, submit, and publish flow | C | B | medium | 1 | RENT-024, RENT-028, RENT-030, RENT-031, RENT-033 |
-| RENT-039 | Search published listings by the full date interval | B | A | high | 2 | RENT-033, RENT-008, RENT-027 |
-| RENT-042 | Save and remove favourite properties | B | A | high | 1 | RENT-010, RENT-016, RENT-033 |
-| RENT-044 | Submit and withdraw a rental enquiry | A | B | high | 1 | RENT-017, RENT-008, RENT-033 |
-| RENT-059 | Accept listing reports and show reporter outcomes | B | A | high | 1 | RENT-016, RENT-009, RENT-033 |
-| RENT-038 | Cover the first-review screens with UI tests | D | B | low | 0.5 | RENT-035, RENT-036, RENT-037 |
-| RENT-040 | Build listing search and detail pages | C | B | medium | 1.5 | RENT-004, RENT-039 |
-| RENT-041 | Cache public listings and keep private data uncached | C | B | high | 1 | RENT-039, RENT-033 |
-| RENT-074 | Alert when a query exceeds the slow-query threshold | A | B | medium | 1 | RENT-072, RENT-039 |
-| RENT-046 | Give owners an enquiry inbox and reject action | A | B | high | 1 | RENT-044 |
-| RENT-055 | Reject aged enquiries only when the interval is unavailable | B | A | high | 1.5 | RENT-044, RENT-039, RENT-067 |
-| RENT-061 | Resolve reports and suspend or restore listings | B | A | high | 1.5 | RENT-059, RENT-033 |
-| RENT-043 | Build favourite hearts and the saved list | C | B | medium | 1 | RENT-014, RENT-040, RENT-042 |
-| RENT-045 | Build the enquiry form and tenant request list | C | A | medium | 1 | RENT-040, RENT-044 |
-| RENT-060 | Build the listing report form and reporter list | C | B | low | 0.5 | RENT-040, RENT-059 |
-| RENT-078 | Record frontend resource-loading improvements | C | B | medium | 1 | RENT-040, RENT-024 |
-| RENT-047 | Build the owner enquiry inbox | C | A | low | 0.5 | RENT-015, RENT-046 |
-| RENT-048 | Commit a tenancy proposal and temporary hold | A | B | high | 2 | RENT-046, RENT-026, RENT-017 |
-| RENT-064 | Build admin report decision forms | D | A | medium | 0.5 | RENT-063, RENT-061 |
-| RENT-065 | Build the admin suspend and restore form | D | A | medium | 0.5 | RENT-063, RENT-061 |
-| RENT-049 | Confirm or decline the exact contract version | A | B | high | 2 | RENT-048 |
-| RENT-050 | Download the private contract document | B | A | high | 1 | RENT-022, RENT-048 |
-| RENT-054 | Expire confirmation holds on a schedule | A | B | high | 1 | RENT-048, RENT-067 |
-| RENT-068 | Deliver domain notifications through the outbox | B | A | high | 1.5 | RENT-009, RENT-067, RENT-048 |
-| RENT-076 | Raise API test coverage above 70 percent | A | B | high | 2 | RENT-048, RENT-039, RENT-061, RENT-012 |
-| RENT-079 | Remove listing and tenancy query antipatterns | B | A | medium | 1 | RENT-039, RENT-048 |
-| RENT-066 | Cover admin report screens with UI tests | D | A | low | 0.5 | RENT-062, RENT-063, RENT-064, RENT-065 |
-| RENT-052 | Record move-in, cancellation, and tenancy end | A | B | high | 1.5 | RENT-049 |
-| RENT-053 | Submit a corrected unconfirmed contract | A | B | high | 1.5 | RENT-049 |
-| RENT-051 | Build the tenancy timeline and confirmation screen | C | A | medium | 1.5 | RENT-049, RENT-050 |
-| RENT-081 | Produce the course demo recording | A | C | medium | 1 | RENT-080, RENT-075, RENT-074, RENT-054 |
-| RENT-069 | Expose the private notification inbox API | B | A | medium | 0.5 | RENT-068 |
-| RENT-086 | Add admin screenshots and accessibility notes | D | C | low | 0.5 | RENT-038, RENT-066, RENT-080 |
-| RENT-056 | Submit, withdraw, or reject a renewal request | A | B | high | 1 | RENT-052 |
-| RENT-077 | Raise UI and business coverage above 70 percent | C | A | high | 2 | RENT-043, RENT-045, RENT-051, RENT-038, RENT-066 |
-| RENT-070 | Build the notification inbox screen | C | B | low | 0.5 | RENT-069, RENT-014 |
-| RENT-057 | Propose a renewal segment without releasing occupancy | A | B | high | 2 | RENT-056, RENT-048 |
-| RENT-058 | Build renewal request and proposal screens | C | A | medium | 1 | RENT-051, RENT-056, RENT-057 |
+| Member | Issue | Complete outcome | Integration prerequisites |
+| --- | --- | --- | --- |
+| Kien | [RNT-05](issues/RNT-05.md) | Create tenancy proposals and confirm the same contract version | RNT-01, RNT-06, RNT-07 |
+| Khai | [RNT-06](issues/RNT-06.md) | Build the landing page, browse/search listings and view listing details | RNT-02, RNT-03, RNT-04 |
+| Tri | [RNT-07](issues/RNT-07.md) | Submit/manage rental requests and save favourite properties | RNT-01, RNT-03, RNT-06 |
+| Hien | [RNT-08](issues/RNT-08.md) | Report listings and let admins investigate, hide or restore them | RNT-01, RNT-04, RNT-06 |
 
-## Reuse
-There were no existing GitHub issues or pull requests to link. The Laravel skeleton, Sanctum install, jobs migration, pull request template, and `design/` tokens are reused. The Vite apps are not extended into the product UI.
+## Phase 3: Renewals, automatic rules, background jobs and monitoring
 
+| Member | Issue | Complete outcome | Integration prerequisites |
+| --- | --- | --- | --- |
+| Kien | [RNT-09](issues/RNT-09.md) | Request tenancy renewals, add contract versions and release expired reservations | RNT-05, RNT-10 |
+| Khai | [RNT-10](issues/RNT-10.md) | Run background jobs, delete unreferenced photo files after retention and deliver notifications | RNT-02, RNT-05, RNT-08 |
+| Hien | [RNT-11](issues/RNT-11.md) | Apply the 15-day request rule, cache public search results and refresh them after listing changes | RNT-06, RNT-07, RNT-09 |
+| Tri | [RNT-12](issues/RNT-12.md) | Monitor errors and slow queries, send alerts and show useful error screens | RNT-01, RNT-03, RNT-08 |
+
+## Phase 4: Final testing, fixes and submission
+
+| Member | Issue | Complete outcome | Integration prerequisites |
+| --- | --- | --- | --- |
+| Khai | [RNT-13](issues/RNT-13.md) | Verify contract permissions, conflicting updates and deployment failure recovery | RNT-09, RNT-10, RNT-12 |
+| Kien | [RNT-14](issues/RNT-14.md) | Verify owner property/listing/photo actions, remove repeated database queries and reduce image downloads | RNT-02, RNT-06, RNT-10 |
+| Hien | [RNT-15](issues/RNT-15.md) | Check tenant account/search/request/favourite behavior, API responses and test coverage | RNT-07, RNT-09, RNT-11 |
+| Tri | [RNT-16](issues/RNT-16.md) | Verify admin approval/report permissions and prepare reproducible setup/demo evidence | RNT-04, RNT-08, RNT-12, RNT-13, RNT-14, RNT-15 |
+
+## Early checkpoints and independent work
+
+1. Khai publishes complete schema/seeds, API/error/revision conventions and initial Fortify/Sanctum/CSRF/Scramble/Telescope configuration early within RNT-01.
+2. Hien publishes the session/CSRF, profile and separate personal-token/ability contracts early within RNT-03. Kien/Tri can start with local fixtures and agreed request/response contracts while account UI is completed.
+3. Kien’s RNT-02 keeps Create property and Create listing separate. Tri’s RNT-04 can use seeded complete packages before the owner UI exists. Khai’s RNT-06 consumes the real public API for landing/location/date search/details.
+4. Tri owns RNT-07 rental requests/favourites. Hien owns RNT-08 reports/admin hide/restore. Kien owns RNT-09 renewals; Khai owns RNT-10 jobs, notifications and unreferenced-photo-file deletion. Telescope initial setup is Khai/RNT-01; diagnostics/actual alerts remain Tri/RNT-12.
+5. Every member runs committed migrations/tests locally and writes their own feature tests. Later persisted-field changes get new reviewed migrations; UI labels do not imply column renames. CI uses disposable PostgreSQL/Supabase; only reviewed main deploy migrates the shared environment.
+
+## Completion gates
+
+Phase 1: reproducible setup/CI, real auth/profile, seeded admin approval and separate owner properties and units/listing actions. Phase 2: public browsing, pending request/contact discussion, favourites, atomic tenancy/contract agreement and listing reporting through actual APIs. Phase 3: renewal/expiry/15-day decisions, worker/private notifications, documented cache privacy/invalidation and actual alerts. Phase 4: focused API/component/constraint regressions, measured query/image evidence and reproducible setup/demo/sprint reports.
+
+One valid topological order (independent work can overlap):
+
+RNT-01 → RNT-03 → RNT-04 → RNT-02 → RNT-06 → RNT-07 → RNT-08 → RNT-05 → RNT-12 → RNT-10 → RNT-09 → RNT-14 → RNT-11 → RNT-13 → RNT-15 → RNT-16
+
+## Prompt for a local AI to publish these issues
+
+```text
+Read the repository’s actual AGENTS.md, docs/README.md, planning/issue-plan.md,
+planning/coverage-validation.md, planning/repository-audit.md and
+planning/issues-manifest.json. Read every planning/issues/RNT-xx.md body.
+Verify repository remote/authentication and current implemented code first.
+Use these 16 coherent issue drafts; do not restore/reuse deleted issues or
+create migration/shell/frontend/backend/test micro-issues. Resolve Khai, Kien,
+Hien and Tri to actual collaborator handles; leave assignees empty if unknown.
+
+This prompt, when explicitly invoked for publishing, authorizes creating the
+16 missing issues in the verified target repository. Check each stable marker
+<!-- rentos-backlog-v2: RNT-xx --> before create/retry. Use structured arguments
+or gh issue create --body-file; preserve actual newlines. Create in manifest
+topological order, record returned real issue numbers/URLs, then link actual
+dependencies without changing planning keys. Preserve the four phases and
+current owners. Identify already implemented work with evidence and adjust
+remaining checklists honestly; never fabricate unfinished/completed code.
+
+Fortify accounts, Sanctum sessions/CSRF, separate PAT management/scopes, Scramble and Telescope setup are mandatory. Supabase provides database/storage only; do not reinstate the old identity-token bridge.
+Khai owns initial shared setup. RNT-07 belongs to Tri; RNT-08 to Hien;
+RNT-09 to Kien; RNT-10 to Khai. Require unit/component/API/PostgreSQL tests,
+not automated browser/E2E tasks or a browser-test CI gate. TypeScript generator
+setup is documentation only. Keep property/listing workflows separate.
+
+Do not implement or push app code, change schemas, delete unrelated issues or
+invent URLs. If authentication/target access is unavailable, retain drafts and
+report the exact missing access. Summarize created/existing/draft counts using
+actual results; do not claim these issues already exist because this pack does.
+```

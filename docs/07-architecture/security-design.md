@@ -1,9 +1,19 @@
 # Security design
-Verify Supabase access JWT with configured allowed asymmetric algorithm, project issuer/audience, expiry, subject and cached trusted JWKS; bounded refresh on unknown key, fail closed. Do not follow arbitrary key URLs from token input. Enforce active profile and resource Policies for all actions and downloads. is_admin is server-only; owner/tenant party snapshots protect confirmation role identity.
 
-The current design sends Authorization bearer headers; do not introduce cross-origin session cookies or Sanctum PAT duplication without a recorded decision. Inventory protection uses DB constraints, not UI disabling. Contracts/storage paths are private and immutable; image metadata is validated from actual bytes, not file extension alone. Escape custom text and prevent XSS, which could expose bearer tokens. Bind SQL parameters and validate allowlisted JSON keys.
+| Boundary | Required control | Negative evidence |
+| --- | --- | --- |
+| Account lifecycle | Fortify validation, password hashing, email verification, rate limits, session rotation | Invalid credentials, duplicate registration race, forged verification/reset link |
+| Browser forms | Stateful session and Laravel CSRF validation, exact credentialed CORS | Missing/wrong/other-session CSRF rejected before mutation; hostile origin |
+| Non-browser API | Real hashed Sanctum PAT, finite expiry, explicit endpoint scope matrix | Read-only write denial; expired/revoked token; admin/session-only route denial |
+| Token management | Verified active browser session; password confirmation + CSRF on mutation; owner-scoped queries | PAT-only management, foreign token ID, wildcard/admin ability, secret re-display |
+| Resource access | Current active account, is_admin and ownership/participation Policies | Foreign-resource guesses and stale privilege assumptions |
+| Recovery/suspension | Explicit all-session/PAT invalidation and remember-token rotation | Old cookie and token replay after committed reset/suspension |
+| Storage and diagnostics | Private buckets, unexposed auth tables, restricted Telescope and secret redaction | Raw credential/contract/contact exposure and anonymous dashboard access |
 
-## CSRF rubric treatment
-CSRF risk depends on actual automatically attached browser credentials. Bearer-only endpoints must not quietly accept ambient auth cookies; strict allowed origins/CORS, safe verbs and server validation still apply. If local implementation has cookie-authenticated routes/forms, implement framework CSRF protection and test missing/invalid tokens plus hostile origins. CORS alone is not a CSRF defense. Do not globally disable CSRF to satisfy a demo. Record with lecturer which demonstrated design satisfies printed Task3c under approved Next.js substitution; server validation alone is not evidence of CSRF protection.
+Session authentication and API tokens are separate credential modes. Browser logout invalidates that session; explicit token revocation affects the selected PAT. Password reset/change and suspension revoke all. Newly authenticated requests must respect committed revocation; cancellation of already-authorized in-flight work is not promised.
 
-Clear account-scoped profile/request/contract/favourite caches on logout/switch. No tenant contacts, report internal notes, document links, JWTs or service keys in public DTOs/shared caches/logs. Tombstone saved items with hidden target expose only saved relation identity/time and generic unavailable status; no hidden title/photo/address/moderation reason.
+Sanctum tokenCan returns true for first-party sessions; Policies must still enforce ownership/admin rules. Session-only middleware rejects a PAT-only caller even if that token belongs to an admin. Reject unsupported credential modes before sensitive work. Do not fall back to a bearer token to bypass a failed browser CSRF check.
+
+Framework tests skip CSRF by default. Use a dedicated test harness that disables this bypass or an HTTP integration process with real CSRF enabled; prove 419 and zero writes. A test that only uses actingAs or withMiddleware is insufficient evidence by itself.
+
+See [setup and API-token matrix](authentication-setup.md) and [acceptance cases](../06-acceptance/test-scenarios.md#fr90). Defaults and API-token scope choices are project decisions, not additional teacher requirements.

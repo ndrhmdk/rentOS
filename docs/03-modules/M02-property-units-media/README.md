@@ -1,10 +1,11 @@
-# M02 Properties units media policies and amenities
- Primary owner: Member-B. Required reviewer: Member-A. This is a proposed allocation, not verified GitHub assignment.
+# M02-property-units-media: Property, unit, photo, policy and amenity management
 
- Owner physical inventory, whole-space auto-unit, editable bulk units, image lifecycle and controlled JSONB policies/amenities.
+Owners manage physical properties and independently rentable units before separately creating public listings.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: Same-property references, complete published data, upload failures and stale content revisions.
+Primary contributors: Khai, Kien. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: No property or per-image moderation; no amenity/policy management tables; geocoding remains domain-deferred unless separately selected for course evidence.
+- [RNT-02](../../../planning/issues/RNT-02.md) — Kien
+- [RNT-10](../../../planning/issues/RNT-10.md) — Khai
+- [RNT-14](../../../planning/issues/RNT-14.md) — Kien

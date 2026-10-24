@@ -1,10 +1,10 @@
-# M07 Tenancy renewal requests
- Primary owner: Member-B. Required reviewer: Member-A. This is a proposed allocation, not verified GitHub assignment.
+# M07-renewals: Renewal requests and new contract segments
 
- Tenant renewal request, negotiated consecutive segment proposal, extension hold and mutual confirmation under same tenancy.
+Renewal retains the same tenancy and historical agreement versions; it appends a new consecutive RENEWAL contract segment.
 
- Read [PRD](prd.md), [business rules](../../02-domain/business-rules.md), [state transitions](../../02-domain/state-transition.md), [API contract](../../07-architecture/api-design.md) and [course compliance](../../08-project/course-compliance.md). The local AI must inspect existing implementation before creating missing-work issues.
+Read the [PRD](prd.md), [domain rules](../../02-domain/business-rules.md) and [traceability matrix](../../06-acceptance/traceability-matrix.md).
 
- Critical review focus: One pending request; future-booking conflict; expire/decline releases only extension.
+Primary contributors: Kien. Ownership is per complete issue, not a separate frontend/backend allocation.
 
- Explicit boundaries: Never rewrite original contract, never accept renewal on owner submission alone; many draft corrections may reference one request.
+- [RNT-09](../../../planning/issues/RNT-09.md) — Kien
+- [RNT-13](../../../planning/issues/RNT-13.md) — Khai

@@ -1,7 +1,11 @@
-# Immutable tenancy contracts with embedded confirmations
+# Immutable contract versions and same-version acknowledgement
 
-Status: specified design, implementation unverified.
+Status: agreed project design; implementation unverified.
 
-Decision: Use tenancy_contracts for submitted segment versions and write-once owner/tenant timestamps. Protect terms/document/hash while allowing legitimate first acknowledgement; no separate confirmation entity. Corrections append new row and reset confirmation metadata.
+## Decision and reason
 
-Consequences: tests and issue acceptance must reference this behavior; record any approved change here and update affected PRDs/workflows/data/API/acceptance together.
+Use tenancy_contracts under one tenancy. Store immutable negotiated terms/document/hash and embedded write-once owner/tenant acknowledgements. Never create contract_versions or contract_confirmations tables. Correct unconfirmed proposals by a new version; renew by a new consecutive segment. Both parties must acknowledge the same current UUID/hash before deadline.
+
+## Consequences and validation
+
+Apply the owning module requirements and acceptance scenarios; update the related API/data/workflow/issue documents together if the decision changes. Record actual implementation tests and evidence rather than treating this ADR as proof of working code.

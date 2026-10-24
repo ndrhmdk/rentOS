@@ -1,8 +1,16 @@
 # Architecture overview
-Controllers/FormRequests/API Resources are thin. Shared action/services own proposals, confirmation, renewal, expiry,15day decisions, initial moderation and visibility. Queue and HTTP paths reuse them; avoid duplicated transition logic.
 
-Use database transactions, fixed lock order and final DB constraints. Availability is a query/projection and never a mutable decrementing count. Media bytes are uploaded before committing references; incomplete orphan cleanup is compensating work, not a DB transaction pretending to roll back remote storage.
+| Boundary | Responsibility |
+| --- | --- |
+| Next.js | Public discovery and private owner/tenant/admin screens; forms, TanStack Query and credentialed browser API calls |
+| Laravel Fortify | Registration, login/logout, password hashing/recovery and email verification; Next.js supplies UI |
+| Laravel Sanctum | Session authentication for first-party browser requests; independent scoped personal tokens for approved non-browser routes |
+| Laravel middleware/Policies | CSRF on browser mutations, account eligibility, resource/role permissions and PAT scope restrictions |
+| Supabase PostgreSQL | Private Laravel identity/framework tables and rental domain constraints; direct Eloquent connection |
+| Supabase Storage | Validated media and private immutable contracts; Laravel-authorized access |
+| Queue/scheduler | Notifications, expiry/15-day actions, unreferenced photo deletion and framework pruning |
+| Scramble/Telescope | API documentation and restricted diagnostics; Khai configures both in RNT-01 |
 
-Next.js/TanStack Query treats search as indicative. Private profile/favourite/request/contract caches are scoped by authenticated account and cleared on logout; public caches never contain private flags. Frontend writes include expected revisions or stable operation UUIDs where specified. Favourite PUT/DELETE supplies intended state rather than an ambiguous toggle.
+Controllers coordinate FormRequests, Policies, transactional actions and Resources. Shared actions enforce the same domain rules in HTTP and worker paths. Khai owns initial migrations; feature owners create later reviewed migrations and their own UI/API/tests.
 
-Repository layout/versioned packages/hosting are discovered locally. Suggested frontend/backend boundaries are logical, not a claim that directories with those names exist. One person coordinates migrations/API contracts; feature owners avoid overlapping unreviewed foundation changes.
+See [authentication setup](authentication-setup.md) for hosts/cookies/CORS, routes, schema transition and tests. Supabase Auth and the former JWT exchange are removed from the target architecture. Existing repository implementation and installed versions have not been audited.

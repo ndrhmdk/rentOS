@@ -1,7 +1,10 @@
-# Explicit assumptions
-- User-reported teacher approval covers use of Next.js frontend/Laravel API/Supabase. Exact named-rubric replacements still require written evidence; do not invent it.
-- User reports favourites feature has been added; repo audit decides what remains, not this documentation.
-- New bookmarks are private authenticated property-level saves. No guest persistence or post-login automatic queue. Badge counts stored saved relations including generic unavailable placeholders. These bounded product details are proposed defaults where user supplied only heart/save behavior.
-- Existing48h hold duration is a configurable proposed default.15day rule is age>=15days AND no eligible full-interval alternatives; preferred unit soft preference. Do not silently replace with unconditional expiry.
-- Module owners are aliases until real team/handles/capacity are supplied. D's scope is bounded UI work with reviewed backend.
-- Existing repo layout, installed dependency versions, actual feature status, hosting and remaining time unknown; discover locally before planning tasks or commands.
+# Assumptions
+
+The five-week course scope is known; remaining calendar capacity/actual code progress are unverified. Phase numbers are completion gates, not invented weeks/deadlines.
+
+- Proposed configurable confirmation timeout: 48 hours. At/after deadline confirmation fails; release requires an explicit locked action.
+- Fifteen-day rule uses age >=15 days AND no eligible complete-interval alternative. Preferred unit is a soft preference; hidden publication does not imply occupation.
+- Original minimum term is three calendar months with inclusive displayed end dates. Renewal is consecutive, not an overlapping replacement agreement.
+- Notification delivery, storage retention durations, rate limits, cache TTLs and host-resource alert thresholds must be configured/documented. Do not silently invent product values or evidence.
+- Domain timestamps stored in UTC, displayed Asia/Ho_Chi_Minh; rental boundaries are PostgreSQL DATE; money follows the agreed VND dictionary type.
+- Proposed API paths and code directories must be checked against the actual repository. The source snapshot defines behavior and data; no implementation readiness is inferred.

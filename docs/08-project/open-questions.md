@@ -1,11 +1,13 @@
-# Open questions and decision boundaries
-| Question | Owner | Effect |
-|---|---|---|
-| Does approval explicitly substitute Next.js for T3a Blade/Livewire and JWT/Policies for T4b Sanctum scopes? | A + lecturer | Only affected rubric evidence pending; keep chosen stack and continue unrelated implementation |
-| What exact CSRF demonstration is accepted for the approved frontend/auth transport? | A + lecturer | Must demonstrate actual transport-appropriate defense; not just validation/CORS |
-| Which repo, branch/layout, versions, team GitHub handles and actual implemented features exist? | Local AI + team | Discover before issue publishing/assignment; no invented handles/status |
-| How many days/sprints remain and each member's capacity? | Team | Adjust reference plan; do not promise5weeks remaining |
-| Which host provides CPU/memory/disk/network metrics and real worker/scheduler execution? | A | Choose monitoring deployment with demonstrable alerts |
-| Are proposed48h hold duration and unavailable-favourite placeholder/count semantics accepted? | Product owner/team | Defaults explicitly marked; change docs/tests together if adjusted |
+# Open implementation decisions
 
-Unknown future production performance budgets are not blockers to writing well-scoped course issues; do not fabricate SLO compliance or time estimates as facts.
+These questions do not reopen agreed features or block unrelated work:
+
+- Exact installed Laravel/Next.js/package versions, repository paths and existing implementation state.
+- Final hosting provider, direct-DB connectivity/network support and deployment environments/approval configuration.
+- Cache keys/TTL, unused-file retention, alert thresholds/channel, performance dataset/budget and backup RPO/RTO.
+- Final controlled frontend/API domain names or tested same-origin proxy; confirm the proposed session lifetime, password-confirmation window and PAT expiry choices before implementation.
+- Whether any non-local Telescope dashboard will be enabled; otherwise keep it disabled and demonstrate local diagnostics. Use the Laravel session and restricted admin gate if enabled.
+- Record documentary scope of teacher approval for the Next.js substitution for printed Blade/Livewire wording ; CSRF now uses Fortify/Sanctum sessions and is required, with explicit positive/negative evidence. Sanctum, Scramble and Telescope are required and are not open waiver questions.
+- Actual GitHub handles for Khai, Kien, Hien and Tri; existing source/features/tests and real submission/demo/report URLs.
+
+Do not invent completed decisions, free hosting, test passes, alerts or a repository audit. Inspect first, then record the chosen bounded implementation in its ADR/PR.

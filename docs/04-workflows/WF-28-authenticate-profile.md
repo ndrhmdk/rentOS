@@ -1,24 +1,24 @@
-# WF-28 Authenticate and manage profile
+# WF-28 Register, sign in and manage profile
 
-Actors: Guest/user
-
-Requirements: FR01 FR02 FR04 FR05 FR06 FR43 FR49
+Actors: Guest; authenticated user; Next.js; Laravel. Requirements: FR01 FR02 FR04 FR05 FR06 FR43 FR49 FR90.
 
 ## Preconditions and trigger
-Configured Supabase project. Trigger is the named user action or due system evaluation.
+
+RNT-01 Fortify/Sanctum infrastructure, configured database sessions, mail and frontend/API domains. User registers, signs in, verifies email, recovers access or signs out.
 
 ## Main flow
-1. Register/confirm email/login or provider recovery.
-2. Laravel verifies JWT signature/project claims and profile eligibility.
-3. Run resource policy on each private action; update permitted profile fields with revision.
-4. Logout clears private client data; document expiry-bound copied JWT behavior.
 
-## Alternative and failure flows
-- No self-granted admin; no duplicate password store.
-- Unknown signing key bounded refresh then fail closed; no token-supplied key URL.
+1. Next.js fetches `/sanctum/csrf-cookie` with credentials. Submit registration/login with cookies and matching `X-XSRF-TOKEN`.
+2. Fortify validates credentials; registration atomically creates users/profile with matching UUID and hashed password. Valid login rotates the session ID and sets its HttpOnly cookie. No personal token is created.
+3. Unverified accounts use only limited verification/account routes. After signed email verification, approved product operations are available subject to current Policies.
+4. Private browser API requests use `auth:sanctum`. All browser mutations require CSRF; server FormRequests provide 422 field errors. Owner/admin privilege is never taken from submitted fields.
+5. Password recovery uses Laravel broker links and allowlisted Next.js pages. Successful reset revokes all sessions/PATs and requires fresh login.
+6. CSRF-protected logout invalidates the current browser session, regenerates CSRF and clears account-private queries. Separately created API tokens remain until explicit revoke/expiry.
 
-## Postcondition
-One verified identity/profile with tenant and owner capability.
+## Alternatives and failure flows
 
-## Consistency boundary
-Use current revisions/Policies and the shared actions; state-changing flows capture audit/outbox/replay where required. A read/favourite is never an allocation authority.
+401 means authentication expired/missing, 403 forbidden, 419 invalid browser CSRF, 422 validation, 429 throttled. Keep safe unsent input and require explicit resubmission after recovery. No token exchange or silent write replay. Failed server logout is not falsely shown as server revocation.
+
+## Postcondition and evidence
+
+One Laravel user/profile account; session access depends on account status and current Policies. Test session rotation/logout, missing/mismatched CSRF and cross-account isolation. Manual UI checks complement unit/component/API integration tests; no required E2E automation. [Token management is separate](WF-29-manage-api-tokens.md).

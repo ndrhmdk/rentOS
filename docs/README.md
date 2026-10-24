@@ -1,16 +1,34 @@
-# rentOS implementation documentation
+# rentOS documentation
 
-This is an implementation specification and issue-planning input for a four-person Advanced Web Development team. It follows the teacher's eight-section Markdown documentation hierarchy, adapted from the helpdesk example to property rentals. It is not application code and does not certify that features or tests exist in the repository.
+Read product → domain → module PRD → workflow → acceptance → architecture before implementing an issue. The current plan and owner are in [planning](../planning/issue-plan.md).
 
-## Read in this order
-1. [Source precedence](08-project/source-register.md) and [constraints](08-project/constraints.md).
-2. [Product scope](01-product/product-scope.md), [business rules](02-domain/business-rules.md), [state transitions](02-domain/state-transition.md).
-3. Your module README and PRD under `03-modules/`, then its referenced independent workflows under `04-workflows/`.
-4. [Data model](07-architecture/data-model.md), [API contract](07-architecture/api-design.md) and [test scenarios](06-acceptance/test-scenarios.md).
-5. [Course compliance](08-project/course-compliance.md), [team ownership](08-project/team-ownership.md), and [issue authoring contract](08-project/issue-authoring.md).
+1. [Product overview](01-product/product-overview.md)
+2. [Domain overview](02-domain/domain-overview.md)
+3. [Module index](#modules)
+4. [Separate workflows](04-workflows/README.md)
+5. [Non-functional requirements](05-non-functional-requirements/README.md)
+6. [Acceptance and traceability](06-acceptance/README.md)
+7. [Architecture](07-architecture/README.md)
+8. [Assumptions](08-project/assumptions.md), [constraints](08-project/constraints.md), [open questions](08-project/open-questions.md), [glossary](08-project/glossary.md)
 
-The full requirements and acceptance catalogue is retained in `06-acceptance/requirements-catalog.md` and `acceptance-cases.md`. Current baseline: **81 active specification rows and 324 acceptance cases**: workbook version3 contributes80/314; newly requested FR88 favourites contributes1/10. This does not silently rewrite the earlier workbook. Original FR priorities and IDs are retained; retired IDs are not reused.
+## Modules
 
-Use Next.js frontend, Laravel API and Supabase PostgreSQL/Auth/Storage. The user reports teacher approval for that stack. Exact replacement of named Blade/Livewire/Sanctum grading items is not evidenced; record that distinction rather than implementing two authentication systems.
+- [M01-identity-access — Identity, profiles and API permissions](03-modules/M01-identity-access/README.md)
+- [M02-property-units-media — Property, unit, photo, policy and amenity management](03-modules/M02-property-units-media/README.md)
+- [M03-listings-moderation — Owner listings and initial admin approval](03-modules/M03-listings-moderation/README.md)
+- [M04-discovery-favourites — Landing page, location/date search and private favourites](03-modules/M04-discovery-favourites/README.md)
+- [M05-rental-requests — Tenant rental requests and owner request lists](03-modules/M05-rental-requests/README.md)
+- [M06-tenancies-contracts — Tenancy proposals, immutable agreements and lifecycle](03-modules/M06-tenancies-contracts/README.md)
+- [M07-renewals — Renewal requests and new contract segments](03-modules/M07-renewals/README.md)
+- [M08-reports-admin — Listing reports and admin hide/restore](03-modules/M08-reports-admin/README.md)
+- [M09-notifications-audit — Private notifications, audit history and queued delivery](03-modules/M09-notifications-audit/README.md)
+- [M10-operations-delivery — Shared setup, API docs, monitoring, tests and release](03-modules/M10-operations-delivery/README.md)
 
-Do not rename `tenancy_contracts`, `tenancy_renewal_requests`, `audit_logs` or `notifications`. Contract confirmation timestamps live inside `tenancy_contracts`.
+## Source and change policy
+
+- [Current functional requirements workbook](https://docs.google.com/spreadsheets/d/1w33EYYbyNxTfkC-yxoUO5PwWIAbBhakI/edit?usp=drivesdk&ouid=106252598381185742228&rtpof=true&sd=true): 83 FRs, 343 acceptance specifications, 20 dictionary entities and 256 columns; accessed 23 October 2026.
+- [Current task sheet](https://docs.google.com/spreadsheets/d/1KGFVfL88V_y3_pbkqb4at4xT3FxdkfP4DcFGV8bICm4/edit): 16 grouped issues; latest named assignments and setup boundaries.
+- User screenshots: teacher’s Task 4 explicitly requires Sanctum token management and token scopes/permissions. Telescope and Scramble are also mandatory; no assumed waiver.
+- Earlier project/course specifications supply unchanged business/NFR/submission constraints. The original provided documentation is superseded where it described JWT-only API access, anonymous photo review or older member aliases.
+
+Record approved product changes in the owning PRD, workflow, acceptance cases and architecture together; update planning coverage in the same PR. Product requirements do not become completed because a document passes a structural check.

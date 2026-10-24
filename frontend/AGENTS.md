@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# rentOS frontend
+
+Test feature behavior: what the user can do and what the screen shows for success, empty, and error results.
+
+Do not add tests just to prove the app shell, providers, or tooling are configured. Add a test when a feature has behavior worth protecting.

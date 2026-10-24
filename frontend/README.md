@@ -2,7 +2,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Copy the env example, then run the development server:
+
+```bash
+cp .env.example .env.local
+```
+
+`NEXT_PUBLIC_API_URL` is the Laravel origin. The default is `http://localhost:8000`.
 
 ```bash
 npm run dev
@@ -15,6 +21,8 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+To check that this app can reach the Laravel API, start the backend from `backend/` with `php artisan serve`, then use **Check backend** on the home page. It calls `$NEXT_PUBLIC_API_URL/api/health`.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

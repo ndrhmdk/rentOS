@@ -1,11 +1,13 @@
 # Goals and non-goals
-## Goals
-- Independently implement property creation, unit creation, listing drafting, first review and publication.
-- Search eligible units for a complete date interval, with canonical amenities and resolved policies.
-- Save authenticated users' favourite **properties**, persist hearts and counts, and protect private saved data.
-- Keep enquiries PENDING during phone/offline discussion; ACCEPT only with successful proposal creation.
-- Require exact-contract mutual acknowledgement, retain submitted versions, hold dates temporarily and enforce nonoverlap in PostgreSQL.
-- Deliver course evidence for Git/Issues/PRs, migrations/seeds, tested UI/API, external integration, Scramble, monitoring and performance work.
 
-## Non-goals
-No phone OTP, KYC, in-app chat/calendar/viewings, payments, legal e-signature engine, confirmed mid-term amendments, property/image reapproval or AI-generated thumbnails. No Kafka/RabbitMQ/Elasticsearch requirement. Maps, geocoding, Google login and property reviews retain P2 domain status unless scope is explicitly changed. Do not infer features from prototype language buttons, notification badges or map buttons alone.
+## Goals
+
+- Independently manage properties, units and public listings; make location/date search and private favourites usable.
+- Keep requests pending during discussion and accept them only when a tenancy proposal transaction succeeds.
+- Prevent double allocation through PostgreSQL constraints and temporary reservations.
+- Preserve immutable contract versions and require both parties to acknowledge the same version; renew through new consecutive segments.
+- Satisfy the actual course tooling and evidence: Sanctum, Scramble, Telescope, queues/workers, tests, caching and measured resource/query improvements.
+
+## Outside the initial MVP
+
+Phone OTP/KYC, property/photo moderation, image-replacement review, in-app chat/viewing calendar, payments, verified legal e-signatures, confirmed mid-term agreement amendments, Kafka/RabbitMQ/Elasticsearch and AI thumbnails. Maps/geocoding, Google OAuth, property reviews and a dedicated changes-requested moderation state remain P2 deferred. Automated browser/E2E suites and TypeScript generator integration are not required.

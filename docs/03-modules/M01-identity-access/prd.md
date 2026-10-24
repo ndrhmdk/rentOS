@@ -1,146 +1,103 @@
-# M01 Product requirements
+# Identity, profiles and API permissions — PRD
 
-## Purpose
-Supabase identity, profile bootstrap, dual tenant/owner navigation and server resource authorization.
+## Outcome
 
-## Actors and permissions
-Use actor/resource Policies from each FR below; UI guards never replace backend checks.
+Laravel Fortify owns account credentials and email flows. Next.js uses Sanctum session authentication with CSRF-protected forms. Users separately manage personal API tokens for the approved non-browser endpoints.
+
+## Scope and screens/actions
+
+- Registration, login, email verification, forgot/reset password, profile and tenant/owner navigation.
+- Settings > API tokens: recent password confirmation, name, scope checkboxes, expiry, one-time display, metadata list and revoke.
+- Session-only admin and token-management routes; current Policies enforce roles and resource access in both authentication modes.
 
 ## Functional requirements
 
-### FR01 Email registration
-Priority: P0 Must. Actors: Guest. Dependencies: Shared identity/resource foundation.
+### FR01 — Email registration
 
-Factors: Identity consistency; privilege escalation; privacy
+**Priority:** P0 Must. **Actors:** Guest. **Delivery:** Primary: RNT-03.
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS
+Register through Laravel Fortify. Create one users row with a normalized unique email, hashed password and is_admin=false. Confirm email before protected product writes or API-token creation. One user can rent and own; no phone OTP or role-selection step.
 
-Register through Supabase Auth, confirm email before protected product writes, and create one application profile keyed by Auth UUID. Users can act as both tenant and owner; no role selection or phone OTP is required.
+Acceptance: [4 cases for FR01](../../06-acceptance/test-scenarios.md#fr01); IDs FR01-AC01, FR01-AC02, FR01-AC03, FR01-AC04.
 
-Acceptance criteria:
+### FR02 — Sign in with a Sanctum browser session
 
-- FR01-AC01 [Positive] Register a valid email/password and confirm email → One Auth identity and one profile exist; is_admin=false.
-- FR01-AC02 [Validation] Invalid email or weak password → Provider errors are mapped to field feedback without creating a privileged profile.
-- FR01-AC03 [Privacy] Register an already registered email → Handle provider response without promising disclosure of whether the account exists; offer sign-in/reset guidance.
-- FR01-AC04 [Race] Two signup/profile callbacks run for the same Auth UUID → Unique profile PK/upsert creates one profile; retries do not reset an existing name or admin flag.
+**Priority:** P0 Must. **Actors:** User. **Delivery:** Primary: RNT-03.
 
-### FR02 Email login and session refresh
-Priority: P0 Must. Actors: User. Dependencies: Shared identity/resource foundation.
+Next.js obtains /sanctum/csrf-cookie and submits credentials to Fortify /login with cookies and X-XSRF-TOKEN. Regenerate the session ID on login. Sanctum authenticates subsequent browser API requests using the HttpOnly Laravel session cookie; login creates no personal API token. Unverified users have only the limited verification/account flow; expired sessions require sign-in.
 
-Factors: Authentication; expiration; recovery
+Acceptance: [4 cases for FR02](../../06-acceptance/test-scenarios.md#fr02); IDs FR02-AC01, FR02-AC02, FR02-AC03, FR02-AC04.
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS
+### FR03 — Google sign in
 
-Sign in through Supabase Auth. Send its access token to Laravel; use provider refresh flow and protect private Next.js pages and API endpoints.
+**Priority:** P2 Defer. **Actors:** User. **Delivery:** Deferred — no MVP implementation.
 
-Acceptance criteria:
+Deferred Google sign-in may use Laravel Socialite and an explicitly verified account-linking flow to the existing Laravel users/profile UUID. It must not silently link accounts using an unverified email or reintroduce a separate identity store. No Google OAuth implementation in MVP.
 
-- FR02-AC01 [Positive] Confirmed user submits correct credentials → Protected dashboard loads the linked profile.
-- FR02-AC02 [Negative] Wrong password or unconfirmed account → Clear safe error; no protected data returned.
-- FR02-AC03 [Security] Expired token with valid refresh session → Refresh through Supabase then retry safe reads once; never blindly replay a non-idempotent write.
-- FR02-AC04 [Negative] Refresh fails or session expires → Clear private client cache and require sign-in; API returns 401.
+Acceptance: [3 cases for FR03](../../06-acceptance/test-scenarios.md#fr03); IDs FR03-AC01, FR03-AC02, FR03-AC03.
 
-### FR03 Google sign in
-Priority: P2 Defer. Actors: User. Dependencies: FR01 FR43.
+### FR04 — Sign out of the browser session
 
-Factors: Identity linking; callback integrity
+**Priority:** P0 Must. **Actors:** User. **Delivery:** Primary: RNT-03.
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS + Google OAuth
+CSRF-protected POST /logout invalidates the current Laravel browser session and regenerates its CSRF token. Clear/cancel private TanStack Query data. Ordinary logout does not revoke independently created personal API tokens; users revoke those in API tokens settings. Failed server logout is shown honestly. Password reset or account suspension invalidates all sessions and tokens.
 
-Optional Google sign in with configured redirect allowlist; map provider identity to one profile. Do not implement a second Laravel password store.
+Acceptance: [3 cases for FR04](../../06-acceptance/test-scenarios.md#fr04); IDs FR04-AC01, FR04-AC02, FR04-AC03.
 
-Acceptance criteria:
+### FR05 — Enforce account and resource permissions
 
-- FR03-AC01 [Positive] User completes allowed Google callback → Provider identity maps to one application profile.
-- FR03-AC02 [Security] Invalid callback/state or attempted client-created admin flag → Reject flow or ignore forbidden privilege input.
-- FR03-AC03 [Race] Callback is delivered twice → No duplicate profile or duplicated onboarding notification.
+**Priority:** P0 Must. **Actors:** User; Admin. **Delivery:** Primary: RNT-03.
 
-### FR04 Logout
-Priority: P0 Must. Actors: User. Dependencies: Shared identity/resource foundation.
+Private routes require auth:sanctum and current account/ownership/participant/admin Policies. Browser requests use sessions and CSRF; approved token-enabled endpoints additionally enforce personal-token abilities. Sanctum tokenCan returns true for first-party sessions, so it never replaces Policies. Current users.is_admin is server-managed; personal API tokens cannot call admin or token-management routes.
 
-Factors: Session lifecycle; bearer-token limits
+Acceptance: [4 cases for FR05](../../06-acceptance/test-scenarios.md#fr05); IDs FR05-AC01, FR05-AC02, FR05-AC03, FR05-AC04.
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS
+### FR06 — Profile and dual dashboards
 
-Sign out via Supabase and clear user-scoped Next.js/TanStack data. Document that a previously issued JWT may remain valid until expiry when Laravel validates it offline.
-
-Acceptance criteria:
-
-- FR04-AC01 [Positive] User logs out → Current browser loses credentials and private cached data; protected navigation requires sign-in.
-- FR04-AC02 [Security] Another user signs in on same browser → No previous user private data appears.
-- FR04-AC03 [Boundary] Previously copied unexpired access token is replayed → Do not claim instant token revocation; state expiry-bound behavior unless a server-side revocation check is deliberately added.
-
-### FR05 Resource and admin authorization
-Priority: P0 Must. Actors: User; Admin. Dependencies: Shared identity/resource foundation.
-
-Factors: Ownership; least privilege; direct DB exposure
-
-Tools: Laravel REST + FormRequest + Policies + Eloquent + Supabase PostgreSQL
-
-Use is_admin on trusted profiles for moderation. Normal users act as tenant and owner through resource relationships. Backend checks every private read/write; frontend guards are only UX.
-
-Acceptance criteria:
-
-- FR05-AC01 [Security] Owner B guesses Owner A property/unit/request UUID → Return 403/404 without private data or mutation.
-- FR05-AC02 [Security] Normal user submits is_admin or another owner_id → Reject restricted input; actor comes from verified identity.
-- FR05-AC03 [Security] Normal user calls an admin moderation endpoint → 403; no audit outcome or notification is committed.
-- FR05-AC04 [Security] Browser directly calls Supabase Data API/storage → Business tables are not writable/readable through unintended grants; storage rules restrict private files. Laravel authorization remains enforced even if DB connection bypasses RLS.
-
-### FR06 Profile and dual dashboards
-Priority: P0 Must. Actors: User. Dependencies: Shared identity/resource foundation.
-
-Factors: Data minimization; stale edits
-
-Tools: Next.js + React + Tailwind + TanStack Query + Laravel REST + FormRequest + Policies + Eloquent + Supabase PostgreSQL
+**Priority:** P0 Must. **Actors:** User. **Delivery:** Primary: RNT-03.
 
 View/update permitted name and contact information and navigate between tenant area and Manage rentals. Phone is contact information, not verified ownership. Avatar/DOB are optional later scope.
 
-Acceptance criteria:
+Acceptance: [3 cases for FR06](../../06-acceptance/test-scenarios.md#fr06); IDs FR06-AC01, FR06-AC02, FR06-AC03.
 
-- FR06-AC01 [Positive] User edits allowed contact fields → Validated values saved; dashboard uses current profile.
-- FR06-AC02 [Security] Profile PATCH includes admin flag, identity UUID or verification fields → Rejected; privilege fields unchanged.
-- FR06-AC03 [Race] Two tabs edit the same profile version → Expected version rejects stale write with 409 rather than silently overwriting.
+### FR43 — Protect APIs with Sanctum sessions and scoped tokens
 
-### FR43 Verify Supabase JWT in Laravel
-Priority: P0 Must. Actors: API client. Dependencies: Shared identity/resource foundation.
+**Priority:** P0 Must. **Actors:** API client. **Delivery:** Primary: RNT-03.
 
-Factors: Signature and claims; single identity authority
+Use auth:sanctum for private APIs. Browser clients use Fortify sessions; non-browser clients may send an explicitly created Sanctum personal access token only on the documented token-enabled routes. Enforce active/verified account, token expiry/revocation, abilities and current resource Policies. Store token hashes only. Reject provider JWTs and remove the former identity-token exchange. FR89 owns token management; FR90 owns CSRF.
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS
+Acceptance: [8 cases for FR43](../../06-acceptance/test-scenarios.md#fr43); IDs FR43-AC01, FR43-AC02, FR43-AC03, FR43-AC04, FR43-AC05, FR43-AC06, FR43-AC07, FR43-AC08.
 
-Validate Supabase access JWT using allowed asymmetric algorithm and project JWKS; verify issuer, audience, expiry, subject and account/profile eligibility. Use trusted sub as profile UUID. No Sanctum personal_access_tokens in chosen auth path.
+### FR49 — Password reset and email confirmation
 
-Acceptance criteria:
+**Priority:** P0 Must. **Actors:** User. **Delivery:** Primary: RNT-03.
 
-- FR43-AC01 [Positive] Valid project access token → Laravel resolves current profile and then runs Policies.
-- FR43-AC02 [Security] Tampered payload, alg none, wrong issuer/audience/key or expired token → 401, no protected action.
-- FR43-AC03 [Security] Body contains a different user_id → Never replaces verified sub.
-- FR43-AC04 [Failure] Unknown kid/key rotation or JWKS refresh failure → Bounded key refresh, fail closed and safe error; no arbitrary token-supplied key URL.
-- FR43-AC05 [Race] Multiple first API calls bootstrap same confirmed profile → One profile row with no overwritten privilege flags.
+Use Fortify/Laravel password-broker reset links and signed email-verification links with allowlisted frontend destinations, expiry and throttling. Store password/reset-token hashes only. After a successful password reset invalidate all browser sessions, remember credentials and personal API tokens; require fresh login. The reset handler uses the valid reset token, not an existing login. Configure Next.js reset/verify screens when Fortify views are disabled.
 
-### FR49 Password reset and email confirmation
-Priority: P0 Must. Actors: User. Dependencies: Shared identity/resource foundation.
+Acceptance: [3 cases for FR49](../../06-acceptance/test-scenarios.md#fr49); IDs FR49-AC01, FR49-AC02, FR49-AC03.
 
-Factors: Account recovery; provider-managed credentials
+### FR89 — Manage personal API tokens
 
-Tools: Supabase Auth + Next.js auth client + Laravel JWT guard using project JWKS
+**Priority:** P0 Must. **Actors:** Signed-in verified user. **Delivery:** Primary: RNT-03.
 
-Use Supabase confirmation/recovery links with configured allowed redirects. Reset password through provider; never store plaintext or recovery tokens in application tables.
+Provide Settings > API tokens with create, list and revoke actions. Creation requires a current browser session, recent password confirmation, CSRF, a name, allowed abilities and finite expiry. Initial abilities: account:read, favourites:read, favourites:write. Show plaintext once; persist only its hash and metadata. List name, abilities, created/last-used/expiry/status without secrets. Revoke immediately; rotation is explicit create replacement then revoke old. Tokens cannot mint/manage tokens or invoke admin APIs.
 
-Acceptance criteria:
+Acceptance: [8 cases for FR89](../../06-acceptance/test-scenarios.md#fr89); IDs FR89-AC01, FR89-AC02, FR89-AC03, FR89-AC04, FR89-AC05, FR89-AC06, FR89-AC07, FR89-AC08.
 
-- FR49-AC01 [Positive] User follows valid recovery link and chooses valid password → Provider resets password; user can authenticate normally.
-- FR49-AC02 [Security] Expired/replayed recovery link or disallowed redirect → Rejected by provider/application; no arbitrary account reset.
-- FR49-AC03 [Privacy] Reset requested for an unknown email → Generic response avoids account enumeration.
+### FR90 — Protect browser forms against CSRF
 
-## Data and API boundary
-Use the shared data dictionary and versioned API contract; do not invent tables/enums to suit one screen. Every issue identifies exact routes, schema fields, stale-state behavior and cache invalidation that it changes.
+**Priority:** P0 Must. **Actors:** Guest; signed-in user. **Delivery:** Primary: RNT-03.
 
-## Failure and concurrency
-JWT verification, account/session isolation and admin privilege boundaries. Ordinary permission/validation/empty/network states are part of completion, alongside the specific race cases above. PostgreSQL invariants require real database tests.
+Apply Laravel CSRF validation to browser POST/PUT/PATCH/DELETE forms and actions, including login, registration, password reset, logout, profile, favourites, rental/contract and admin actions. Next.js obtains the CSRF cookie and sends X-XSRF-TOKEN plus session cookies. Invalid/missing/mismatched CSRF fails before writes (419 on the selected Laravel baseline). Keep server validation and field errors. Genuine bearer-only non-browser calls on approved routes use token permissions instead of browser CSRF.
 
-## Definition of done
-UI and API integrated where applicable; unit and integration tests; private/public DTO checks; Scramble and source docs synchronized; audit/outbox only where required; issue-linked PR and reviewer evidence. No implementation is claimed here.
+Acceptance: [6 cases for FR90](../../06-acceptance/test-scenarios.md#fr90); IDs FR90-AC01, FR90-AC02, FR90-AC03, FR90-AC04, FR90-AC05, FR90-AC06.
 
-## Out of scope
-No second password store; Google OAuth is deferred; Sanctum rubric substitution is unresolved.
+## API, validation and failure behavior
+
+Private product routes require `auth:sanctum` and current resource Policies. Browser writes require CSRF; explicitly token-enabled routes additionally require the corresponding PAT ability. Public GET routes serialize safe fields only. Use FormRequests and Resources. Deny forged actors/foreign references; preserve documented 401/403/404/409/422 behavior. Show loading/empty/network/field/revision/session feedback in the related UI.
+
+State-changing domain actions use agreed revision/idempotency/lock order and audit/outbox transaction rules. External storage failure is handled without pretending an upload or queued delivery already completed. See [API design](../../07-architecture/api-design.md).
+
+## Tests and completion
+
+Each feature owner writes meaningful unit/component and API/PostgreSQL integration tests, including denied, invalid, retry/stale and concurrency cases where relevant. Use a short manual checklist for changed screens; automated browser/E2E suites are not required. Record actual commands/results and evidence; current case specifications are not passed tests.
