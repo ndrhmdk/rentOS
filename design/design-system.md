@@ -74,6 +74,6 @@ Iconify line icons (akar, basil, bi, clarity, energy-icons, fluent, hugeicons…
 |---|---|---|
 | Public | homepage, homepageWhenActive | `/` |
 | Public | List Property, Map View, Detail card | `/nha`, `/ban-do`, `/nha/:id` |
-| Auth | Sign in, Create account, Signed out | `/dang-nhap`, `/dang-ky`, `/dang-xuat` |
+| Auth | Sign in, Create account, Signed out | `/login`, `/register`, `/logout` |
 | Tenant | Dashboard, Căn hộ đang thuê, Thanh toán, Yêu cầu sửa chữa, Yêu thích, Thông báo, Trang cá nhân | `/tenant/*` |
 | Owner | Owner dashboard, New Property S1–S3 | `/owner`, `/owner/bat-dong-san/moi` |
