@@ -1,0 +1,602 @@
+/* Shared brand tokens are extended here with the exact semantic values of Figma S06/T08. */
+@import "./brand-tokens.css";
+.identity-app {
+  --identity-canvas: #f0f4f7;
+  --identity-border: #e1e7ed;
+  --identity-input: #c9d3e0;
+  --identity-muted: #5b6676;
+  --identity-body: #454e5c;
+  --identity-danger: #b42318;
+  --identity-sidebar: #0e1a20;
+  --identity-selected: #22313a;
+  --identity-radius: 15px;
+  --identity-shadow: 0 24px 60px rgba(9, 18, 22, 0.1);
+  background: var(--identity-canvas);
+  color: var(--text-primary);
+  font: 14px/1.5 var(--font-sans);
+  min-height: 100vh;
+}
+.identity-app * {
+  box-sizing: border-box;
+}
+.identity-app a {
+  text-decoration: none;
+}
+.identity-app button,
+.identity-app input,
+.identity-app select {
+  font: inherit;
+}
+.identity-app h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.56px;
+  line-height: 36px;
+  margin: 0;
+}
+.identity-app h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.identity-app p {
+  margin: 0;
+}
+.identity-header {
+  min-height: 75px;
+  padding: 12px 40px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--surface-nav-dark);
+  color: var(--text-on-dark);
+}
+.identity-header > nav {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  gap: 32px;
+  font-size: 15px;
+}
+.identity-header a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.identity-header img {
+  object-fit: contain;
+}
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.locale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--identity-input);
+  border-radius: 999px;
+}
+.header-register {
+  gap: 8px;
+  border-radius: var(--identity-radius);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  padding: 0 20px;
+  font-weight: 600;
+}
+.auth-page {
+  display: flex;
+  flex-direction: column;
+}
+.auth-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 80px 24px 64px;
+}
+.auth-card {
+  display: grid;
+  grid-template-columns: 450px minmax(0, 1fr);
+  width: 960px;
+  max-width: 100%;
+  min-height: 612px;
+  overflow: hidden;
+  border: 1px solid var(--identity-border);
+  border-radius: 16px;
+  background: var(--surface-card);
+  box-shadow: var(--identity-shadow);
+}
+.auth-art {
+  position: relative;
+  background: var(--surface-nav-dark);
+  color: var(--text-on-dark);
+  min-height: 610px;
+}
+.auth-art > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.auth-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(9, 18, 22, 0.15) 30%,
+    rgba(9, 18, 22, 0.85)
+  );
+}
+.brand-eyebrow {
+  position: absolute;
+  z-index: 1;
+  top: 28px;
+  left: 32px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.96px;
+}
+.auth-story {
+  position: absolute;
+  z-index: 1;
+  bottom: 32px;
+  left: 32px;
+  right: 32px;
+  display: grid;
+  gap: 10px;
+}
+.auth-story h2 {
+  font-size: 34px;
+  line-height: 40px;
+  letter-spacing: -0.68px;
+}
+.auth-story p {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--border-default);
+}
+.auth-story i {
+  height: 2px;
+  width: 44px;
+  background: var(--rentos-cherub);
+  margin-top: 6px;
+}
+.auth-story small {
+  font-size: 13px;
+  color: var(--identity-input);
+}
+.auth-content {
+  padding: 44px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+.auth-subtitle {
+  padding-top: 4px;
+  color: var(--identity-body);
+}
+.social-soon {
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--identity-radius);
+  background: #e5e8ed;
+  color: var(--identity-muted);
+  font-weight: 600;
+}
+.auth-divider {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--identity-muted);
+  font-size: 13px;
+}
+.auth-divider span {
+  flex: 1;
+  height: 1px;
+  background: var(--identity-border);
+}
+.identity-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.identity-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.identity-field label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.identity-field input,
+.identity-field select,
+.identity-app select {
+  min-height: 48px;
+  border: 1px solid var(--identity-input);
+  border-radius: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-size: 16px;
+}
+.identity-field input:disabled {
+  background: #f1f3f6;
+  color: var(--identity-body);
+}
+.identity-field small {
+  color: var(--identity-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.identity-field input[aria-invalid="true"] {
+  border-color: var(--identity-danger);
+}
+.identity-field .field-error,
+.field-error {
+  color: var(--identity-danger);
+}
+.identity-app button {
+  cursor: pointer;
+}
+.identity-app button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.identity-app :focus-visible {
+  outline: 3px solid var(--rentos-placid);
+  outline-offset: 3px;
+}
+.primary-button,
+.secondary-button,
+.danger-button {
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: var(--identity-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  border: 1px solid var(--identity-border);
+}
+.primary-button {
+  background: var(--action-primary);
+  color: var(--text-on-dark);
+  border-color: var(--text-primary);
+}
+.secondary-button {
+  background: var(--surface-card);
+  color: var(--action-primary);
+}
+.danger-button {
+  background: var(--surface-card);
+  color: var(--identity-danger);
+  border-color: #f1b8b2;
+}
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--action-primary);
+  padding: 10px 6px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.full-width {
+  width: 100%;
+  min-height: 48px;
+}
+.auth-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+.auth-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-options a,
+.auth-bottom a,
+.identity-card > a {
+  color: var(--action-primary);
+  font-weight: 600;
+}
+.auth-bottom {
+  text-align: center;
+}
+.identity-footer {
+  background: var(--surface-nav-dark);
+  color: var(--identity-input);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+.account-layout {
+  display: flex;
+  min-height: calc(100vh - 75px);
+}
+.account-sidebar {
+  flex: 0 0 260px;
+  background: var(--identity-sidebar);
+  color: var(--identity-input);
+  padding: 24px 14px;
+}
+.account-sidebar > small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.1px;
+  font-weight: 700;
+  padding: 0 6px 10px;
+}
+.mode-switch {
+  display: flex;
+  border: 1px solid var(--identity-selected);
+  border-radius: 10px;
+  padding: 4px;
+  background: var(--surface-nav-dark);
+  margin-bottom: 18px;
+}
+.mode-switch a {
+  width: 50%;
+  padding: 10px 4px;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 7px;
+}
+.account-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.account-sidebar nav a {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 15px;
+}
+.account-sidebar .selected {
+  background: var(--identity-selected);
+  color: var(--text-on-dark);
+}
+.dual-account {
+  margin-top: 22px;
+  padding: 12px;
+  border: 1px solid var(--identity-selected);
+  border-radius: 10px;
+  font-size: 12px;
+}
+.dual-account strong {
+  color: var(--text-on-dark);
+  font-size: 13px;
+}
+.dual-account p {
+  margin-top: 4px;
+  line-height: 18px;
+}
+.account-main {
+  padding: 28px 40px 56px;
+  width: 860px;
+  max-width: calc(100% - 260px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.identity-card {
+  background: var(--surface-card);
+  border: 1px solid var(--identity-border);
+  border-radius: var(--identity-radius);
+  padding: 24px;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--identity-border);
+  padding-top: 16px;
+}
+.identity-feedback {
+  border: 1px solid var(--identity-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+.identity-feedback.error {
+  background: #fff1f0;
+  color: var(--identity-danger);
+}
+.identity-feedback.success {
+  background: var(--success-soft);
+  color: #087754;
+}
+.identity-feedback a {
+  text-decoration: underline;
+  margin: 0 8px;
+}
+.token-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.scope-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+.scope-option input {
+  height: 18px;
+  width: 18px;
+}
+.identity-app fieldset {
+  border: 1px solid var(--identity-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.identity-app legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+.one-time-secret code {
+  display: block;
+  padding: 14px;
+  background: var(--identity-canvas);
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.token-table-wrap {
+  overflow-x: auto;
+}
+.identity-app table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.identity-app th,
+.identity-app td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--identity-border);
+  vertical-align: top;
+}
+.identity-app td small {
+  display: block;
+  color: var(--identity-muted);
+  overflow-wrap: anywhere;
+}
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 18, 22, 0.5);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 20;
+}
+.dialog-backdrop section {
+  max-width: 560px;
+}
+.dialog-backdrop p {
+  margin: 16px 0;
+}
+@media (max-width: 1000px) {
+  .auth-card {
+    grid-template-columns: 42% minmax(0, 1fr);
+  }
+  .auth-content {
+    padding: 36px 28px;
+  }
+  .auth-story h2 {
+    font-size: 28px;
+    line-height: 34px;
+  }
+  .identity-header {
+    padding: 12px 24px;
+    gap: 20px;
+  }
+  .identity-header > nav {
+    gap: 20px;
+  }
+  .account-sidebar {
+    flex-basis: 220px;
+  }
+  .account-main {
+    max-width: calc(100% - 220px);
+    padding: 28px 24px;
+  }
+}
+@media (max-width: 700px) {
+  .identity-header {
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    gap: 12px;
+  }
+  .identity-header > nav {
+    order: 3;
+    width: 100%;
+    flex: auto;
+    justify-content: flex-start;
+  }
+  .header-account {
+    margin-left: auto;
+    gap: 10px;
+  }
+  .locale {
+    display: none;
+  }
+  .auth-main {
+    padding: 28px 16px;
+  }
+  .auth-card {
+    display: block;
+    min-height: 0;
+  }
+  .auth-art {
+    display: none;
+  }
+  .auth-content {
+    padding: 28px 24px;
+  }
+  .identity-footer {
+    flex-direction: column;
+    padding: 20px;
+  }
+  .account-layout {
+    flex-direction: column;
+  }
+  .account-sidebar {
+    flex: auto;
+    padding: 16px;
+  }
+  .account-sidebar > small,
+  .dual-account {
+    display: none;
+  }
+  .account-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .account-sidebar nav a {
+    font-size: 13px;
+    padding: 0 8px;
+  }
+  .mode-switch {
+    max-width: 300px;
+    margin-bottom: 10px;
+  }
+  .account-main {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 16px;
+  }
+  .identity-card {
+    padding: 20px;
+  }
+  .auth-options {
+    flex-wrap: wrap;
+  }
+}
