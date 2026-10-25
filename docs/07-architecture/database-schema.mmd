@@ -10,6 +10,7 @@ erDiagram
         text phone  "Optional contact number; not OTP ownership verification."
         boolean is_admin  "Trusted server-managed moderation privilege."
         text account_status  "ACTIVE or SUSPENDED."
+        integer credential_version "Revocation epoch; increment on reset/change/suspension, not profile revision"
         timestamptz created_at  "Account creation time."
         timestamptz updated_at  "Account update time."
     }

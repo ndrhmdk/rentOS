@@ -61,3 +61,7 @@ vendor/bin/pint --dirty --format agent
 - [Data dictionary](../docs/07-architecture/data-dictionary.md)
 - [Authentication setup](../docs/07-architecture/authentication-setup.md)
 - [RNT-01 delivery scope](../planning/issues/RNT-01.md)
+
+## Identity and authorization
+
+See [identity integration](docs/setup/identity-access.md) before adding Tenant/Owner/Admin endpoints. The API group is private by default; resource Policies remain mandatory.

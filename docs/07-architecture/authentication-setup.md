@@ -1,6 +1,6 @@
 # Fortify, Sanctum sessions and personal API tokens
 
-Decision date: 23 October 2026. RNT-01/Khai owns shared setup; RNT-03/Hien owns forms, account/token APIs and their tests. This guide specifies the target implementation; it does not claim packages/routes already exist. Check the repository’s installed Laravel version before using these Laravel 12-style examples. Do not upgrade unrelated dependencies merely to match this guide.
+Decision date: 23 October 2026. RNT-01/Khai owns the database/seeds/Telescope/Scramble/CI foundation; RNT-03/Hien owns Fortify/Sanctum session, CSRF/CORS setup, forms, account/token APIs and their tests. This guide specifies the target implementation; it does not claim packages/routes already exist. Check the repository’s installed Laravel version before using these Laravel 12-style examples. Do not upgrade unrelated dependencies merely to match this guide.
 
 ## Two authentication modes
 

@@ -15,6 +15,7 @@ One `users` row is the account. Domain foreign keys point at `users.id`. Supabas
 | phone | text |  | Yes |  | Optional contact number; not OTP ownership verification. |
 | is_admin | boolean |  | No | false | Trusted server-managed moderation privilege. |
 | account_status | text |  | No | ACTIVE | ACTIVE or SUSPENDED. |
+| credential_version | integer |  | No | 1 | Server-managed revocation epoch captured at browser login; increment on password reset/change or suspension. This is not a profile edit revision. |
 | created_at | timestamptz |  | No | now() | Account creation time. |
 | updated_at | timestamptz |  | No | now() | Account update time. |
 

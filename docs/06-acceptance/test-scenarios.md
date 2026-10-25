@@ -10,14 +10,14 @@ All 343 cases are specifications. Unit/component/API/PostgreSQL integration test
 
 - Type: Positive
 - Trigger/input: Register valid credentials through Fortify, then verify email
-- Expected: One users row and one matching UUID profile exist; password is hashed, is_admin=false; verified user can perform permitted product writes.
+- Expected: One users row holds the identity and profile; password is hashed, is_admin=false; verified user can perform permitted product writes.
 - Evidence status: Not executed
 
 ### FR01-AC02
 
 - Type: Validation
 - Trigger/input: Submit invalid email, weak password or mismatched confirmation
-- Expected: 422 field errors; no partial user/profile or privileged account is created.
+- Expected: 422 field errors; no partial users record or privileged account is created.
 - Evidence status: Not executed
 
 ### FR01-AC03
@@ -31,7 +31,7 @@ All 343 cases are specifications. Unit/component/API/PostgreSQL integration test
 
 - Type: Race
 - Trigger/input: Two registrations use the same normalized email concurrently
-- Expected: Unique constraint and transaction permit one user/profile pair; retries cannot overwrite password, name or admin privilege.
+- Expected: Unique constraint and transaction permit one users identity/profile record; retries cannot overwrite password, name or admin privilege.
 - Evidence status: Not executed
 
 ## FR02

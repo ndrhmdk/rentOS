@@ -42,3 +42,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Account screens
+
+RNT-03 routes: `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password`, `/profile`, `/change-password`, `/settings/api-tokens`. `/tenant`, `/owner`, `/admin` are account navigation shells; domain features belong to their feature owners.
+
+Use `src/lib/identity/api.ts` for credentialed browser calls and `privateKey(userId, ...)` for private TanStack queries. Initialize CSRF before guest auth forms. Do not add login PAT/localStorage authentication or automatic mutation retries. Token creation secrets stay in component memory, outside Query/Mutation caches.
+
+Run `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`. For an environment that blocks Turbopack's internal worker port, `npm run build -- --webpack` validates the production bundle. This fallback does not change the CI/default build command.
+
+See [backend integration contract](../backend/docs/setup/identity-access.md). Identity styles use a local copy of `design/tokens/rentos-tokens.css` because the frontend Turbopack root excludes the parent directory; synchronize `src/components/identity/brand-tokens.css` when brand tokens change.

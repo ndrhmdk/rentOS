@@ -39,7 +39,7 @@ Dependencies gate final integration; fixtures and agreed contracts allow earlier
 
 ## Backend deliverables
 
-- [ ] Implement Fortify registration/login/logout, signed email verification, password-broker recovery and current-user/profile APIs with users/profile atomic creation and normalized email uniqueness. Only Laravel owns passwords; keep is_admin server-controlled and verified/active-account checks current.
+- [ ] Implement Fortify registration/login/logout, signed email verification, password-broker recovery and current-user/profile APIs with atomic users creation (profile fields live in users) and normalized email uniqueness. Only Laravel owns passwords; keep is_admin server-controlled and verified/active-account checks current.
 - [ ] Use auth:sanctum and Policies for private APIs. Browser writes use Laravel CSRF; enforce session-only mode for token management, admin and all private routes outside the approved PAT matrix. Do not infer authorization from tokenCan for first-party sessions.
 - [ ] Implement GET/POST /api/v1/account/api-tokens and DELETE /api/v1/account/api-tokens/{id}, using browser-session-only authentication, verification, active-account checks and current-user scoping. Mutations require CSRF and recent password confirmation. Add form validation and rate limits.
 - [ ] Allow only account:read, favourites:read and favourites:write; expose the mapping in OpenAPI. Validate token name and expiry choices 1/7/30 days (proposed configurable default 30). Return plaintext once on create with no-store, store SHA-256 hash, and list metadata only. Never cache a creation secret for idempotent replay.
@@ -67,7 +67,7 @@ Dependencies gate final integration; fixtures and agreed contracts allow earlier
 ## Tests/evidence owned by this member
 
 - [ ] Unit tests for normalized registration, validation, permitted scopes/expiry, account checks and token metadata serialization; frontend component tests for login, 419 recovery, create/copy-once/revoke and account switching.
-- [ ] API/PostgreSQL tests for user/profile atomicity, real login session rotation/logout, valid/missing/mismatched CSRF, protected writes and role/resource denial. Explicitly disable the Laravel testing CSRF bypass in a dedicated harness; merely enabling middleware is insufficient.
+- [ ] API/PostgreSQL tests for users creation atomicity, real login session rotation/logout, valid/missing/mismatched CSRF, protected writes and role/resource denial. Explicitly disable the Laravel testing CSRF bypass in a dedicated harness; merely enabling middleware is insufficient.
 - [ ] Real PAT issuance and cookie-free bearer tests for hash storage, ability denial, expiry, revocation, foreign token IDs, session-only routes, password-reset/suspension revocation and redaction. Do not substitute Sanctum::actingAs for all token integration tests.
 - [ ] Manual screen and deployed-origin checks plus curl/Postman demonstration with both success and denied token operations; no mandatory E2E automation.
 
@@ -75,7 +75,7 @@ Dependencies gate final integration; fixtures and agreed contracts allow earlier
 
 NFR-02, NFR-03, NFR-04, NFR-06, NFR-07
 
-Hien owns frontend + backend + tests for the complete account/token feature. Khai supplies initial Fortify/Sanctum/schema/CORS/client/Telescope setup in RNT-01. Admin account restrictions must call the shared session/token revocation service. Each feature owner applies CSRF and Policies; approved PAT endpoints are limited to current-user and favourites APIs.
+Hien owns frontend + backend + tests for the complete account/token feature. Khai supplies the database/schema/seeds/Telescope/Scramble/CI foundation in RNT-01; Hien implements Fortify/Sanctum session, CORS/CSRF and the authenticated browser client in RNT-03. Admin account restrictions must call the shared session/token revocation service. Each feature owner applies CSRF and Policies; approved PAT endpoints are limited to current-user and favourites APIs.
 
 ## Definition of done
 
