@@ -2,10 +2,14 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin User
+ */
 class CurrentUserResource extends JsonResource
 {
     public function withResponse(Request $request, JsonResponse $response): void
