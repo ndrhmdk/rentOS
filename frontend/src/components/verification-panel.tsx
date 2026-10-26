@@ -57,9 +57,12 @@ export function VerificationPanel() {
           <div className="status-mark" aria-hidden="true">✉</div>
           <h2>Kiểm tra hộp thư</h2>
           <p>Chúng tôi đã gửi liên kết xác minh đến <strong>{email}</strong>. Mở liên kết để xác nhận địa chỉ email của bạn.</p>
-          <button className="secondary-button" onClick={handleResend} disabled={busy}>
-            {busy ? "Đang gửi…" : "Gửi lại email xác minh"}
-          </button>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+            <button className="secondary-button" onClick={handleResend} disabled={busy}>
+              {busy ? "Đang gửi…" : "Gửi lại email xác minh"}
+            </button>
+            <Link className="text-button" href="/profile">Quay về hồ sơ &rarr;</Link>
+          </div>
           {message && <FormMessage message={message} error={isError} />}
         </>
       ) : (

@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, getCurrentUser, logout, updatePassword, updateProfile, type CurrentUser } from "@/lib/auth-api";
+import { ApiError, getCurrentUser, logout, resendVerification, updatePassword, updateProfile, type CurrentUser } from "@/lib/auth-api";
 import { FieldError, FormMessage } from "./auth-shell";
 
 export function ProfilePanel() {
@@ -16,6 +17,9 @@ export function ProfilePanel() {
   const [profileBusy, setProfileBusy] = useState(false);
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [logoutBusy, setLogoutBusy] = useState(false);
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [resendError, setResendError] = useState(false);
   const [passwordFieldErrors, setPasswordFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -91,6 +95,21 @@ export function ProfilePanel() {
     }
   }
 
+  async function handleResendVerification() {
+    setResendBusy(true);
+    setResendMessage("");
+    setResendError(false);
+    try {
+      await resendVerification();
+      setResendMessage("Đã gửi lại liên kết xác minh. Vui lòng kiểm tra hộp thư của bạn.");
+    } catch (error) {
+      setResendError(true);
+      setResendMessage(error instanceof ApiError ? error.message : "Chưa thể gửi email xác minh lúc này.");
+    } finally {
+      setResendBusy(false);
+    }
+  }
+
   if (loadError) return <FormMessage message={loadError} error />;
 
   if (!user) return <p className="loading-copy">Đang tải hồ sơ…</p>;
@@ -107,11 +126,36 @@ export function ProfilePanel() {
             <span>Họ và tên</span>
             <input name="name" defaultValue={user.name} required maxLength={255} />
           </label>
-          <label className="field">
+          <div className="field">
             <span>Email</span>
             <input value={user.email} readOnly aria-describedby="email-status" />
-            <small id="email-status">{user.email_verified_at ? "Email đã xác minh" : "Email chưa xác minh"}</small>
-          </label>
+            <div className="email-status-container" id="email-status">
+              {user.email_verified_at ? (
+                <span className="email-status-badge badge-verified">
+                  <span className="badge-icon" aria-hidden="true">✓</span> Email đã xác minh
+                </span>
+              ) : (
+                <div className="unverified-email-wrapper">
+                  <span className="email-status-badge badge-unverified">
+                    <span className="badge-icon" aria-hidden="true">!</span> Email chưa xác nhận
+                  </span>
+                  <button
+                    type="button"
+                    className="resend-verification-button"
+                    onClick={handleResendVerification}
+                    disabled={resendBusy}
+                  >
+                    {resendBusy ? "Đang gửi…" : "Gửi lại email xác thực"}
+                  </button>
+                </div>
+              )}
+            </div>
+            {resendMessage && (
+              <small className={`resend-feedback ${resendError ? "resend-error" : "resend-success"}`}>
+                {resendMessage}
+              </small>
+            )}
+          </div>
           <label className="field">
             <span>Số điện thoại liên hệ</span>
             <input name="phone" type="tel" defaultValue={user.phone ?? ""} autoComplete="tel" maxLength={64} />
@@ -153,6 +197,34 @@ export function ProfilePanel() {
             {passwordBusy ? "Đang cập nhật…" : "Cập nhật mật khẩu"}
           </button>
         </form>
+      </section>
+
+      <section className="settings-card" style={{ gridColumn: "1 / -1" }}>
+        <div className="section-heading">
+          <span className="section-kicker">KHÔNG GIAN TIỆN ÍCH</span>
+          <h2>Cổng dịch vụ vai trò của bạn</h2>
+          <p>Truy cập nhanh các cổng chức năng chuyên biệt theo quan hệ tài nguyên thực tế của bạn trên rentOS.</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+          <div className="portal-stat-box" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <strong style={{ fontSize: "16px", color: "var(--text-heading)" }}>🔑 Cổng Cư Dân</strong>
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
+              Theo dõi hợp đồng thuê, thanh toán tiền phòng và các yêu cầu hỗ trợ cư dân.
+            </p>
+            <Link className="primary-button button-link" href="/tenant" style={{ marginTop: "8px", alignSelf: "flex-start", minHeight: "38px", fontSize: "13px" }}>
+              Vào Cổng Cư Dân &rarr;
+            </Link>
+          </div>
+          <div className="portal-stat-box" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <strong style={{ fontSize: "16px", color: "var(--text-heading)" }}>🏢 Cổng Chủ Nhà</strong>
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
+              Quản lý danh mục bất động sản, phòng cho thuê và theo dõi hợp đồng người thuê.
+            </p>
+            <Link className="primary-button button-link" href="/owner" style={{ marginTop: "8px", alignSelf: "flex-start", minHeight: "38px", fontSize: "13px" }}>
+              Vào Cổng Chủ Nhà &rarr;
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

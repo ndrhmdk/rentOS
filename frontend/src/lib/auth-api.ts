@@ -22,6 +22,15 @@ export type CurrentUser = {
   phone: string | null;
 };
 
+export type RoleStatus = {
+  is_admin: boolean;
+  is_tenant: boolean;
+  is_owner: boolean;
+  tenancies_count: number;
+  properties_count: number;
+  email_verified: boolean;
+};
+
 function csrfToken(): string | null {
   const cookie = document.cookie
     .split(";")
@@ -136,4 +145,8 @@ export async function updatePassword(input: {
 
 export async function resendVerification(): Promise<void> {
   await request<void>("/email/verification-notification", { method: "POST", body: "{}" });
+}
+
+export async function getRoleStatus(): Promise<RoleStatus> {
+  return request<RoleStatus>("/api/v1/me/role-status");
 }

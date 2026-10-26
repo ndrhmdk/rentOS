@@ -27,10 +27,11 @@ export function HeaderView({ account, onRetry, onSignOut, signingOut = false, er
         <Image src="/rentos-logo-dark.png" alt="rentOS" width={130} height={33} priority />
       </Link>
       <nav className="rentos-header-navigation" aria-label="Điều hướng chính">
-        <Link href="/" className="rentos-header-active">Tìm nhà cho bạn</Link>
+        <Link href="/">Tìm nhà cho bạn</Link>
+        <Link href="/tenant">Cổng Cư Dân</Link>
+        <Link href="/owner">Cổng Chủ Nhà</Link>
         <button type="button" disabled title="Sắp ra mắt">Hướng dẫn</button>
         <button type="button" disabled title="Sắp ra mắt">FAQ</button>
-        <button type="button" disabled title="Sắp ra mắt">Quản lý thuê</button>
       </nav>
       <div className="rentos-header-actions">
         <span className="rentos-header-language" aria-label="Ngôn ngữ: Tiếng Việt">
@@ -62,6 +63,9 @@ export function HeaderView({ account, onRetry, onSignOut, signingOut = false, er
             <div className="rentos-header-dropdown">
               <strong>{user.name}</strong>
               <Link href="/profile">Hồ sơ của bạn</Link>
+              <Link href="/tenant">Cổng Cư Dân</Link>
+              <Link href="/owner">Cổng Chủ Nhà</Link>
+              <Link href="/admin">Cổng Quản Trị</Link>
               <button type="button" onClick={onSignOut} disabled={signingOut}>{signingOut ? "Đang đăng xuất…" : "Đăng xuất"}</button>
               {error && <p role="alert">{error}</p>}
             </div>

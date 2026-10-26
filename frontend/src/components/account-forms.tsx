@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { ApiError, getCurrentUser, login, registerAccount } from "@/lib/auth-api";
+import { ApiError, login, registerAccount } from "@/lib/auth-api";
 import { FieldError, FormMessage } from "./auth-shell";
 
 type AuthMode = "login" | "register";
@@ -30,7 +30,7 @@ export function AccountForm({ mode }: { mode: AuthMode }) {
           password: String(values.get("password") ?? ""),
           password_confirmation: String(values.get("password_confirmation") ?? ""),
         });
-        router.push("/confirm-email");
+        router.push("/profile");
         return;
       }
 
@@ -38,8 +38,7 @@ export function AccountForm({ mode }: { mode: AuthMode }) {
         email: String(values.get("email") ?? ""),
         password: String(values.get("password") ?? ""),
       });
-      const user = await getCurrentUser();
-      router.push(user.email_verified_at ? "/profile" : "/confirm-email");
+      router.push("/profile");
     } catch (error) {
       if (error instanceof ApiError) {
         setMessage(error.message);
