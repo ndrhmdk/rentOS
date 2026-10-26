@@ -202,10 +202,10 @@ class AccountAuthFlowsTest extends TestCase
     public function test_password_change_checks_current_password_and_revokes_tokens_and_session(): void
     {
         $user = User::factory()->create(['password' => 'Old-password-123']);
-        $user->createToken('account-test');
+        $user->createToken('account-test', ['account:read'], now()->addHour());
         $rememberToken = $user->remember_token;
         $otherUser = User::factory()->create();
-        $otherUser->createToken('other-account');
+        $otherUser->createToken('other-account', ['account:read'], now()->addHour());
         foreach ([$user, $otherUser] as $sessionUser) {
             DB::table('sessions')->insert([
                 'id' => 'session-'.$sessionUser->id,
@@ -327,7 +327,7 @@ class AccountAuthFlowsTest extends TestCase
             $router->getMiddlewareGroups()['web'],
         ));
         $user = User::factory()->unverified()->create(['password' => 'Old-password-123']);
-        $user->createToken('existing');
+        $user->createToken('existing', ['account:read'], now()->addHour());
         $originalName = $user->name;
         $csrf = $this->get('/sanctum/csrf-cookie')->assertNoContent();
         $this->withCookie(config('session.cookie'), $csrf->getCookie(config('session.cookie'))->getValue());
@@ -376,7 +376,7 @@ class AccountAuthFlowsTest extends TestCase
     public function test_stale_authenticated_password_cannot_overwrite_a_committed_change(): void
     {
         $user = User::factory()->create(['password' => 'Old-password-123']);
-        $user->createToken('preserve-on-failure');
+        $user->createToken('preserve-on-failure', ['account:read'], now()->addHour());
         User::query()->whereKey($user->id)->update(['password' => Hash::make('Committed-password-456')]);
         $this->actingAs($user)->putJson('/user/password', [
             'current_password' => 'Old-password-123', 'password' => 'Attempt-password-789',

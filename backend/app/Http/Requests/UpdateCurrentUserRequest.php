@@ -3,13 +3,17 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UpdateCurrentUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Auth::guard('web')->check() && $this->user()->account_status === 'ACTIVE';
+        $user = $this->user();
+
+        return $user !== null
+            && $user->account_status === 'ACTIVE'
+            && ! ($user->currentAccessToken() instanceof PersonalAccessToken);
     }
 
     /**

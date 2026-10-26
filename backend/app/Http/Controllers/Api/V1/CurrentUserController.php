@@ -12,9 +12,12 @@ class CurrentUserController extends Controller
 {
     public function show(Request $request): CurrentUserResource
     {
-        abort_unless($request->user()->account_status === 'ACTIVE' && $request->user()->tokenCan('account:read'), 403);
+        $user = $request->user();
+        $canRead = $user->currentAccessToken() ? $user->tokenCan('account:read') : true;
 
-        return new CurrentUserResource($request->user());
+        abort_unless($user->account_status === 'ACTIVE' && $canRead, 403);
+
+        return new CurrentUserResource($user);
     }
 
     public function update(UpdateCurrentUserRequest $request): JsonResource
