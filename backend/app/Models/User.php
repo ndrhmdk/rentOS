@@ -20,6 +20,15 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
     /**
+     * The model's default values for attributes.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'account_status' => 'ACTIVE',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
