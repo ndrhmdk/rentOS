@@ -20,18 +20,41 @@ export type CurrentUser = {
   email: string;
   email_verified_at: string | null;
   phone: string | null;
+  is_admin?: boolean;
 };
 
-export type RoleStatus = {
-  is_admin: boolean;
-  is_tenant: boolean;
-  is_owner: boolean;
-  tenancies_count: number;
-  properties_count: number;
-  email_verified: boolean;
+export type TenantTenancy = {
+  id: string;
+  unit_id: string;
+  tenant_id: string;
+  owner_id: string;
+  rental_request_id: string;
+  status: string;
+  confirmed_start_date: string | null;
+  confirmed_end_date: string | null;
+  blocked_start_date: string | null;
+  blocked_end_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OwnerProperty = {
+  id: string;
+  owner_id: string;
+  client_operation_id: string;
+  name: string;
+  property_type: string;
+  rental_arrangement: string;
+  city: string;
+  policies?: unknown;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 function csrfToken(): string | null {
+  if (typeof document === "undefined") return null;
+
   const cookie = document.cookie
     .split(";")
     .map((part) => part.trim())
@@ -58,6 +81,28 @@ export async function initializeCsrf(): Promise<void> {
   }
 }
 
+async function ensureCsrfToken(): Promise<string> {
+  let token = csrfToken();
+  if (!token) {
+    await initializeCsrf();
+    token = csrfToken();
+  }
+  if (!token) {
+    throw new ApiError(419, "Phiên bảo mật đã hết hạn. Vui lòng tải lại trang.");
+  }
+  return token;
+}
+
+async function executeFetch(path: string, method: string, headers: Headers, init: RequestInit): Promise<Response> {
+  return fetch(`${apiUrl}${path}`, {
+    ...init,
+    method,
+    headers,
+    credentials: "include",
+    cache: "no-store",
+  });
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = (init.method ?? "GET").toUpperCase();
   const headers = new Headers(init.headers);
@@ -67,22 +112,23 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers.set("Content-Type", "application/json");
   }
 
-  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-    await initializeCsrf();
-    const token = csrfToken();
-    if (!token) {
-      throw new ApiError(419, "Phiên CSRF đã hết hạn. Vui lòng tải lại trang.");
-    }
+  const isWriteMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  if (isWriteMethod) {
+    const token = await ensureCsrfToken();
     headers.set("X-XSRF-TOKEN", token);
   }
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...init,
-    method,
-    headers,
-    credentials: "include",
-    cache: "no-store",
-  });
+  let response = await executeFetch(path, method, headers, init);
+
+  // Nếu gặp lỗi 419 (CSRF token mismatch), xin lại csrf-cookie một lần và thử lại đúng request đó 1 lần
+  if (response.status === 419 && isWriteMethod) {
+    await initializeCsrf();
+    const refreshedToken = csrfToken();
+    if (refreshedToken) {
+      headers.set("X-XSRF-TOKEN", refreshedToken);
+      response = await executeFetch(path, method, headers, init);
+    }
+  }
 
   if (response.status === 204 || response.status === 201) {
     return undefined as T;
@@ -147,6 +193,10 @@ export async function resendVerification(): Promise<void> {
   await request<void>("/email/verification-notification", { method: "POST", body: "{}" });
 }
 
-export async function getRoleStatus(): Promise<RoleStatus> {
-  return request<RoleStatus>("/api/v1/me/role-status");
+export async function getTenantTenancies(): Promise<TenantTenancy[]> {
+  return request<TenantTenancy[]>("/api/v1/tenant/tenancies");
+}
+
+export async function getOwnerProperties(): Promise<OwnerProperty[]> {
+  return request<OwnerProperty[]>("/api/v1/owner/properties");
 }

@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'phone'])]
@@ -65,52 +64,10 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if the user is a tenant with at least one tenancy.
-     */
-    public function isTenant(): bool
-    {
-        return DB::table('tenancies')->where('tenant_id', $this->id)->exists();
-    }
-
-    /**
-     * Check if the user is an owner with at least one unarchived property.
-     */
-    public function isOwner(): bool
-    {
-        return DB::table('properties')
-            ->where('owner_id', $this->id)
-            ->whereNull('archived_at')
-            ->exists();
-    }
-
-    /**
      * Check if the user is an administrator.
      */
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
-    }
-
-    /**
-     * Get the summarized role status for the user.
-     *
-     * @return array{is_admin: bool, is_tenant: bool, is_owner: bool, tenancies_count: int, properties_count: int, email_verified: bool}
-     */
-    public function getRoleStatus(): array
-    {
-        $tenanciesCount = DB::table('tenancies')->where('tenant_id', $this->id)->count();
-        $propertiesCount = DB::table('properties')
-            ->where('owner_id', $this->id)
-            ->whereNull('archived_at')
-            ->count();
-
-        return [
-            'is_admin' => $this->isAdmin(),
-            'is_tenant' => $tenanciesCount > 0,
-            'is_owner' => $propertiesCount > 0,
-            'tenancies_count' => $tenanciesCount,
-            'properties_count' => $propertiesCount,
-            'email_verified' => $this->hasVerifiedEmail(),
-        ];
     }
 }

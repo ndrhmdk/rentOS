@@ -112,36 +112,48 @@ export function ProfilePanel() {
 
   if (loadError) return <FormMessage message={loadError} error />;
 
-  if (!user) return <p className="loading-copy">Đang tải hồ sơ…</p>;
+  if (!user) return <p className="text-center py-12 text-slate-500">Đang tải hồ sơ…</p>;
 
   return (
-    <div className="profile-grid">
-      <section className="settings-card">
-        <div className="section-heading">
-          <span className="section-kicker">Thông tin tài khoản</span>
-          <h2>Hồ sơ của bạn</h2>
+    <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      {/* Profile Settings Card */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="mb-6">
+          <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Thông tin tài khoản</span>
+          <h2 className="text-xl font-bold text-slate-900 mt-1 mb-1">Hồ sơ của bạn</h2>
         </div>
-        <form className="account-form" onSubmit={saveProfile}>
-          <label className="field">
+        <form className="space-y-4" onSubmit={saveProfile}>
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Họ và tên</span>
-            <input name="name" defaultValue={user.name} required maxLength={255} />
+            <input
+              name="name"
+              defaultValue={user.name}
+              required
+              maxLength={255}
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:border-[#3368a0] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
           </label>
-          <div className="field">
+          <div className="space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Email</span>
-            <input value={user.email} readOnly aria-describedby="email-status" />
-            <div className="email-status-container" id="email-status">
+            <input
+              value={user.email}
+              readOnly
+              aria-describedby="email-status"
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm cursor-not-allowed outline-none"
+            />
+            <div className="pt-1.5" id="email-status">
               {user.email_verified_at ? (
-                <span className="email-status-badge badge-verified">
-                  <span className="badge-icon" aria-hidden="true">✓</span> Email đã xác minh
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                  <span aria-hidden="true" className="font-bold">✓</span> Email đã xác minh
                 </span>
               ) : (
-                <div className="unverified-email-wrapper">
-                  <span className="email-status-badge badge-unverified">
-                    <span className="badge-icon" aria-hidden="true">!</span> Email chưa xác nhận
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                    <span aria-hidden="true" className="font-bold">!</span> Email chưa xác nhận
                   </span>
                   <button
                     type="button"
-                    className="resend-verification-button"
+                    className="text-xs font-semibold text-[#3368a0] hover:text-[#285584] underline transition-colors cursor-pointer disabled:opacity-50"
                     onClick={handleResendVerification}
                     disabled={resendBusy}
                   >
@@ -151,76 +163,134 @@ export function ProfilePanel() {
               )}
             </div>
             {resendMessage && (
-              <small className={`resend-feedback ${resendError ? "resend-error" : "resend-success"}`}>
+              <small className={`block text-xs mt-1.5 ${resendError ? "text-rose-600" : "text-emerald-600"}`}>
                 {resendMessage}
               </small>
             )}
           </div>
-          <label className="field">
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Số điện thoại liên hệ</span>
-            <input name="phone" type="tel" defaultValue={user.phone ?? ""} autoComplete="tel" maxLength={64} />
-            <small>Số điện thoại là thông tin liên hệ, chưa được xác minh.</small>
+            <input
+              name="phone"
+              type="tel"
+              defaultValue={user.phone ?? ""}
+              autoComplete="tel"
+              maxLength={64}
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:border-[#3368a0] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
+            <small className="block text-[11px] font-normal text-slate-500">Số điện thoại là thông tin liên hệ, chưa được xác minh.</small>
           </label>
           {profileMessage && <FormMessage message={profileMessage} error={profileError} />}
-          <button className="primary-button" type="submit" disabled={profileBusy}>
+          <button
+            className="w-full min-h-[44px] flex items-center justify-center rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 mt-2"
+            type="submit"
+            disabled={profileBusy}
+          >
             {profileBusy ? "Đang lưu…" : "Lưu thay đổi"}
           </button>
         </form>
-        <button className="text-button signout-button" onClick={signOut} disabled={logoutBusy}>
+        <button
+          type="button"
+          className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline mt-4 inline-block cursor-pointer disabled:opacity-50"
+          onClick={signOut}
+          disabled={logoutBusy}
+        >
           {logoutBusy ? "Đang đăng xuất…" : "Đăng xuất"}
         </button>
       </section>
 
-      <section className="settings-card">
-        <div className="section-heading">
-          <span className="section-kicker">Bảo mật</span>
-          <h2>Đổi mật khẩu</h2>
-          <p>Nhập mật khẩu hiện tại để xác nhận thay đổi. Sau khi đổi, mọi phiên đăng nhập sẽ bị thu hồi và bạn cần đăng nhập lại.</p>
+      {/* Password Change Card */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="mb-6">
+          <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Bảo mật</span>
+          <h2 className="text-xl font-bold text-slate-900 mt-1 mb-1">Đổi mật khẩu</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Nhập mật khẩu hiện tại để xác nhận thay đổi. Sau khi đổi, mọi phiên đăng nhập sẽ bị thu hồi và bạn cần đăng nhập lại.
+          </p>
         </div>
-        <form className="account-form" onSubmit={savePassword}>
-          <label className="field">
+        <form className="space-y-4" onSubmit={savePassword}>
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Mật khẩu hiện tại</span>
-            <input aria-invalid={Boolean(passwordFieldErrors.current_password)} aria-describedby={passwordFieldErrors.current_password ? "current-password-error" : undefined} name="current_password" type="password" autoComplete="current-password" required />
+            <input
+              aria-invalid={Boolean(passwordFieldErrors.current_password)}
+              aria-describedby={passwordFieldErrors.current_password ? "current-password-error" : undefined}
+              name="current_password"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:border-[#3368a0] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
             <FieldError id="current-password-error" message={passwordFieldErrors.current_password?.[0]} />
           </label>
-          <label className="field">
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Mật khẩu mới</span>
-            <input aria-invalid={Boolean(passwordFieldErrors.password)} aria-describedby={passwordFieldErrors.password ? "new-password-error" : undefined} name="password" type="password" autoComplete="new-password" required />
+            <input
+              aria-invalid={Boolean(passwordFieldErrors.password)}
+              aria-describedby={passwordFieldErrors.password ? "new-password-error" : undefined}
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:border-[#3368a0] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
             <FieldError id="new-password-error" message={passwordFieldErrors.password?.[0]} />
           </label>
-          <label className="field">
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             <span>Xác nhận mật khẩu mới</span>
-            <input name="password_confirmation" type="password" autoComplete="new-password" required />
+            <input
+              name="password_confirmation"
+              type="password"
+              autoComplete="new-password"
+              required
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:border-[#3368a0] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            />
           </label>
           {passwordMessage && <FormMessage message={passwordMessage} error={passwordError} />}
-          <button className="primary-button" type="submit" disabled={passwordBusy}>
+          <button
+            className="w-full min-h-[44px] flex items-center justify-center rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 mt-2"
+            type="submit"
+            disabled={passwordBusy}
+          >
             {passwordBusy ? "Đang cập nhật…" : "Cập nhật mật khẩu"}
           </button>
         </form>
       </section>
 
-      <section className="settings-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="section-heading">
-          <span className="section-kicker">KHÔNG GIAN TIỆN ÍCH</span>
-          <h2>Cổng dịch vụ vai trò của bạn</h2>
-          <p>Truy cập nhanh các cổng chức năng chuyên biệt theo quan hệ tài nguyên thực tế của bạn trên rentOS.</p>
+      {/* Role Portal Navigation Shortcuts */}
+      <section className="col-span-1 lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="mb-6">
+          <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">KHÔNG GIAN TIỆN ÍCH</span>
+          <h2 className="text-xl font-bold text-slate-900 mt-1 mb-1">Cổng dịch vụ vai trò của bạn</h2>
+          <p className="text-sm text-slate-600">
+            Truy cập nhanh các cổng chức năng chuyên biệt theo quan hệ tài nguyên thực tế của bạn trên rentOS.
+          </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-          <div className="portal-stat-box" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <strong style={{ fontSize: "16px", color: "var(--text-heading)" }}>🔑 Cổng Cư Dân</strong>
-            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
-              Theo dõi hợp đồng thuê, thanh toán tiền phòng và các yêu cầu hỗ trợ cư dân.
-            </p>
-            <Link className="primary-button button-link" href="/tenant" style={{ marginTop: "8px", alignSelf: "flex-start", minHeight: "38px", fontSize: "13px" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3">
+            <div>
+              <strong className="text-base text-slate-900 flex items-center gap-2">🔑 Cổng Cư Dân</strong>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                Theo dõi hợp đồng thuê, thanh toán tiền phòng và các yêu cầu hỗ trợ cư dân.
+              </p>
+            </div>
+            <Link
+              className="inline-flex items-center justify-center min-h-[38px] px-4 py-2 rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-xs font-semibold shadow-sm transition-colors self-start"
+              href="/tenant"
+            >
               Vào Cổng Cư Dân &rarr;
             </Link>
           </div>
-          <div className="portal-stat-box" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <strong style={{ fontSize: "16px", color: "var(--text-heading)" }}>🏢 Cổng Chủ Nhà</strong>
-            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>
-              Quản lý danh mục bất động sản, phòng cho thuê và theo dõi hợp đồng người thuê.
-            </p>
-            <Link className="primary-button button-link" href="/owner" style={{ marginTop: "8px", alignSelf: "flex-start", minHeight: "38px", fontSize: "13px" }}>
+          <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3">
+            <div>
+              <strong className="text-base text-slate-900 flex items-center gap-2">🏢 Cổng Chủ Nhà</strong>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                Quản lý danh mục bất động sản, phòng cho thuê và theo dõi hợp đồng người thuê.
+              </p>
+            </div>
+            <Link
+              className="inline-flex items-center justify-center min-h-[38px] px-4 py-2 rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-xs font-semibold shadow-sm transition-colors self-start"
+              href="/owner"
+            >
               Vào Cổng Chủ Nhà &rarr;
             </Link>
           </div>

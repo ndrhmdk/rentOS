@@ -2,120 +2,30 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
-import { ApiError, getCurrentUser, logout, type CurrentUser } from "@/lib/auth-api";
-import "./site-header.css";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 
-type AccountState =
-  | { status: "loading" | "guest" | "error" }
-  | { status: "authenticated"; user: CurrentUser };
-
-export function HeaderView({ account, onRetry, onSignOut, signingOut = false, error = "" }: {
-  account: AccountState;
-  onRetry?: () => void;
-  onSignOut?: () => void;
-  signingOut?: boolean;
-  error?: string;
-}) {
-  const user = account.status === "authenticated" ? account.user : null;
-  const initials = user?.name.trim().split(/\s+/).slice(-2).map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("vi") || "U";
-
-  return (
-    <header className="rentos-header-header">
-      <Link href="/" className="rentos-header-logo" aria-label="rentOS - trang chủ">
-        <Image src="/rentos-logo-dark.png" alt="rentOS" width={130} height={33} priority />
-      </Link>
-      <nav className="rentos-header-navigation" aria-label="Điều hướng chính">
-        <Link href="/">Tìm nhà cho bạn</Link>
-        <Link href="/tenant">Cổng Cư Dân</Link>
-        <Link href="/owner">Cổng Chủ Nhà</Link>
-        <button type="button" disabled title="Sắp ra mắt">Hướng dẫn</button>
-        <button type="button" disabled title="Sắp ra mắt">FAQ</button>
-      </nav>
-      <div className="rentos-header-actions">
-        <span className="rentos-header-language" aria-label="Ngôn ngữ: Tiếng Việt">
-          <Image src="/header/globe.svg" alt="" width={22} height={22} /> VN
-        </span>
-        {account.status === "loading" && <span className="rentos-header-loading" role="status">Đang tải…</span>}
-        {account.status === "error" && <button className="rentos-header-retry" onClick={onRetry}>Thử lại tài khoản</button>}
-        {account.status === "guest" && <>
-          <Link className="rentos-header-login" href="/login">Đăng nhập</Link>
-          <Link className="rentos-header-register" href="/register">Đăng ký <span aria-hidden="true">↗</span></Link>
-        </>}
-        {user && <>
-          <button type="button" className="rentos-header-notifications" disabled aria-label="Thông báo — sắp ra mắt" title="Thông báo — sắp ra mắt">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
-          </button>
-          <details className="rentos-header-account" onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.currentTarget.open = false;
-              event.currentTarget.querySelector("summary")?.focus();
-            }
-          }} onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
-          }}>
-            <summary aria-label={`Tài khoản của ${user.name}`}>
-              <span className="rentos-header-avatar" aria-hidden="true">{initials}</span>
-              <span className="rentos-header-name" title={user.name}>{user.name}</span>
-              <Image src="/header/chevron-down.svg" alt="" width={15} height={15} />
-            </summary>
-            <div className="rentos-header-dropdown">
-              <strong>{user.name}</strong>
-              <Link href="/profile">Hồ sơ của bạn</Link>
-              <Link href="/tenant">Cổng Cư Dân</Link>
-              <Link href="/owner">Cổng Chủ Nhà</Link>
-              <Link href="/admin">Cổng Quản Trị</Link>
-              <button type="button" onClick={onSignOut} disabled={signingOut}>{signingOut ? "Đang đăng xuất…" : "Đăng xuất"}</button>
-              {error && <p role="alert">{error}</p>}
-            </div>
-          </details>
-        </>}
-      </div>
-    </header>
-  );
-}
-
-function ConnectedHeader() {
-  const pathname = usePathname();
+export function SiteHeader() {
   const router = useRouter();
-  const [snapshot, setSnapshot] = useState<{ path: string; account: AccountState } | null>(null);
-  const [retry, setRetry] = useState(0);
+  const { user, status, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
-  const generation = useRef(0);
 
-  useEffect(() => {
-    let active = true;
-    async function refresh() {
-      const request = ++generation.current;
-      try {
-        const user = await getCurrentUser();
-        if (active && request === generation.current) setSnapshot({ path: pathname, account: { status: "authenticated", user } });
-      } catch (error) {
-        if (active && request === generation.current) setSnapshot({ path: pathname, account: {
-          status: error instanceof ApiError && error.status === 401 ? "guest" : "error",
-        } });
-      }
-    }
-    void refresh();
-    window.addEventListener("focus", refresh);
-    window.addEventListener("pageshow", refresh);
-    return () => {
-      active = false;
-      window.removeEventListener("focus", refresh);
-      window.removeEventListener("pageshow", refresh);
-    };
-  }, [pathname, retry]);
+  const initials =
+    user?.name
+      .trim()
+      .split(/\s+/)
+      .slice(-2)
+      .map((part) => Array.from(part)[0])
+      .join("")
+      .toLocaleUpperCase("vi") || "U";
 
-  async function signOut() {
+  async function handleSignOut() {
     setSigningOut(true);
     setError("");
-    ++generation.current;
     try {
-      await logout();
-      ++generation.current;
-      setSnapshot({ path: pathname, account: { status: "guest" } });
+      await signOut();
       router.replace("/login");
     } catch {
       setError("Đăng xuất chưa hoàn tất. Vui lòng thử lại.");
@@ -124,10 +34,157 @@ function ConnectedHeader() {
     }
   }
 
-  return <HeaderView account={snapshot?.path === pathname ? snapshot.account : { status: "loading" }}
-    onRetry={() => setRetry((value) => value + 1)} onSignOut={signOut} signingOut={signingOut} error={error} />;
-}
-
-export function SiteHeader() {
-  return <Suspense fallback={<HeaderView account={{ status: "loading" }} />}><ConnectedHeader /></Suspense>;
+  return (
+    <header className="sticky top-0 z-50 flex items-center justify-between gap-3 sm:gap-6 min-h-[72px] lg:min-h-[94px] px-4 sm:px-6 lg:px-12 bg-surface-nav-dark text-on-dark border-b border-white/10 shadow-sm">
+      <Link href="/" className="inline-flex items-center min-h-[44px] shrink-0" aria-label="rentOS - trang chủ">
+        <Image
+          src="/rentos-logo-dark.png"
+          alt="rentOS"
+          width={130}
+          height={33}
+          priority
+          className="w-[110px] sm:w-[130px] h-auto object-contain"
+        />
+      </Link>
+      <nav className="flex items-center gap-3 sm:gap-6 lg:gap-8 overflow-x-auto py-1" aria-label="Điều hướng chính">
+        <Link
+          href="/"
+          className="text-xs sm:text-sm font-medium text-on-dark-muted hover:text-action-secondary transition-colors whitespace-nowrap"
+        >
+          Tìm nhà cho bạn
+        </Link>
+        <Link
+          href="/tenant"
+          className="text-xs sm:text-sm font-medium text-on-dark-muted hover:text-action-secondary transition-colors whitespace-nowrap"
+        >
+          Cổng Cư Dân
+        </Link>
+        <Link
+          href="/owner"
+          className="text-xs sm:text-sm font-medium text-on-dark-muted hover:text-action-secondary transition-colors whitespace-nowrap"
+        >
+          Cổng Chủ Nhà
+        </Link>
+        {status === "authenticated" && Boolean(user?.is_admin) && (
+          <Link
+            href="/admin"
+            className="hidden md:inline-flex items-center text-xs sm:text-sm font-semibold text-action-secondary hover:text-white transition-colors whitespace-nowrap gap-1"
+          >
+            <span>Cổng Quản Trị</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-xs bg-navy-800 text-on-dark">
+              Admin
+            </span>
+          </Link>
+        )}
+      </nav>
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {status === "loading" && (
+          <div className="w-[100px] sm:w-[120px] h-[36px]" aria-hidden="true" />
+        )}
+        {status === "guest" && (
+          <div className="flex items-center gap-1 sm:gap-3">
+            <Link
+              className="text-xs sm:text-sm font-semibold text-on-dark hover:text-action-secondary transition-colors px-2.5 sm:px-3 py-2 min-h-[44px] inline-flex items-center whitespace-nowrap"
+              href="/login"
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              className="text-xs sm:text-sm font-semibold text-primary bg-white hover:bg-slate-100 transition-all px-4 sm:px-5 py-2 sm:py-2.5 rounded-pill min-h-[40px] sm:min-h-[44px] inline-flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+              href="/register"
+            >
+              <span>Đăng ký</span>
+              <span aria-hidden="true" className="text-xs">↗</span>
+            </Link>
+          </div>
+        )}
+        {status === "authenticated" && user && (
+          <details
+            className="relative shrink-0 select-none"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.currentTarget.open = false;
+                event.currentTarget.querySelector("summary")?.focus();
+              }
+            }}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                event.currentTarget.open = false;
+              }
+            }}
+          >
+            <summary
+              aria-label={`Tài khoản của ${user.name}`}
+              className="flex items-center gap-2 cursor-pointer list-none min-h-[44px] select-none [&::-webkit-details-marker]:hidden py-1 px-1.5 rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <span
+                className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white/40 bg-navy-800 text-on-dark flex items-center justify-center text-xs sm:text-sm font-semibold"
+                aria-hidden="true"
+              >
+                {initials}
+              </span>
+              <span
+                className="max-w-[90px] sm:max-w-[140px] truncate text-xs sm:text-sm font-semibold text-on-dark hidden sm:inline"
+                title={user.name}
+              >
+                {user.name}
+              </span>
+              <Image
+                src="/header/chevron-down.svg"
+                alt=""
+                width={14}
+                height={14}
+                className="opacity-80"
+              />
+            </summary>
+            <div className="absolute right-0 top-[calc(100%+8px)] w-56 sm:w-64 max-w-[calc(100vw-32px)] p-2 bg-surface-card text-primary rounded-xl border border-border-default shadow-xl z-50">
+              <div className="px-3 py-2 border-b border-border-default mb-1">
+                <div className="flex items-center justify-between gap-2">
+                  <strong className="block text-xs font-semibold text-heading truncate break-all">
+                    {user.name}
+                  </strong>
+                  {Boolean(user.is_admin) && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-xs bg-navy-800 text-on-dark shrink-0">
+                      Admin
+                    </span>
+                  )}
+                </div>
+                <span className="block text-xs text-secondary truncate mt-0.5">
+                  {user.email}
+                </span>
+              </div>
+              <Link
+                href="/profile"
+                className="flex items-center w-full px-3 py-2 text-sm font-medium text-primary hover:text-heading hover:bg-slate-100 rounded-lg transition-colors text-left min-h-[38px]"
+              >
+                Hồ sơ của bạn
+              </Link>
+              {Boolean(user.is_admin) && (
+                <Link
+                  href="/admin"
+                  className="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-action-primary hover:bg-slate-100 rounded-lg transition-colors text-left min-h-[38px]"
+                >
+                  <span>Cổng Quản Trị</span>
+                  <span className="text-xs text-muted">↗</span>
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                disabled={signingOut}
+                className="flex items-center w-full px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left disabled:opacity-50 min-h-[38px] mt-1 border-t border-border-default/60 pt-2"
+              >
+                {signingOut ? "Đang đăng xuất…" : "Đăng xuất"}
+              </button>
+              {error && (
+                <p role="alert" className="px-3 py-1.5 text-xs text-rose-600">
+                  {error}
+                </p>
+              )}
+            </div>
+          </details>
+        )}
+      </div>
+    </header>
+  );
 }

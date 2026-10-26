@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AuthProvider } from "@/lib/auth-context";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +13,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body className="min-h-screen flex flex-col bg-surface-app text-primary antialiased">
+        <AuthProvider>
+          <SiteHeader />
+          <main className="flex-1 min-h-[calc(100vh-160px)] flex flex-col">
+            {children}
+          </main>
+          <SiteFooter />
+        </AuthProvider>
+      </body>
     </html>
   );
 }
