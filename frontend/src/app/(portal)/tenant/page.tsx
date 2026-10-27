@@ -71,25 +71,72 @@ export default function TenantPortalPage() {
           </button>
         </div>
       ) : tenancies && tenancies.length > 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#3368a0] mb-3">
-            Cư dân chính thức
-          </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Không gian sống của bạn</h2>
-          <p className="text-sm text-slate-600">
-            Chào mừng bạn, <strong>{user?.name}</strong>. Dưới đây là thông tin về hợp đồng thuê nhà của bạn trên hệ thống rentOS.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200">
-              <div className="text-3xl font-bold text-[#3368a0] mb-1">{tenancies.length}</div>
-              <div className="text-xs font-medium text-slate-500">Hợp đồng thuê đang kích hoạt</div>
-            </div>
-            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200">
-              <div className="text-3xl font-bold text-emerald-600 mb-1">Đang hoạt động</div>
-              <div className="text-xs font-medium text-slate-500">Trạng thái cư trú</div>
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#3368a0] mb-3">
+              Cư dân chính thức
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Hợp đồng thuê của bạn</h2>
+            <p className="text-sm text-slate-600">
+              Chào mừng bạn, <strong>{user?.name}</strong>. Dưới đây là danh sách các hợp đồng thuê nhà thực tế của bạn trên hệ thống rentOS.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
+              <span>Tổng số hợp đồng:</span>
+              <strong className="text-slate-900">{tenancies.length}</strong>
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
+
+          <div className="space-y-4">
+            {tenancies.map((tenancy) => {
+              const isActive = tenancy.status === "ACTIVE";
+              const isConfirmed = tenancy.status === "CONFIRMED";
+              const statusLabel = isActive ? "Đang hoạt động" : isConfirmed ? "Đã xác nhận" : tenancy.status;
+              const badgeClass = isActive
+                ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                : isConfirmed
+                ? "bg-blue-50 text-blue-800 border-blue-300"
+                : "bg-slate-100 text-slate-700 border-slate-300";
+
+              return (
+                <div
+                  key={tenancy.id}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h3 className="text-base font-bold text-slate-900">
+                        Hợp đồng #{tenancy.id.slice(0, 8)}
+                      </h3>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeClass}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-slate-600">
+                      <div>
+                        <span className="text-slate-400">Ngày bắt đầu: </span>
+                        <span className="font-medium text-slate-700">{tenancy.confirmed_start_date ?? "Chưa ấn định"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Ngày kết thúc: </span>
+                        <span className="font-medium text-slate-700">{tenancy.confirmed_end_date ?? "Không thời hạn"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Link
+                      className="inline-flex items-center justify-center min-h-[38px] px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-colors"
+                      href="/"
+                    >
+                      Chi tiết nơi ở
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2">
             <Link
               className="inline-flex items-center justify-center min-h-[42px] px-5 py-2 rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-sm font-semibold shadow-sm transition-colors"
               href="/"

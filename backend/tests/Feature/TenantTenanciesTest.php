@@ -161,6 +161,24 @@ class TenantTenanciesTest extends TestCase
             'end_reason' => 'Nguoi thue huy bo',
         ]);
 
+        // Tenancy with ENDED
+        $this->createTenancy($tenant->id, $owner->id, 'ENDED', [
+            'blocked_start_date' => '2026-05-01',
+            'blocked_end_date' => '2026-10-01',
+            'moved_in_at' => now()->subMonths(6),
+            'actual_ended_at' => now(),
+            'end_reason' => 'Ket thuc thoi han hop dong',
+        ]);
+
+        // Tenancy with EXPIRED
+        $this->createTenancy($tenant->id, $owner->id, 'EXPIRED', [
+            'blocked_start_date' => null,
+            'blocked_end_date' => null,
+            'moved_in_at' => null,
+            'actual_ended_at' => now(),
+            'end_reason' => 'Qua han xac nhan hop dong',
+        ]);
+
         $response = $this->actingAs($tenant)->getJson('/api/v1/tenant/tenancies');
 
         $response->assertOk()

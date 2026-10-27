@@ -71,25 +71,73 @@ export default function OwnerPortalPage() {
           </button>
         </div>
       ) : properties && properties.length > 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#3368a0] mb-3">
-            Chủ nhà đối tác
-          </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Danh mục bất động sản của bạn</h2>
-          <p className="text-sm text-slate-600">
-            Xin chào, <strong>{user?.name}</strong>. Dưới đây là tình hình hoạt động của các bất động sản bạn đang quản lý.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200">
-              <div className="text-3xl font-bold text-[#3368a0] mb-1">{properties.length}</div>
-              <div className="text-xs font-medium text-slate-500">Bất động sản đang quản lý</div>
-            </div>
-            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200">
-              <div className="text-3xl font-bold text-emerald-600 mb-1">Đang hoạt động</div>
-              <div className="text-xs font-medium text-slate-500">Trạng thái danh mục</div>
+        <div className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#3368a0] mb-3">
+              Chủ nhà đối tác
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Danh mục bất động sản của bạn</h2>
+            <p className="text-sm text-slate-600">
+              Xin chào, <strong>{user?.name}</strong>. Dưới đây là danh sách các bất động sản thực tế bạn đang quản lý trên rentOS.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
+              <span>Tổng số bất động sản:</span>
+              <strong className="text-slate-900">{properties.length}</strong>
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
+
+          <div className="space-y-4">
+            {properties.map((property) => {
+              const isArchived = Boolean(property.archived_at);
+              const statusLabel = isArchived ? "Đã lưu trữ" : "Đang hoạt động";
+              const badgeClass = isArchived
+                ? "bg-slate-100 text-slate-700 border-slate-300"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300";
+
+              return (
+                <div
+                  key={property.id}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h3 className="text-base font-bold text-slate-900">
+                        {property.name}
+                      </h3>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeClass}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-slate-600">
+                      <div>
+                        <span className="text-slate-400">Khu vực: </span>
+                        <span className="font-medium text-slate-700">{property.city}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Loại hình: </span>
+                        <span className="font-medium text-slate-700">{property.property_type}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Hình thức: </span>
+                        <span className="font-medium text-slate-700">{property.rental_arrangement}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Link
+                      className="inline-flex items-center justify-center min-h-[38px] px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-colors"
+                      href="/"
+                    >
+                      Quản lý phòng
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2">
             <Link
               className="inline-flex items-center justify-center min-h-[42px] px-5 py-2 rounded-lg bg-[#3368a0] hover:bg-[#285584] text-white text-sm font-semibold shadow-sm transition-colors"
               href="/"

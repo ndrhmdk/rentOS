@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 export function AuthShell({
@@ -9,6 +10,7 @@ export function AuthShell({
   wide = false,
   welcomeTitle,
   welcomeCopy,
+  welcomeFooter,
 }: {
   eyebrow: string;
   title: string;
@@ -18,13 +20,14 @@ export function AuthShell({
   wide?: boolean;
   welcomeTitle?: string;
   welcomeCopy?: string;
+  welcomeFooter?: string;
 }) {
   return (
     <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
       <section
-        className={`w-full bg-white bg-surface-card border border-[#DCE5EA] border-border-default rounded-2xl shadow-sm shadow-card overflow-hidden ${
+        className={`w-full bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden ${
           marketingPanel
-            ? "max-w-5xl flex flex-col md:flex-row min-h-[600px]"
+            ? "max-w-[960px] flex flex-col md:flex-row min-h-[610px]"
             : wide
             ? "max-w-4xl"
             : "max-w-md"
@@ -33,30 +36,51 @@ export function AuthShell({
       >
         {marketingPanel && (
           <aside
-            className="relative isolate md:w-[41.4%] min-h-[280px] md:min-h-[600px] p-6 sm:p-10 lg:p-12 flex flex-col justify-between overflow-hidden text-white bg-gradient-to-br from-[#739c83] via-[#345c50] to-[#091216]"
+            className="relative md:w-[450px] shrink-0 min-h-[320px] md:min-h-full p-8 sm:p-10 lg:p-12 flex flex-col justify-between text-white overflow-hidden bg-[#091216]"
             aria-label="Thông tin về rentOS"
           >
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.08em] uppercase text-emerald-200">
-              <span aria-hidden="true" className="text-base">⌂</span> NƠI ĐỂ Ở. CHỐN ĐỂ THUỘC VỀ.
+            {/* Background Hero Image */}
+            <Image
+              src="/images/auth-hero.png"
+              alt="Không gian sống rentOS"
+              fill
+              priority
+              className="object-cover object-center"
+            />
+            {/* Gradient Overlay for Readability */}
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-[#091216] via-[#091216]/65 to-[#091216]/40 pointer-events-none"
+              aria-hidden="true"
+            />
+
+            {/* Top Brand Kicker */}
+            <div className="relative z-10 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-emerald-200">
+              <span aria-hidden="true">⌂</span> Nơi để ở. Chọn để thuộc về.
             </div>
-            <div className="my-auto py-6">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-[-0.04em] text-white mb-3 leading-tight">
+
+            {/* Bottom Emotional Copy */}
+            <div className="relative z-10 mt-auto pt-16">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-3 leading-snug">
                 {welcomeTitle}
               </h2>
-              <p className="text-white/85 text-sm leading-relaxed">{welcomeCopy}</p>
-              <span className="block w-9 h-0.5 bg-[#75B0C6] my-4" />
-              <small className="text-[#8BB4C2] text-xs">Bình yên bắt đầu từ một nơi gọi là nhà.</small>
+              <p className="text-white/85 text-sm leading-relaxed mb-5">
+                {welcomeCopy}
+              </p>
+              <div className="w-11 h-0.5 bg-[#75B0C6] mb-4" />
+              <p className="text-xs text-[#BCD0DB] font-medium leading-relaxed">
+                {welcomeFooter ?? "Bình yên bắt đầu từ một nơi gọi là nhà."}
+              </p>
             </div>
           </aside>
         )}
-        <div className={`p-6 sm:p-10 lg:p-12 flex flex-col justify-center bg-surface-card ${marketingPanel ? "md:w-[58.6%]" : "flex-1"}`}>
-          <span className="block text-muted text-[10px] font-bold tracking-[0.1em] uppercase mb-1.5">
+        <div className={`p-8 sm:p-10 lg:p-12 flex flex-col justify-center bg-white ${marketingPanel ? "flex-1 md:w-[508px]" : "flex-1"}`}>
+          <span className="block text-slate-400 text-[11px] font-bold tracking-wider uppercase mb-1.5">
             {eyebrow}
           </span>
-          <h1 id="auth-title" className="text-2xl sm:text-3xl font-bold text-heading tracking-tight mb-2">
+          <h1 id="auth-title" className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             {title}
           </h1>
-          <p className="text-secondary text-sm mb-6">{description}</p>
+          <p className="text-slate-600 text-sm mb-6">{description}</p>
           {children}
         </div>
       </section>

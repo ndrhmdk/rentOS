@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, getCurrentUser, logout, resendVerification, updatePassword, updateProfile, type CurrentUser } from "@/lib/auth-api";
+import { ApiError, getCurrentUser, resendVerification, updatePassword, updateProfile, type CurrentUser } from "@/lib/auth-api";
+import { useAuth } from "@/lib/auth-context";
 import { FieldError, FormMessage } from "./auth-shell";
 
 export function ProfilePanel() {
   const router = useRouter();
+  const { refreshUser, signOut: authSignOut } = useAuth();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loadError, setLoadError] = useState("");
   const [profileMessage, setProfileMessage] = useState("");
@@ -44,6 +46,7 @@ export function ProfilePanel() {
         phone: String(values.get("phone") ?? "").trim() || null,
       });
       setUser(updated);
+      await refreshUser();
       setProfileMessage("Hồ sơ đã được cập nhật.");
     } catch (error) {
       setProfileMessage(error instanceof ApiError ? error.message : "Không thể cập nhật hồ sơ.");
@@ -68,6 +71,7 @@ export function ProfilePanel() {
       });
       setPasswordMessage("Mật khẩu đã đổi. Hãy đăng nhập lại bằng mật khẩu mới.");
       setUser(null);
+      await authSignOut();
       router.replace("/login");
     } catch (error) {
       if (error instanceof ApiError) {
@@ -85,7 +89,7 @@ export function ProfilePanel() {
   async function signOut() {
     setLogoutBusy(true);
     try {
-      await logout();
+      await authSignOut();
       setUser(null);
       router.replace("/login");
     } catch (error) {

@@ -12,6 +12,7 @@ export default function RegisterPage() {
         marketingPanel
         welcomeTitle="Một tài khoản. Nhiều khởi đầu mới."
         welcomeCopy="Tìm nơi ở phù hợp hoặc chia sẻ không gian của bạn — tất cả trên rentOS."
+        welcomeFooter="Bình yên bắt đầu từ một nơi gọi là nhà."
       >
         <AccountForm mode="register" />
       </AuthShell>

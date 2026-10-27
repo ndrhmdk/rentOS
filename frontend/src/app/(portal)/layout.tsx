@@ -6,11 +6,11 @@ export default function PortalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-94px)] w-full bg-surface-app">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-75px)] w-full bg-[#f8fafc]">
       <PortalSidebar />
-      <div className="flex-1 min-w-0 flex flex-col">
+      <main className="flex-1 min-w-0 flex flex-col p-4 sm:p-6 lg:p-8">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

@@ -11,7 +11,8 @@ export default function SignInPage() {
         description="Tiếp tục hành trình của bạn cùng rentOS."
         marketingPanel
         welcomeTitle="Chào mừng bạn trở về."
-        welcomeCopy="Những ngôi nhà bạn yêu thích và những kế hoạch mới luôn ở đây chờ bạn."
+        welcomeCopy="Những ngôi nhà bạn quan tâm và các hợp đồng đang chờ, luôn ở đây chờ bạn."
+        welcomeFooter="Một tài khoản dùng cho cả tìm nhà và quản lý cho thuê."
       >
         <AccountForm mode="login" />
       </AuthShell>

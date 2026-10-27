@@ -20,7 +20,11 @@ export default function Home() {
         Một tài khoản cho hành trình thuê nhà và quản lý bất động sản của bạn.
       </p>
 
-      {status === "authenticated" && user ? (
+      {status === "loading" ? (
+        <div className="min-h-[46px] w-full flex items-center justify-center" aria-hidden="true">
+          <div className="h-2.5 w-24 bg-slate-200 rounded-full animate-pulse" />
+        </div>
+      ) : status === "authenticated" && user ? (
         <div className="text-center mt-2">
           <p className="mb-6 text-sm text-slate-500">
             Xin chào trở lại, <strong className="text-slate-800">{user.name}</strong>!
