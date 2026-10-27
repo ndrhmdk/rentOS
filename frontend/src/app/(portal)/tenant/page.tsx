@@ -58,7 +58,18 @@ export default function TenantPortalPage() {
       </div>
 
       {loading ? (
-        <p className="text-center py-12 text-slate-500">Đang tải thông tin cư dân…</p>
+        <div className="space-y-6 animate-pulse" aria-busy="true" aria-label="Đang tải thông tin cư dân">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-3">
+            <div className="h-5 w-32 bg-blue-100 rounded-full" />
+            <div className="h-7 w-64 bg-slate-200 rounded-lg" />
+            <div className="h-4 w-96 max-w-full bg-slate-100 rounded" />
+            <div className="h-6 w-36 bg-slate-100 rounded-lg mt-2" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-24 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm" />
+            <div className="h-24 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm" />
+          </div>
+        </div>
       ) : error ? (
         <div className="text-center py-10 px-4 bg-white border border-rose-200 rounded-2xl p-8 max-w-xl mx-auto shadow-sm">
           <p className="text-sm text-rose-600 font-medium mb-4">{error}</p>

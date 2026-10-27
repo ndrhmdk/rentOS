@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
 export function SiteHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, status, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
@@ -152,7 +153,7 @@ export function SiteHeader() {
                   </span>
                 </div>
                 <Link
-                  href="/profile"
+                  href={pathname.startsWith("/owner") ? "/owner/profile" : "/tenant/profile"}
                   className="flex items-center w-full px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors text-left min-h-[38px]"
                 >
                   Hồ sơ của bạn
