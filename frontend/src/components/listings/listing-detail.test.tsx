@@ -1,14 +1,14 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ListingDetail } from "./listings-api";
+import type { ListingDetail } from "@/features/discovery/listings-api";
 import { ListingDetailView } from "./listing-detail";
-import { UnavailableListing } from "./unavailable-listing";
 
 const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const listing: ListingDetail = {
@@ -17,7 +17,10 @@ const listing: ListingDetail = {
   description: "Mô tả công khai",
   availability_label: "Trống từ 02/05/2027",
   available_unit_count: 0,
-  gallery: [],
+  gallery: [
+    { id: "photo-1", caption: "Mặt ngoài", sort_order: 0, url: "/photos/outside.webp" },
+    { id: "photo-2", caption: "Phòng khách", sort_order: 1, url: "/photos/living.webp" },
+  ],
   property: {
     name: "Nhà Hải Châu",
     property_type: "APARTMENT",
@@ -29,6 +32,7 @@ const listing: ListingDetail = {
     shared_amenities: [{ key: "laundry", label_vi: "Giặt là chung", details: "Tầng trệt" }],
     custom_amenities: [],
   },
+  owner: { name: "Quoc Huy Le" },
   units: [
     {
       id: "unit-1",
@@ -64,42 +68,56 @@ describe("listing detail", () => {
     push.mockReset();
   });
 
-  it("separates shared laundry from an in-unit washing machine and keeps a held unit", () => {
+  it("separates shared laundry from an in-unit washing machine and keeps a held unit", async () => {
+    const user = userEvent.setup();
     render(<ListingDetailView listing={listing} isSignedIn />);
 
     const shared = screen.getByRole("region", { name: "Tiện ích chung" });
-    const unitAmenities = screen.getByRole("region", { name: "Tiện ích trong căn Phòng 1" });
     expect(shared.textContent).toContain("Giặt là chung");
-    expect(unitAmenities.textContent).not.toContain("Máy giặt");
     expect(screen.getByText("Đã được giữ/đặt. Trống từ 02/05/2027")).toBeTruthy();
     expect(screen.getByRole("region", { name: "Nội quy đang quảng cáo" }).textContent).toContain("Không hút thuốc trong nhà");
+    expect(screen.getByText("Quoc Huy Le")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: /Phòng 1/ }));
+
+    const unitAmenities = screen.getByRole("region", { name: "Tiện ích trong căn Phòng 1" });
+    expect(unitAmenities.textContent).not.toContain("Máy giặt");
+    expect(screen.getByText(/Máy giặt riêng/)).toBeTruthy();
   });
 
-  it("blocks submit when the phone is empty and does not call the network", async () => {
+  it("opens the request form only after the button is clicked", async () => {
     const user = userEvent.setup();
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<ListingDetailView listing={listing} isSignedIn />);
 
-    await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
 
-    expect(screen.getByRole("alert").textContent).toContain("Nhập số điện thoại.");
+    await user.click(screen.getByRole("button", { name: "Gửi yêu cầu thuê" }));
+    const dialog = screen.getByRole("dialog", { name: "Gửi yêu cầu thuê" });
+    await user.click(within(dialog).getByRole("button", { name: "Gửi yêu cầu thuê" }));
+
+    expect(within(dialog).getByRole("alert").textContent).toContain("Nhập số điện thoại.");
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 
-  it("sends a guest to login", async () => {
+  it("sends a guest to login from the request form", async () => {
     const user = userEvent.setup();
     render(<ListingDetailView listing={listing} isSignedIn={false} />);
 
-    await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+    await user.click(screen.getByRole("button", { name: "Gửi yêu cầu thuê" }));
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Gửi yêu cầu thuê" }));
 
     expect(push).toHaveBeenCalledWith("/login");
   });
 
-  it("renders the unavailable copy without a hidden title", () => {
-    render(<UnavailableListing />);
+  it("opens a scrollable gallery of every photo", async () => {
+    const user = userEvent.setup();
+    render(<ListingDetailView listing={listing} isSignedIn />);
 
-    expect(screen.getByRole("heading", { name: "Bài đăng này hiện không khả dụng" })).toBeTruthy();
-    expect(screen.queryByText("Tiêu đề bí mật bị ẩn")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Xem tất cả 2 ảnh" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Tất cả ảnh" });
+    expect(within(dialog).getAllByRole("img")).toHaveLength(2);
   });
 });

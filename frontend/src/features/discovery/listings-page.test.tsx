@@ -41,6 +41,7 @@ function card(title: string, label: string): ListingSearchResponse {
         rent_max: "4500000",
         minimum_rental_months: 3,
         cover_url: null,
+        image_urls: [],
         property: {
           name: "Nhà Hải Châu",
           property_type: "APARTMENT",

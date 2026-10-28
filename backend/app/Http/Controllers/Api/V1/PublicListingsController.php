@@ -7,6 +7,7 @@ use App\Domain\Discovery\EligibleUnitQuery;
 use App\Domain\Discovery\ListingSearchCriteria;
 use App\Domain\Discovery\LocationQuery;
 use App\Domain\Discovery\UnitAvailability;
+use App\Domain\Media\PublicStorageUrl;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PublicListingIndexRequest;
 use App\Http\Requests\Api\V1\PublicListingShowRequest;
@@ -19,11 +20,9 @@ use App\Models\PropertyMedia;
 use App\Models\Unit;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class PublicListingsController extends Controller
 {
@@ -58,7 +57,7 @@ class PublicListingsController extends Controller
     public function show(PublicListingShowRequest $request, string $listing): JsonResponse
     {
         return DB::transaction(function () use ($listing): JsonResponse {
-            $model = Listing::query()->with('property')->find($listing);
+            $model = Listing::query()->with('property.owner')->find($listing);
             if (! $model instanceof Listing || ! $this->isPublic($model)) {
                 abort(404);
             }
@@ -120,13 +119,27 @@ class PublicListingsController extends Controller
         $units = $this->eligibleUnits($propertyIds, $criteria)->get()->groupBy(
             fn (Unit $unit): string => (string) $unit->property_id,
         );
+        $photos = PropertyMedia::query()
+            ->whereIn('property_id', $propertyIds)
+            ->where('is_selected_for_listing', true)
+            ->whereNull('deleted_at')
+            ->whereNull('purged_at')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (PropertyMedia $item): string => (string) $item->property_id);
 
         return collect($listingIds)
-            ->map(function (string $id) use ($listings, $units, $criteria): Listing {
+            ->map(function (string $id) use ($listings, $units, $photos, $criteria): Listing {
                 $listing = $listings->get($id);
                 $listingUnits = $units->get((string) $listing->property_id, collect())->values();
                 $this->attachUnitPresentation($listingUnits, $listing->property, $criteria->moveInDate);
-                $listing->setAttribute('search_summary', $this->summary($listingUnits, $criteria->moveInDate, $listing));
+                $listing->setAttribute('search_summary', $this->summary(
+                    $listingUnits,
+                    $criteria->moveInDate,
+                    $listing,
+                    $photos->get((string) $listing->property_id, collect()),
+                ));
 
                 return $listing;
             })
@@ -192,9 +205,10 @@ class PublicListingsController extends Controller
 
     /**
      * @param  Collection<int, Unit>  $units
-     * @return array{availability_label: string, available_unit_count: int, rent_min: string, rent_max: string, minimum_rental_months: int, cover_url: ?string}
+     * @param  Collection<int, PropertyMedia>  $photos
+     * @return array{availability_label: string, available_unit_count: int, rent_min: string, rent_max: string, minimum_rental_months: int, cover_url: ?string, image_urls: list<string>}
      */
-    private function summary(Collection $units, ?string $moveInDate, Listing $listing): array
+    private function summary(Collection $units, ?string $moveInDate, Listing $listing, ?Collection $photos = null): array
     {
         $free = $units->filter(function (Unit $unit) use ($moveInDate): bool {
             /** @var array<string, mixed> $availability */
@@ -234,18 +248,46 @@ class PublicListingsController extends Controller
             'cover_url' => $cover instanceof PropertyMedia
                 ? $this->publicMediaUrl((string) $cover->storage_path)
                 : null,
+            'image_urls' => $this->imageUrls($listing, $photos ?? collect()),
         ];
+    }
+
+    /**
+     * @param  Collection<int, PropertyMedia>  $photos
+     * @return list<string>
+     */
+    private function imageUrls(Listing $listing, Collection $photos): array
+    {
+        $cover = $listing->relationLoaded('coverMedia') ? $listing->coverMedia : null;
+        $urls = [];
+
+        if ($cover instanceof PropertyMedia && $this->isVisibleMedia($cover)) {
+            $urls[] = $this->publicMediaUrl((string) $cover->storage_path);
+        }
+
+        foreach ($photos as $photo) {
+            if (! $photo instanceof PropertyMedia || ! $this->isVisibleMedia($photo)) {
+                continue;
+            }
+            if ($cover instanceof PropertyMedia && (string) $photo->id === (string) $cover->id) {
+                continue;
+            }
+            $urls[] = $this->publicMediaUrl((string) $photo->storage_path);
+        }
+
+        return array_values(array_unique($urls));
+    }
+
+    private function isVisibleMedia(PropertyMedia $media): bool
+    {
+        return $media->is_selected_for_listing
+            && $media->deleted_at === null
+            && $media->purged_at === null;
     }
 
     private function publicMediaUrl(string $path): string
     {
-        $disk = Storage::disk('public');
-
-        if (! $disk instanceof FilesystemAdapter) {
-            throw new \RuntimeException('The public disk cannot build a URL.');
-        }
-
-        return $disk->url($path);
+        return app(PublicStorageUrl::class)->forPath($path);
     }
 
     private function isPublic(Listing $listing): bool

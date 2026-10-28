@@ -38,6 +38,9 @@ class PublicListingDetailResource extends JsonResource
                 'shared_amenities' => $this->resource->getAttribute('public_shared_amenities'),
                 'custom_amenities' => $property->shared_amenities['custom'] ?? [],
             ],
+            'owner' => [
+                'name' => $property->owner?->name,
+            ],
             'units' => PublicUnitResource::collection($this->resource->getAttribute('public_units')),
         ];
     }

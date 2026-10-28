@@ -28,6 +28,7 @@ export type ListingCard = {
   rent_max: string;
   minimum_rental_months: number;
   cover_url: string | null;
+  image_urls: string[];
   property: {
     name: string;
     property_type: string;
@@ -100,6 +101,9 @@ export type ListingDetail = {
     shared_rules: string[];
     shared_amenities: PublicAmenity[];
     custom_amenities: string[];
+  };
+  owner: {
+    name: string | null;
   };
   units: PublicUnit[];
 };

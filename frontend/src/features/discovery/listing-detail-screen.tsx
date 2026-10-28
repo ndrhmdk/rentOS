@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { ListingDetailView } from "./listing-detail";
+import { ListingDetailView } from "@/components/listings/listing-detail";
 import { fetchListing, ListingUnavailableError, type ListingDetail } from "./listings-api";
 import { UnavailableListing } from "./unavailable-listing";
 

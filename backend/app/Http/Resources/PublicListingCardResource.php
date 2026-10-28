@@ -29,6 +29,7 @@ class PublicListingCardResource extends JsonResource
             'rent_max' => $summary['rent_max'],
             'minimum_rental_months' => $summary['minimum_rental_months'],
             'cover_url' => $summary['cover_url'],
+            'image_urls' => $summary['image_urls'],
             'property' => [
                 'name' => $property->name,
                 'property_type' => $property->property_type,

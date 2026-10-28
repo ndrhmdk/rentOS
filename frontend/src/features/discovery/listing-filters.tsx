@@ -265,7 +265,7 @@ function MillionField({
 }) {
   return (
     <label className="grid min-w-0 gap-1 text-xs font-medium text-[#5b6676]">
-      {label}
+      {label} (triệu VNĐ)
       <span className={`flex h-11 min-w-0 items-center gap-1 rounded-xl border bg-white px-3 ${invalid ? "border-[#c53636]" : "border-[#e1e7ed]"}`}>
         <input
           inputMode="decimal"
@@ -276,7 +276,6 @@ function MillionField({
           onChange={(event) => onChange(sanitizeMillions(event.target.value))}
           className="w-full min-w-0 bg-transparent text-sm text-[#091216] outline-none"
         />
-        <span className="shrink-0 text-sm text-[#5b6676]">triệu</span>
       </span>
     </label>
   );

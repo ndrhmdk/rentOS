@@ -54,7 +54,9 @@ class PublicListingDetailTest extends TestCase
         $response->assertJsonMissing(['admin_suspended_at']);
         $encoded = $response->getContent();
         $this->assertIsString($encoded);
+        $this->assertSame($published->owner->name, $response->json('data.owner.name'));
         $this->assertStringNotContainsString($published->owner->id, $encoded);
+        $this->assertStringNotContainsString($published->owner->email, $encoded);
         $this->assertStringNotContainsString('storage_path', $encoded);
         $this->assertStringNotContainsString('document_sha256', $encoded);
         $this->assertStringNotContainsString('latitude', $encoded);
