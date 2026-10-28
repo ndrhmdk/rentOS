@@ -62,6 +62,12 @@ class PublicListingSearchTest extends TestCase
             ->assertJsonPath('data.0.property.ward', 'Hải Châu')
             ->assertJsonPath('data.0.property.city', 'Đà Nẵng');
 
+        $this->assertStringStartsWith(
+            'https://example.supabase.co/storage/v1/object/public/property-media/listings/',
+            $response->json('data.0.cover_url'),
+        );
+        $this->assertSame($response->json('data.0.cover_url'), $response->json('data.0.image_urls.0'));
+        $this->assertCount(3, $response->json('data.0.image_urls'));
         $this->assertArrayNotHasKey('district', $response->json('data.0.property'));
     }
 
