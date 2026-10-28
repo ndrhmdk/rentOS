@@ -62,5 +62,7 @@ jobs:
           extensions: pdo_pgsql, pcntl
           coverage: none
       - run: composer install --no-interaction --prefer-dist
+      - run: composer run lint
+      - run: composer run typecheck
       - run: cp .env.example .env && php artisan key:generate --no-interaction
       - run: php artisan test
