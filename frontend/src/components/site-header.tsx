@@ -49,7 +49,7 @@ export function SiteHeader() {
       </Link>
       <nav className="flex items-center gap-4 sm:gap-6 lg:gap-8 overflow-x-auto py-1" aria-label="Điều hướng chính">
         <Link
-          href="/"
+          href="/listings"
           className="text-[15px] font-bold text-[#8FBCD0] hover:text-[#FFFFFF] transition-colors whitespace-nowrap"
         >
           Tìm nhà cho bạn
