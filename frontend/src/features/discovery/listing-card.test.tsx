@@ -10,7 +10,7 @@ function listing(imageUrls: string[]): ListingCard {
   return {
     id: "listing-1",
     title: "Studio full nội thất gần biển Mỹ Khê",
-    availability_label: "3 căn còn trống",
+    availability_label: "Còn trống đến 01/06/2027",
     available_unit_count: 3,
     rent_min: "3800000",
     rent_max: "3800000",
@@ -46,6 +46,8 @@ describe("listing card gallery", () => {
 
     expect(photo().src).toContain("/photos/house.webp");
     expect(screen.getByText("1/4")).toBeTruthy();
+    expect(screen.getByText("3 căn còn trống")).toBeTruthy();
+    expect(screen.queryByText("Còn trống đến 01/06/2027")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Ảnh sau" }));
 

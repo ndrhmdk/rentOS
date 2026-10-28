@@ -27,7 +27,7 @@ vi.mock("./listings-api", () => ({
     }),
 }));
 
-import { ListingsBrowser } from "./listings-browser";
+import { ListingsBrowser, paginationItems } from "./listings-browser";
 
 function card(title: string, label: string): ListingSearchResponse {
   return {
@@ -53,6 +53,18 @@ function card(title: string, label: string): ListingSearchResponse {
     meta: { current_page: 1, per_page: 12, total: 1, last_page: 1 },
   };
 }
+
+describe("pagination", () => {
+  it("shows every page when they all fit", () => {
+    expect(paginationItems(2, 4)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("keeps the current page between its neighbors and the last page", () => {
+    expect(paginationItems(4, 274)).toEqual([1, 2, 3, 4, 5, "gap", 274]);
+    expect(paginationItems(10, 17)).toEqual([1, "gap", 9, 10, 11, "gap", 17]);
+    expect(paginationItems(16, 17)).toEqual([1, "gap", 13, 14, 15, 16, 17]);
+  });
+});
 
 describe("listings page", () => {
   beforeEach(() => {

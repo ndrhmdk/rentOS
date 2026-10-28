@@ -50,7 +50,7 @@ export function ListingCardView({ listing, href }: { listing: ListingCard; href:
           ) : null}
         </Link>
         <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-heading">
-          {listing.availability_label}
+          {listing.available_unit_count > 0 ? `${listing.available_unit_count} căn còn trống` : listing.availability_label}
         </span>
         {showControls ? (
           <>

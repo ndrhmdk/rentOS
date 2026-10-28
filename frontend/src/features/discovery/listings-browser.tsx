@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DiscoverySidebar } from "./discovery-sidebar";
@@ -24,6 +23,24 @@ const emptySearch: ListingSearchState = {
   page: 1,
 };
 
+export function paginationItems(current: number, lastPage: number): Array<number | "gap"> {
+  const page = Math.min(Math.max(current, 1), lastPage);
+  const wanted = lastPage <= 5
+    ? Array.from({ length: lastPage }, (_, index) => index + 1)
+    : page <= 4
+      ? [1, 2, 3, 4, 5, lastPage]
+      : page >= lastPage - 3
+        ? [1, lastPage - 4, lastPage - 3, lastPage - 2, lastPage - 1, lastPage]
+        : [1, page - 1, page, page + 1, lastPage];
+  const numbers = [...new Set(wanted.filter((item) => item >= 1 && item <= lastPage))].sort((left, right) => left - right);
+  const items: Array<number | "gap"> = [];
+  numbers.forEach((item, index) => {
+    if (index > 0 && item - numbers[index - 1] > 1) items.push("gap");
+    items.push(item);
+  });
+  return items;
+}
+
 function parseSearchState(query: string): { state: ListingSearchState; error: string | null } {
   try {
     return { state: parseListingSearchParams(new URLSearchParams(query)), error: null };
@@ -31,6 +48,71 @@ function parseSearchState(query: string): { state: ListingSearchState; error: st
     const message = error instanceof ListingSearchValidationError ? error.message : "Bộ lọc tìm kiếm không hợp lệ.";
     return { state: emptySearch, error: message };
   }
+}
+
+function Pagination({
+  current,
+  lastPage,
+  onSelect,
+}: {
+  current: number;
+  lastPage: number;
+  onSelect: (page: number) => void;
+}) {
+  return (
+    <nav aria-label="Phân trang" className="flex w-fit items-center gap-1 justify-self-end rounded-full bg-surface-brand-soft px-2 py-1.5">
+      <button
+        type="button"
+        aria-label="Trang trước"
+        disabled={current <= 1}
+        className="inline-flex size-9 items-center justify-center rounded-full text-heading disabled:text-muted"
+        onClick={() => onSelect(current - 1)}
+      >
+        <PageChevron direction="left" />
+      </button>
+      {paginationItems(current, lastPage).map((item, index) => {
+        if (item === "gap") {
+          return <span key={`gap-${index}`} className="px-1 text-sm text-muted" aria-hidden="true">…</span>;
+        }
+        const selected = item === current;
+        return (
+          <button
+            key={item}
+            type="button"
+            aria-current={selected ? "page" : undefined}
+            className={`inline-flex size-9 items-center justify-center rounded-full text-sm font-semibold ${selected ? "bg-action-primary text-white" : "text-heading hover:bg-surface-card"}`}
+            onClick={() => onSelect(item)}
+          >
+            {item}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        aria-label="Trang sau"
+        disabled={current >= lastPage}
+        className="inline-flex size-9 items-center justify-center rounded-full text-heading disabled:text-muted"
+        onClick={() => onSelect(current + 1)}
+      >
+        <PageChevron direction="right" />
+      </button>
+    </nav>
+  );
+}
+
+function PageChevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4">
+      <path
+        d={direction === "left" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export function ListingsBrowser() {
@@ -123,27 +205,15 @@ export function ListingsBrowser() {
         </div>
       ) : null}
       {status === "ready" && body && body.meta.last_page > 1 ? (
-        <nav aria-label="Phân trang" className="flex gap-2">
-          {Array.from({ length: body.meta.last_page }, (_, index) => {
-            const page = index + 1;
+        <Pagination
+          current={body.meta.current_page}
+          lastPage={body.meta.last_page}
+          onSelect={(page) => {
             const params = toListingSearchParams({ ...state, page });
             const text = params.toString();
-            return (
-              <Link
-                key={page}
-                href={text ? `/listings?${text}` : "/listings"}
-                aria-current={page === body.meta.current_page ? "page" : undefined}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border"
-                onClick={(event) => {
-                  event.preventDefault();
-                  router.replace(text ? `/listings?${text}` : "/listings");
-                }}
-              >
-                {page}
-              </Link>
-            );
-          })}
-        </nav>
+            router.replace(text ? `/listings?${text}` : "/listings");
+          }}
+        />
       ) : null}
       </div>
         </div>

@@ -18,6 +18,37 @@ const steps = [
   { number: "03", title: "Xác nhận hợp đồng", body: "Chủ nhà gửi phiên bản hợp đồng, bạn xem và xác nhận trước hạn chót." },
 ];
 
+const reasons = [
+  {
+    title: "Nhà được xác thực",
+    body: "Hạn chế thông tin sai lệch, giúp bạn tìm kiếm an tâm hơn.",
+    icon: "/images/home/shield.svg",
+    width: 14,
+    height: 16,
+  },
+  {
+    title: "Minh bạch chi phí",
+    body: "Giá thuê, tiền cọc và các khoảng phí được công khai rõ ràng.",
+    icon: "/images/home/list.svg",
+    width: 22,
+    height: 22,
+  },
+  {
+    title: "Kết nối dễ dàng",
+    body: "Liên hệ trực tiếp với chủ nhà và nhanh chóng giải đáp thắc mắc.",
+    icon: "/images/home/chat.svg",
+    width: 16,
+    height: 15,
+  },
+  {
+    title: "Nơi ở phù hợp",
+    body: "Tìm không gian phù hợp với nhu cầu và phong cách sống của bạn.",
+    icon: "/images/home/home.svg",
+    width: 18,
+    height: 18,
+  },
+];
+
 const faqs = [
   { question: "Thời hạn thuê tối thiểu là bao lâu?", answer: "Tối thiểu 3 tháng. Mỗi căn có thể đặt thời hạn tối thiểu dài hơn, hiển thị rõ trên tin đăng." },
   { question: "Gửi yêu cầu có giữ chỗ cho tôi không?", answer: "Không. Gửi yêu cầu không giữ chỗ. Căn chỉ được giữ sau khi chủ nhà xác nhận." },
@@ -37,6 +68,14 @@ export default function Home() {
       .catch(() => undefined);
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (window.location.hash !== "#cau-hoi") return;
+    const section = document.getElementById("cau-hoi");
+    if (!section) return;
+    const top = section.getBoundingClientRect().top + window.scrollY - 91;
+    window.scrollTo({ top });
+  }, [listings]);
 
   return (
     <div className="bg-[#f0f4f7]">
@@ -71,27 +110,31 @@ export default function Home() {
       </section>
 
       <section className="relative z-10 mx-auto -mt-16 w-full max-w-[1100px] px-4">
-        <div className="rounded-t-[25px] bg-white px-6 py-8 shadow-sm sm:px-12">
-          <p className="text-xs font-semibold tracking-[1.44px] text-[#66a3bf]">VÌ SAO CHỌN CHÚNG TÔI</p>
-          <div className="mt-4 grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-            <h2 className="text-[30px] font-semibold leading-9 tracking-[-1px]">Tìm nhà dễ dàng. Sống an tâm.</h2>
-            <p className="text-sm leading-8 text-[#181818]">Chúng tôi kết nối người tìm nhà với những không gian sống phù hợp, minh bạch và đáng tin cậy.</p>
+        <div className="rounded-t-[25px] bg-white px-6 py-8 shadow-sm sm:px-12 lg:px-14">
+          <p className="flex items-center gap-2 text-xs font-semibold tracking-[1.44px] text-[#66a3bf]">
+            <span className="h-0.5 w-[30px] bg-[#66a3bf]" />
+            Vì sao chọn chúng tôi
+          </p>
+          <div className="mt-5 grid gap-4 lg:grid-cols-[300px_1fr] lg:items-start">
+            <h2 className="text-[30px] font-semibold leading-[35px] tracking-[-1.2px] text-black">Tìm nhà dễ dàng. Sống an tâm.</h2>
+            <p className="max-w-[490px] text-sm font-light leading-8 tracking-[-0.56px] text-[#181818]">
+              Chúng tôi kết nối người tìm nhà với những không gian sống phù hợp, minh bạch và đáng tin cậy.
+            </p>
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ["Nhà được xác thực", "Hạn chế thông tin sai lệch, giúp bạn tìm kiếm an tâm hơn."],
-              ["Minh bạch chi phí", "Giá thuê, tiền cọc và các khoản phí được công khai rõ ràng."],
-              ["Kết nối dễ dàng", "Liên hệ trực tiếp với chủ nhà và nhanh chóng giải đáp thắc mắc."],
-              ["Nơi ở phù hợp", "Tìm không gian phù hợp với nhu cầu và phong cách sống của bạn."],
-            ].map(([title, body]) => (
-              <div key={title} className="text-center">
-                <p className="text-[15px] font-semibold text-[#266683]">{title}</p>
-                <p className="mt-2 text-xs leading-5 text-black">{body}</p>
+            {reasons.map((reason) => (
+              <div key={reason.title} className="text-center">
+                <span className="mx-auto flex size-[25px] items-center justify-center rounded-[3px] bg-[rgba(143,188,208,0.45)]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={reason.icon} alt="" width={reason.width} height={reason.height} />
+                </span>
+                <p className="mt-1 text-[15px] font-semibold tracking-[-0.6px] text-[#266683]">{reason.title}</p>
+                <p className="mt-1 text-xs font-light leading-5 tracking-[-0.48px] text-black">{reason.body}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className="grid gap-6 bg-[#091216] px-6 py-8 text-white sm:grid-cols-3 sm:px-12">
+        <div className="bg-[url('/images/home/why-us.png')] rounded-b-[25px] bg-no-repeat bg-cover bg-center grid gap-6 bg-[#091216] px-6 py-8 text-white sm:grid-cols-3 sm:px-12">
           <Stat value="Nhà tốt. Người thật." label="Tin đăng được kiểm duyệt trước khi công khai" />
           <Stat value="12+" label="Khu phố đang có nhà" />
           <Stat value="4.8 / 5" label="Mức độ hài lòng" />
@@ -181,7 +224,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1200px] gap-10 px-6 py-20 lg:grid-cols-[0.7fr_1.3fr]">
+      <section id="cau-hoi" className="mx-auto grid max-w-[1200px] scroll-mt-24 gap-10 px-6 py-20 lg:grid-cols-[0.7fr_1.3fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#3368a0]">Một chút rõ ràng</p>
           <h2 className="mt-2 text-4xl font-bold tracking-[-0.72px] text-[#091216]">Trước khi bạn chuyển đến.</h2>
