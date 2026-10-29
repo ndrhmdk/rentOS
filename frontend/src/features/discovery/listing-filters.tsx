@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { clearLocation, parseListingSearchParams, toListingSearchParams, type ListingSearchState } from "./listing-search-params";
 import type { AmenityCatalogItem } from "./listings-api";
 
@@ -53,7 +54,7 @@ export function ListingFilters({
   const filterCount = state.amenities.length + (state.pets ? 1 : 0) + (state.moveInDate ? 1 : 0);
 
   return (
-    <section className="relative z-100 grid gap-3" aria-label="Bộ lọc tin đăng">
+    <section className="relative grid gap-3" aria-label="Bộ lọc tin đăng">
       <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
         <div className="relative min-w-0 flex-1 basis-full md:basis-auto">
           <label htmlFor="listing-location" className="sr-only">Địa điểm</label>
@@ -184,11 +185,34 @@ function AnchoredMenu({
   children: ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ top: number; left: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function place() {
+      const rect = rootRef.current?.getBoundingClientRect();
+      const menu = menuRef.current;
+      if (!rect || !menu) return;
+      const width = menu.offsetWidth;
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+      setBox({ top: rect.bottom + 8, left });
+    }
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) onClose();
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      onClose();
     }
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
@@ -207,10 +231,15 @@ function AnchoredMenu({
         {label}
         <span aria-hidden="true" className="text-xs">▾</span>
       </button>
-      {open ? (
-        <div className={`absolute left-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-2xl border border-[#e1e7ed] bg-white shadow-[0_16px_40px_rgba(9,18,22,0.18)] ${menuClassName}`}>
+      {open ? createPortal(
+        <div
+          ref={menuRef}
+          style={{ top: box?.top ?? 0, left: box?.left ?? 0, visibility: box ? "visible" : "hidden" }}
+          className={`fixed z-[60] overflow-hidden rounded-2xl border border-[#e1e7ed] bg-white shadow-[0_16px_40px_rgba(9,18,22,0.18)] ${menuClassName}`}
+        >
           {children}
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
@@ -357,8 +386,8 @@ function FilterDialog({
     }));
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-[#091216]/45 px-4 py-8" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-[#091216]/45 px-4 py-8" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
@@ -417,7 +446,8 @@ function FilterDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

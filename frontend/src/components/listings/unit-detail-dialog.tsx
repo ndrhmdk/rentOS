@@ -1,4 +1,4 @@
-gi"use client";
+"use client";
 
 import { useEffect } from "react";
 import type { PublicUnit } from "@/features/discovery/listings-api";

@@ -30,7 +30,7 @@ final class SeedImageLibrary
             throw new RuntimeException('The media fixture directory is not configured.');
         }
 
-        $manifestPath = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'manifest.json';
+        $manifestPath = rtrim($directory, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'manifest.json';
         $contents = is_file($manifestPath) ? file_get_contents($manifestPath) : false;
         $decoded = is_string($contents) ? json_decode($contents, true) : null;
 
@@ -120,7 +120,7 @@ final class SeedImageLibrary
     public function absolutePath(string $file): string
     {
         $relative = str_replace('/', DIRECTORY_SEPARATOR, $file);
-        $candidate = $this->directory . DIRECTORY_SEPARATOR . $relative;
+        $candidate = $this->directory.DIRECTORY_SEPARATOR.$relative;
         $directory = realpath($this->directory);
         $absolute = realpath($candidate);
 
@@ -128,7 +128,7 @@ final class SeedImageLibrary
             $directory === false
             || $absolute === false
             || ! is_file($absolute)
-            || ! str_starts_with($absolute, $directory . DIRECTORY_SEPARATOR)
+            || ! str_starts_with($absolute, $directory.DIRECTORY_SEPARATOR)
         ) {
             throw new RuntimeException("Media library file is missing or unreadable: {$file}");
         }
@@ -148,7 +148,7 @@ final class SeedImageLibrary
     {
         $matches = array_values(array_filter(
             $this->sets,
-            fn(array $set): bool => in_array($propertyType, $set['property_types'], true)
+            fn (array $set): bool => in_array($propertyType, $set['property_types'], true)
                 && in_array($unitKind, $set['unit_kinds'], true),
         ));
 
@@ -166,7 +166,7 @@ final class SeedImageLibrary
     {
         $matches = array_values(array_filter(
             $this->shared,
-            fn(array $image): bool => $image['amenity'] === $amenity,
+            fn (array $image): bool => $image['amenity'] === $amenity,
         ));
 
         if ($matches === []) {

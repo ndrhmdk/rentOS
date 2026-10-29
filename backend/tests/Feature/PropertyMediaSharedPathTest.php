@@ -36,7 +36,7 @@ class PropertyMediaSharedPathTest extends TestCase
 
         DB::table('property_media')->insert($this->mediaRow($published->propertyId, $published->owner->id, [
             'client_operation_id' => $existing->client_operation_id,
-            'storage_path' => 'owners/' . Str::uuid() . '.png',
+            'storage_path' => 'owners/'.Str::uuid().'.png',
         ]));
     }
 
@@ -49,7 +49,7 @@ class PropertyMediaSharedPathTest extends TestCase
 
         DB::table('property_media')->insert($this->mediaRow($first->propertyId, $first->owner->id, [
             'unit_id' => $second->unitIds[0],
-            'storage_path' => 'owners/' . Str::uuid() . '.png',
+            'storage_path' => 'owners/'.Str::uuid().'.png',
         ]));
     }
 
@@ -67,7 +67,7 @@ class PropertyMediaSharedPathTest extends TestCase
             'unit_id' => null,
             'uploaded_by' => $ownerId,
             'client_operation_id' => (string) Str::uuid(),
-            'storage_path' => 'owners/' . Str::uuid() . '.png',
+            'storage_path' => 'owners/'.Str::uuid().'.png',
             'caption' => 'Ảnh dùng chung',
             'sort_order' => 4,
             'is_selected_for_listing' => true,
