@@ -454,6 +454,8 @@ public function createUnit(User $owner, Property $property, array $attributes): 
             $unit = $property->units()->create([
                 ...$attributes,
                 'client_operation_id' => $operationId,
+                'operational_status' => $attributes['operational_status'] ?? 'READY',
+                'is_marketed' => $attributes['is_marketed'] ?? false,
                 'amenities' => (object) [
                     'schema_version' => 1,
                     'standard' => (object) ($amenities['standard'] ?? []),
@@ -478,6 +480,7 @@ public function createUnit(User $owner, Property $property, array $attributes): 
                     'property_id' => $property->id,
                     'label' => $unit->label,
                     'operational_status' => $unit->operational_status,
+                    'is_marketed' => $unit->is_marketed,
                     'property_content_revision' => $property->content_revision,
                 ],
                 correlationId: $correlationId,

@@ -173,7 +173,10 @@ class OwnerPropertiesTest extends TestCase
         ], JSON_THROW_ON_ERROR);
     }
 
-    private function createProperty(string $ownerId, ?string $archivedAt = null): string
+    private function createProperty(
+        string $ownerId, 
+        ?string $archivedAt = null,
+        string $rentalArrangement = 'WHOLE_SPACE'): string
     {
         $propertyId = Str::uuid()->toString();
 
@@ -183,7 +186,7 @@ class OwnerPropertiesTest extends TestCase
             'client_operation_id' => Str::uuid()->toString(),
             'name' => 'Can ho Landmark '.Str::random(4),
             'property_type' => 'APARTMENT',
-            'rental_arrangement' => 'WHOLE_SPACE',
+            'rental_arrangement' => $rentalArrangement,
             'city' => 'Ho Chi Minh',
             'policies' => $this->validPolicies(),
             'archived_at' => $archivedAt,
@@ -363,5 +366,110 @@ class OwnerPropertiesTest extends TestCase
             'property_type' => 'APARTMENT',
             'rental_arrangement' => 'WHOLE_SPACE',
         ], $overrides);
+    }
+    public function test_owner_can_create_unit_for_separate_unit_property(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $operationId = (string) Str::uuid();
+
+        $response = $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units",
+            [
+                'client_operation_id' => $operationId,
+                'label' => 'Room 101',
+                'unit_kind' => 'ROOM',
+                'bedrooms' => 1,
+                'bathrooms' => 1,
+                'bathroom_arrangement' => 'PRIVATE',
+                'minimum_rental_months' => 3,
+            ],
+        );
+
+        $response->assertCreated()
+            ->assertJsonPath('data.property_id', $propertyId)
+            ->assertJsonPath('data.label', 'Room 101')
+            ->assertJsonPath('data.operational_status', 'READY')
+            ->assertJsonPath('data.is_marketed', false);
+
+        $unitId = $response->json('data.id');
+
+        $this->assertDatabaseHas('units', [
+            'id' => $unitId,
+            'property_id' => $propertyId,
+            'client_operation_id' => $operationId,
+            'label' => 'Room 101',
+        ]);
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'unit',
+            'entity_id' => $unitId,
+            'action' => 'unit.created',
+        ]);
+    }
+
+    public function test_foreign_owner_cannot_create_unit_for_another_owners_property(): void
+    {
+        $owner = User::factory()->create();
+        $otherOwner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $this->actingAs($otherOwner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units",
+            [
+                'client_operation_id' => (string) Str::uuid(),
+                'label' => 'Room 101',
+                'unit_kind' => 'ROOM',
+                'bedrooms' => 1,
+                'bathrooms' => 1,
+                'bathroom_arrangement' => 'PRIVATE',
+                'minimum_rental_months' => 3,
+            ],
+        )->assertForbidden();
+
+        $this->assertDatabaseCount('units', 0);
+    }
+
+    public function test_owner_cannot_create_duplicate_unit_label(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $payload = [
+            'label' => 'Room 101',
+            'unit_kind' => 'ROOM',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+        ];
+
+        $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units",
+            ['client_operation_id' => (string) Str::uuid(), ...$payload],
+        )->assertCreated();
+
+        $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units",
+            ['client_operation_id' => (string) Str::uuid(), ...$payload],
+        )->assertUnprocessable()
+            ->assertJsonValidationErrors('label');
+
+        $this->assertDatabaseCount('units', 1);
     }
 }

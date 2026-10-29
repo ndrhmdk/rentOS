@@ -44,6 +44,7 @@ class Unit extends Model
         return [
             'amenities' => 'object',
             'policy_overrides' => 'object',
+            'operational_status' => 'string',
             'area_m2' => 'decimal:2',
             'bathrooms' => 'decimal:2',
             'advertised_monthly_rent' => 'integer',
