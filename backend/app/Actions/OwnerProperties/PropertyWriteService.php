@@ -421,4 +421,71 @@ class PropertyWriteService
 
         return $value;
     }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    /**
+ * @param array<string, mixed> $attributes
+ */
+public function createUnit(User $owner, Property $property, array $attributes): Unit
+    {
+        return DB::transaction(function () use ($owner, $property, $attributes): Unit {
+            $property = Property::query()
+                ->whereKey($property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            abort_if($property->archived_at !== null, 409);
+            abort_unless($property->rental_arrangement === 'SEPARATE_UNITS', 422);
+
+            $before = [
+                'content_revision' => $property->content_revision,
+                'unit_ids' => $property->units()->whereNull('archived_at')->pluck('id')->all(),
+            ];
+
+            $operationId = $attributes['client_operation_id'];
+            $amenities = $attributes['amenities'] ?? [];
+            unset($attributes['client_operation_id'], $attributes['amenities']);
+
+            $unit = $property->units()->create([
+                ...$attributes,
+                'client_operation_id' => $operationId,
+                'amenities' => (object) [
+                    'schema_version' => 1,
+                    'standard' => (object) ($amenities['standard'] ?? []),
+                    'custom' => $amenities['custom'] ?? [],
+                ],
+                'policy_overrides' => (object) ($attributes['policy_overrides'] ?? []),
+            ]);
+
+            $property->content_revision++;
+            $property->save();
+
+            $correlationId = (string) Str::uuid();
+            $invalidatedListingIds = $this->invalidatePendingListings($property);
+
+            $this->writeAudit(
+                actorId: $owner->id,
+                entityType: 'unit',
+                entityId: $unit->id,
+                action: 'unit.created',
+                before: null,
+                after: [
+                    'property_id' => $property->id,
+                    'label' => $unit->label,
+                    'operational_status' => $unit->operational_status,
+                    'property_content_revision' => $property->content_revision,
+                ],
+                correlationId: $correlationId,
+            );
+
+            $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+
+            return $unit;
+        }, 3);
+    }
 }

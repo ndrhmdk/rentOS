@@ -6,8 +6,10 @@ use App\Actions\OwnerProperties\PropertyWriteService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\StorePropertyRequest;
+use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Resources\PropertyResource;
+use App\Http\Resources\UnitResource;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -82,5 +84,17 @@ class OwnerPropertiesController extends Controller
             $property,
             (int) $request->validated('expected_content_revision'),
         ));
+    }
+
+    public function storeUnit(StoreUnitRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse {
+        $unit = $propertyWriter->createUnit(
+            $request->user(),
+            $property,
+            $request->validated()
+        );
+
+        return (new UnitResource($unit))
+            ->response()
+            ->setStatusCode(201);
     }
 }

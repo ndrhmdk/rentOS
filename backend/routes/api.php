@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
     Route::put('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('api.v1.owner.properties.update');
     Route::patch('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('api.v1.owner.properties.patch');
     Route::patch('/owner/properties/{property}/archive', [OwnerPropertiesController::class, 'archive'])->name('api.v1.owner.properties.archive');
+    Route::post('/owner/properties/{property}/units', [OwnerPropertiesController::class, 'storeUnit'])->name('api.v1.owner.properties.units.store');
 });
