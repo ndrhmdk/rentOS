@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\DB;
 final class EligibleUnitQuery
 {
     /**
-     * @param  Builder<Model>|QueryBuilder  $unitQuery
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>|QueryBuilder  $unitQuery
      */
     public static function apply(Builder|QueryBuilder $unitQuery, ListingSearchCriteria $criteria, bool $requireFree = false): void
     {
@@ -54,7 +56,9 @@ final class EligibleUnitQuery
     }
 
     /**
-     * @param  Builder<Model>|QueryBuilder  $unitQuery
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>|QueryBuilder  $unitQuery
      */
     public static function constrain(Builder|QueryBuilder $unitQuery, ListingSearchCriteria $criteria, bool $requireFree): void
     {
@@ -147,7 +151,9 @@ final class EligibleUnitQuery
     }
 
     /**
-     * @param  Builder<Model>|QueryBuilder  $unitQuery
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>|QueryBuilder  $unitQuery
      */
     private static function order(Builder|QueryBuilder $unitQuery, ListingSearchCriteria $criteria): void
     {
