@@ -23,6 +23,7 @@ import {
   unitKindLabel,
 } from "./listing-format";
 import { ListingPhotoGrid } from "./listing-photo-grid";
+import { ListingReportDialog } from "./listing-report-dialog";
 import { ListingRequestAside } from "./listing-request-aside";
 import { RentalRequestDialog } from "./rental-request-dialog";
 
@@ -35,6 +36,7 @@ export function ListingDetailView({
 }) {
   const searchParams = useSearchParams();
   const [requestOpen, setRequestOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [preferredUnitId, setPreferredUnitId] = useState(listing.units[0]?.id ?? "");
   const [openUnitId, setOpenUnitId] = useState<string | null>(null);
   const rents = rentBounds(listing.units);
@@ -143,6 +145,23 @@ export function ListingDetailView({
               {listing.property.description && listing.property.description !== listing.description ? (
                 <p className="text-base leading-7 text-[#2b3544]">{listing.property.description}</p>
               ) : null}
+              {isSignedIn ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 text-sm leading-5 text-[#5b6676]"
+                  onClick={() => setReportOpen(true)}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/images/listings/report-flag.svg" alt="" width={14} height={14} />
+                  Báo cáo
+                </button>
+              ) : (
+                <Link href="/login" className="inline-flex items-center gap-1.5 text-sm leading-5 text-[#5b6676]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/images/listings/report-flag.svg" alt="" width={14} height={14} />
+                  Đăng nhập để báo cáo tin đăng này
+                </Link>
+              )}
             </section>
           </article>
 
@@ -151,6 +170,7 @@ export function ListingDetailView({
           </div>
         </div>
       </div>
+      {reportOpen ? <ListingReportDialog listingTitle={listing.title} onClose={() => setReportOpen(false)} /> : null}
       {requestOpen ? (
         <RentalRequestDialog
           listing={listing}

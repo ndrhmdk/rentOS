@@ -29,7 +29,7 @@ export function ListingDetailScreen({ id }: { id: string }) {
   }, [id]);
 
   if (unavailable) return <UnavailableListing />;
-  if (!listing) return <LoadingScreen />;
+  if (!listing) return <LoadingScreen message="Đang tải thế giới cho bạn..." />;
 
   return <ListingDetailView listing={listing} isSignedIn={status === "authenticated"} />;
 }

@@ -112,6 +112,33 @@ describe("listing detail", () => {
     expect(push).toHaveBeenCalledWith("/login");
   });
 
+  it("opens the report form for a signed-in user and keeps it closed until then", async () => {
+    const user = userEvent.setup();
+    render(<ListingDetailView listing={listing} isSignedIn />);
+
+    expect(screen.queryByRole("dialog", { name: "Báo cáo tin đăng này" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Báo cáo" }));
+    const dialog = screen.getByRole("dialog", { name: "Báo cáo tin đăng này" });
+    await user.click(within(dialog).getByRole("button", { name: "Gửi báo cáo" }));
+
+    expect(within(dialog).getByRole("alert").textContent).toContain("Chọn lý do báo cáo.");
+
+    await user.click(within(dialog).getByRole("radio", { name: /Sai lệch thông tin/ }));
+    await user.type(within(dialog).getByRole("textbox", { name: "Mô tả (bắt buộc)" }), "Ảnh không giống căn thật.");
+    await user.click(within(dialog).getByRole("button", { name: "Gửi báo cáo" }));
+
+    expect(within(dialog).getByRole("status").textContent).toContain("Chưa gửi báo cáo.");
+  });
+
+  it("asks a guest to sign in before reporting", () => {
+    render(<ListingDetailView listing={listing} isSignedIn={false} />);
+
+    const link = screen.getByRole("link", { name: "Đăng nhập để báo cáo tin đăng này" });
+    expect(link.getAttribute("href")).toBe("/login");
+    expect(screen.queryByRole("button", { name: "Báo cáo" })).toBeNull();
+  });
+
   it("opens a scrollable gallery of every photo", async () => {
     const user = userEvent.setup();
     render(<ListingDetailView listing={listing} isSignedIn />);
