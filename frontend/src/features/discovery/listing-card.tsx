@@ -1,8 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { ListingCard } from "./listings-api";
+
+const cardSizes = "(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw";
 
 const kindLabels: Record<string, string> = {
   ROOM: "Phòng",
@@ -31,25 +34,48 @@ function photoUrls(listing: ListingCard): string[] {
 export function ListingCardView({ listing, href }: { listing: ListingCard; href: string }) {
   const urls = photoUrls(listing);
   const [index, setIndex] = useState(0);
+  const [ready, setReady] = useState<Record<string, true>>({});
   const place = [listing.property.ward, listing.property.city].filter(Boolean).join(", ");
   const current = urls[index] ?? null;
   const showControls = urls.length > 1;
+  const preloaded = preloadIndexes(index, urls.length);
 
-  function show(next: number) {
-    setIndex((next + urls.length) % urls.length);
+  function show(delta: number) {
+    setIndex((current) => (current + delta + urls.length) % urls.length);
+  }
+
+  function markReady(url: string) {
+    setReady((currentReady) => (currentReady[url] ? currentReady : { ...currentReady, [url]: true }));
   }
 
   return (
     <article className="overflow-hidden rounded-2xl border border-border-default bg-surface-card">
       <div className="relative aspect-4/3 bg-surface-brand-soft">
-        <Link href={href} className="block h-full">
-          {current ? (
-            // Listing photos come from the public API, not a fixed design asset.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={current} alt={listing.title} className="h-full w-full object-cover" />
+        <Link href={href} className="relative block h-full">
+          {current && !ready[current] ? (
+            <span className="absolute inset-0 z-[1] flex items-center justify-center bg-[#d9dde3] px-6 text-center text-sm text-[#3d4654]" aria-hidden="true">
+              {listing.title}
+            </span>
           ) : null}
+          {preloaded.map((photoIndex) => {
+            const url = urls[photoIndex];
+            const selected = photoIndex === index;
+            const visible = selected && ready[url];
+            return (
+              <Image
+                key={`${photoIndex}-${url}`}
+                src={url}
+                alt={selected ? listing.title : ""}
+                fill
+                sizes={cardSizes}
+                aria-hidden={selected ? undefined : true}
+                className={`object-cover transition-opacity duration-200 ${visible ? "z-[2] opacity-100" : "opacity-0"}`}
+                onLoad={() => markReady(url)}
+              />
+            );
+          })}
         </Link>
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-heading">
+        <span className="z-[3] pointer-events-none absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-heading">
           {listing.available_unit_count > 0 ? `${listing.available_unit_count} căn còn trống` : listing.availability_label}
         </span>
         {showControls ? (
@@ -58,7 +84,7 @@ export function ListingCardView({ listing, href }: { listing: ListingCard; href:
               type="button"
               aria-label="Ảnh trước"
               className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-heading shadow-md"
-              onClick={() => show(index - 1)}
+              onClick={() => show(-1)}
             >
               <Chevron direction="left" />
             </button>
@@ -66,7 +92,7 @@ export function ListingCardView({ listing, href }: { listing: ListingCard; href:
               type="button"
               aria-label="Ảnh sau"
               className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-heading shadow-md"
-              onClick={() => show(index + 1)}
+              onClick={() => show(1)}
             >
               <Chevron direction="right" />
             </button>
@@ -87,6 +113,14 @@ export function ListingCardView({ listing, href }: { listing: ListingCard; href:
       </Link>
     </article>
   );
+}
+
+function preloadIndexes(index: number, length: number): number[] {
+  if (length === 0) return [];
+  const indexes = [index];
+  if (length > 1) indexes.push((index + 1) % length);
+  if (length > 2) indexes.push((index + 2) % length);
+  return indexes;
 }
 
 function Chevron({ direction }: { direction: "left" | "right" }) {

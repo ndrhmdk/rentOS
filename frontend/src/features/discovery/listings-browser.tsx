@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { DiscoverySidebar } from "./discovery-sidebar";
 import { ListingCardView } from "./listing-card";
 import { ListingFilters } from "./listing-filters";
@@ -183,9 +184,9 @@ export function ListingsBrowser() {
           </div>
           <p className="text-sm text-muted">Tình trạng trống chỉ mang tính chỉ báo, căn có thể được người khác giữ chỗ ngay sau khi bạn tìm kiếm.</p>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 lg:px-8">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-8 lg:px-8">
+      {status === "loading" ? <LoadingScreen className="min-h-0 flex-1" /> : null}
       <div className="grid content-start gap-4">
-      {status === "loading" ? <p role="status">Đang tìm phòng...</p> : null}
       {status === "error" ? (
         <div role="alert" className="grid gap-3">
           <p>{parsed.error ?? "Không tải được danh sách. Thử lại."}</p>

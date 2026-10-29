@@ -45,6 +45,7 @@ export function AuthShell({
               alt="Không gian sống rentOS"
               fill
               priority
+              sizes="(min-width: 768px) 450px, 100vw"
               className="object-cover object-center"
             />
             {/* Gradient Overlay for Readability */}

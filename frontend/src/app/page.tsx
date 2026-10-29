@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ListingCardView } from "@/features/discovery/listing-card";
@@ -80,8 +81,7 @@ export default function Home() {
   return (
     <div className="bg-[#f0f4f7]">
       <section className="relative min-h-[720px] overflow-hidden bg-[#091216] text-white">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/discovery/hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <Image src="/images/discovery/hero.png" alt="" fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,18,22,0.33)_0%,rgba(9,18,22,0)_32%,rgba(9,18,22,0.13)_57%,rgba(9,18,22,0.79)_80%,rgb(9,18,22)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.05)_55%,rgba(0,0,0,0.15)_100%)]" />
         <div className="relative mx-auto grid min-h-[720px] max-w-[1280px] items-center gap-12 px-6 py-24 lg:grid-cols-[1fr_470px] lg:px-10">
@@ -168,8 +168,7 @@ export default function Home() {
           <div className="grid gap-5 lg:grid-cols-3">
             {areas.map((area) => (
               <Link key={area.name} href={`/listings?location=${encodeURIComponent(area.query)}`} className="relative block h-[340px] overflow-hidden rounded-2xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={area.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <Image src={area.image} alt="" fill sizes="(min-width: 1024px) 380px, 100vw" className="object-cover" />
                 <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#091216]/90 to-transparent" />
                 <span className="absolute bottom-5 left-5 right-5">
                   <span className="block text-[26px] font-bold leading-8">{area.name}</span>
@@ -206,8 +205,9 @@ export default function Home() {
             Đăng tài sản cho thuê
           </Link>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/discovery/owner-cta.png" alt="" className="h-[380px] w-full object-cover lg:h-[460px]" />
+        <div className="relative h-[380px] lg:h-[460px]">
+          <Image src="/images/discovery/owner-cta.png" alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+        </div>
       </section>
 
       <section className="bg-[#091216] px-6 py-24 text-white">

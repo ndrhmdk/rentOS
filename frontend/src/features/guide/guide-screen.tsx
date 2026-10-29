@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -103,8 +104,13 @@ export function GuideScreen() {
       <div className="mx-auto grid max-w-[1200px] gap-6 px-6 pb-20 lg:-mt-20 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:px-10">
         <div className="grid gap-5">
           <div className="relative h-[280px] overflow-hidden rounded-[20px] bg-[#091216] shadow-[0_24px_60px_rgba(9,18,22,0.25)] sm:h-[441px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={chapter.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+            <Image
+              src={chapter.image}
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 760px, 100vw"
+              className="object-cover opacity-60"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[rgba(9,18,22,0.85)] via-[rgba(9,18,22,0.1)] to-transparent" />
             <div className="absolute left-6 top-5 flex gap-2">
               <span className="rounded-full bg-white px-2.5 py-0.5 text-[13px] font-semibold text-[#091216]">
@@ -189,10 +195,9 @@ export function GuideScreen() {
                   onClick={() => openChapter(itemIndex)}
                 >
                   <span className="relative h-[60px] w-24 shrink-0 overflow-hidden rounded-[10px] bg-[#091216]">
+                    <Image src={item.image} alt="" fill sizes="96px" className="object-cover opacity-75" />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image} alt="" className="h-full w-full object-cover opacity-75" />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/guide/play-small.svg" alt="" width={18} height={18} className="absolute top-[21px] left-[39px]" />
+                    <img src="/images/guide/play-small.svg" alt="" width={18} height={18} className="absolute top-[21px] left-[39px] z-10" />
                   </span>
                   <span>
                     <span className="block text-[13px] leading-5 text-[#5b6676]">Chương {itemIndex + 1} · {item.duration}</span>

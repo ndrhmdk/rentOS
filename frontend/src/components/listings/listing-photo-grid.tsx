@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { Slide } from "./listing-format";
 
@@ -27,11 +28,12 @@ export function ListingPhotoGrid({ slides }: { slides: Slide[] }) {
           onClick={() => setOpen(true)}
           aria-label={hero.label}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={hero.url}
             alt=""
-            className="absolute inset-0 size-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 700px, 100vw"
+            className="object-cover"
           />
         </button>
         {side.length > 0 ? (
@@ -46,11 +48,12 @@ export function ListingPhotoGrid({ slides }: { slides: Slide[] }) {
                 aria-label={slide.label}
                 onClick={() => setOpen(true)}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={slide.url}
                   alt=""
-                  className="absolute inset-0 size-full object-cover"
+                  fill
+                  sizes="(min-width: 1024px) 280px, 45vw"
+                  className="object-cover"
                 />
               </button>
             ))}
@@ -114,11 +117,13 @@ function PhotoDialog({
         <div className="grid gap-4">
           {slides.map((slide) => (
             <figure key={slide.key} className="grid gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={slide.url}
                 alt={slide.label}
-                className="w-full rounded-xl object-cover"
+                width={1200}
+                height={800}
+                sizes="(min-width: 768px) 768px, 100vw"
+                className="h-auto w-full rounded-xl object-cover"
               />
               <figcaption className="text-sm text-[#454e5c]">
                 {slide.label}

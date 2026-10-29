@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ListingDetailScreen } from "@/features/discovery/listing-detail-screen";
 
 export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<p className="px-4 py-8">Đang tải tin đăng...</p>}>
+    <Suspense fallback={<LoadingScreen />}>
       <ListingDetailLoader params={params} />
     </Suspense>
   );

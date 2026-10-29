@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ListingDetailView } from "@/components/listings/listing-detail";
+import { useAuth } from "@/lib/auth-context";
 import { fetchListing, ListingUnavailableError, type ListingDetail } from "./listings-api";
 import { UnavailableListing } from "./unavailable-listing";
 
@@ -28,7 +29,7 @@ export function ListingDetailScreen({ id }: { id: string }) {
   }, [id]);
 
   if (unavailable) return <UnavailableListing />;
-  if (!listing) return <p className="px-4 py-8">Đang tải tin đăng...</p>;
+  if (!listing) return <LoadingScreen />;
 
   return <ListingDetailView listing={listing} isSignedIn={status === "authenticated"} />;
 }

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { ListingCardView } from "./listing-card";
@@ -26,12 +26,9 @@ function listing(imageUrls: string[]): ListingCard {
   };
 }
 
-function photo(): HTMLImageElement {
+function photoSrc(): string {
   const image = screen.getByRole("img", { name: "Studio full nội thất gần biển Mỹ Khê" });
-  if (!(image instanceof HTMLImageElement)) {
-    throw new Error("Expected the listing photo.");
-  }
-  return image;
+  return decodeURIComponent(image.getAttribute("src") ?? "");
 }
 
 describe("listing card gallery", () => {
@@ -44,26 +41,45 @@ describe("listing card gallery", () => {
       />,
     );
 
-    expect(photo().src).toContain("/photos/house.webp");
+    expect(photoSrc()).toContain("/photos/house.webp");
     expect(screen.getByText("1/4")).toBeTruthy();
     expect(screen.getByText("3 căn còn trống")).toBeTruthy();
     expect(screen.queryByText("Còn trống đến 01/06/2027")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Ảnh sau" }));
 
-    expect(photo().src).toContain("/photos/living.webp");
+    expect(photoSrc()).toContain("/photos/living.webp");
     expect(screen.getByText("2/4")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Ảnh trước" }));
 
-    expect(photo().src).toContain("/photos/house.webp");
+    expect(photoSrc()).toContain("/photos/house.webp");
     expect(screen.getByText("1/4")).toBeTruthy();
+  });
+
+  it("advances one photo for every click in the same turn", () => {
+    render(
+      <ListingCardView
+        listing={listing(["/photos/house.webp", "/photos/living.webp", "/photos/kitchen.webp", "/photos/bath.webp"])}
+        href="/listings/listing-1"
+      />,
+    );
+
+    const next = screen.getByRole("button", { name: "Ảnh sau" });
+    act(() => {
+      next.click();
+      next.click();
+      next.click();
+    });
+
+    expect(screen.getByText("4/4")).toBeTruthy();
+    expect(photoSrc()).toContain("/photos/bath.webp");
   });
 
   it("hides the controls when a listing has one photo", () => {
     render(<ListingCardView listing={listing(["/photos/only.webp"])} href="/listings/listing-1" />);
 
-    expect(photo().src).toContain("/photos/only.webp");
+    expect(photoSrc()).toContain("/photos/only.webp");
     expect(screen.queryByRole("button", { name: "Ảnh sau" })).toBeNull();
     expect(screen.queryByText("1/1")).toBeNull();
   });

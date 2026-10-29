@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { PublicUnit } from "@/features/discovery/listings-api";
 import { dong, kindLabels, meters } from "./listing-format";
 import { UnitDetailDialog } from "./unit-detail-dialog";
@@ -46,8 +47,9 @@ export function AvailableUnits({
                 >
                   <span className="flex items-center gap-3">
                     {photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photo.url} alt="" className="h-14 w-16 rounded-lg object-cover" />
+                      <span className="relative block h-14 w-16 shrink-0 overflow-hidden rounded-lg">
+                        <Image src={photo.url} alt="" fill sizes="64px" className="object-cover" />
+                      </span>
                     ) : (
                       <span className="h-14 w-16 rounded-lg bg-[#e8ebf0]" />
                     )}
