@@ -34,11 +34,13 @@ export function VietnamLocationPicker({
   wardName = "ward",
   initialCity = "",
   initialWard = "",
+  required = true,
 }: {
   cityName?: string;
   wardName?: string;
   initialCity?: string;
   initialWard?: string;
+  required?: boolean;
 }) {
   const [cities, setCities] = useState<AdministrativeUnit[]>([]);
   const [wards, setWards] = useState<AdministrativeUnit[]>([]);
@@ -58,6 +60,7 @@ export function VietnamLocationPicker({
           setCities(units);
           const selected = units.find((unit) => unit.name === initialCity);
           if (selected) {
+            setLoadingWards(true);
             setCityCode(selected.code);
           }
         }
@@ -76,13 +79,10 @@ export function VietnamLocationPicker({
 
   useEffect(() => {
     if (!cityCode) {
-      setWards([]);
       return;
     }
 
     let active = true;
-    setLoadingWards(true);
-    setError("");
 
     loadUnits(`${API_BASE}/new-provinces/${encodeURIComponent(cityCode)}/wards?limit=1000`)
       .then((units) => {
@@ -104,6 +104,9 @@ export function VietnamLocationPicker({
     setCityCode(code);
     setCity(cities.find((unit) => unit.code === code)?.name ?? "");
     setWard("");
+    setWards([]);
+    setLoadingWards(Boolean(code));
+    setError("");
   }
 
   const selectClassName = "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-[#3368a0] focus:outline-none focus:ring-2 focus:ring-[#3368a0]/20 disabled:bg-slate-100";
@@ -117,7 +120,7 @@ export function VietnamLocationPicker({
           value={cityCode}
           onChange={(event) => selectCity(event.target.value)}
           disabled={loadingCities}
-          required
+          required={required}
         >
           <option value="">{loadingCities ? "Đang tải…" : "Chọn tỉnh / thành phố"}</option>
           {cities.map((unit) => <option key={unit.code} value={unit.code}>{unit.name}</option>)}
@@ -134,7 +137,7 @@ export function VietnamLocationPicker({
           value={ward}
           onChange={(event) => setWard(event.target.value)}
           disabled={!cityCode || loadingWards}
-          required
+          required={required}
         >
           <option value="">{loadingWards ? "Đang tải…" : "Chọn phường / xã"}</option>
           {wards.map((unit) => <option key={unit.code} value={unit.name}>{unit.name}</option>)}
