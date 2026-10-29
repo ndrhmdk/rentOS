@@ -21,7 +21,7 @@ run_suite() {
 }
 
 echo "Running frontend and backend checks together."
-run_suite frontend "$root/frontend" "npm run lint && npm run typecheck && npm run build"
+run_suite frontend "$root/frontend" "npm run lint && npm run typecheck && npm test && npm run build"
 run_suite backend "$root/backend" "composer run lint && composer run typecheck && php artisan test"
 
 wait "$(cat "$tmp/frontend.pid")" || true
