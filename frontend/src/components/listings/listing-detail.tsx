@@ -46,7 +46,7 @@ export function ListingDetailView({
 
   function chooseUnit(unitId: string) {
     setPreferredUnitId(unitId);
-    setOpenUnitId((current) => (current === unitId ? null : unitId));
+    setOpenUnitId(unitId);
   }
 
   return (
@@ -90,6 +90,7 @@ export function ListingDetailView({
               selectedUnitId={preferredUnitId}
               openUnitId={openUnitId}
               onChoose={chooseUnit}
+              onClose={() => setOpenUnitId(null)}
             />
 
             <section className="grid gap-4" aria-label="Tiện ích nổi bật">

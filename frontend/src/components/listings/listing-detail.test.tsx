@@ -80,9 +80,10 @@ describe("listing detail", () => {
 
     await user.click(screen.getByRole("button", { name: /Phòng 1/ }));
 
-    const unitAmenities = screen.getByRole("region", { name: "Tiện ích trong căn Phòng 1" });
+    const dialog = screen.getByRole("dialog", { name: "Chi tiết Phòng 1" });
+    const unitAmenities = within(dialog).getByRole("region", { name: "Tiện ích trong căn Phòng 1" });
     expect(unitAmenities.textContent).not.toContain("Máy giặt");
-    expect(screen.getByText(/Máy giặt riêng/)).toBeTruthy();
+    expect(within(dialog).getByText(/Máy giặt riêng/)).toBeTruthy();
   });
 
   it("opens the request form only after the button is clicked", async () => {
