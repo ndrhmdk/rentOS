@@ -7,6 +7,7 @@ use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -306,7 +307,7 @@ class PropertyWriteService
     private function lockActiveOwner(User $owner): User
     {
         $owner = User::query()->whereKey($owner->id)->lockForUpdate()->firstOrFail();
-        abort_unless($owner->account_status === 'ACTIVE' && $owner->email_verified_at !== null, 403);
+        abort_unless($owner->canManageOwnerProducts(), 403);
 
         return $owner;
     }
@@ -974,6 +975,81 @@ class PropertyWriteService
                 'media' => $media,
                 'content_revision' => $property->content_revision,
             ];
+        }, 3);
+    }
+
+    /**
+     * Soft-remove a photo while preserving its immutable storage object and audit history.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function archiveMedia(User $owner, Property $property, PropertyMedia $media, array $attributes): PropertyMedia
+    {
+        return DB::transaction(function () use ($owner, $property, $media, $attributes): PropertyMedia {
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+            abort_if($property->archived_at !== null, 409);
+            abort_unless($property->content_revision === (int) $attributes['expected_content_revision'], 409);
+
+            $media = PropertyMedia::query()->whereKey($media->id)->where('property_id', $property->id)
+                ->whereNull('deleted_at')->whereNull('purged_at')->lockForUpdate()->firstOrFail();
+            abort_unless($media->revision === (int) $attributes['revision'], 409);
+
+            if (DB::table('listings')->where('property_id', $property->id)->where('cover_media_id', $media->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'media' => 'Choose a different cover before removing this photo.',
+                ]);
+            }
+
+            if ($media->unit_id !== null && $media->is_selected_for_listing) {
+                $isRequiredForCurrentListing = DB::table('units')->where('id', $media->unit_id)
+                    ->where('is_marketed', true)->whereNull('archived_at')->exists()
+                    && DB::table('listings')->where('property_id', $property->id)->whereNull('archived_at')
+                        ->where(function (Builder $query): void {
+                            $query->where('moderation_status', 'PENDING')->orWhere('publication_status', 'PUBLISHED');
+                        })->exists();
+                $hasReplacement = DB::table('property_media')->where('property_id', $property->id)
+                    ->where('unit_id', $media->unit_id)->where('id', '<>', $media->id)
+                    ->where('is_selected_for_listing', true)->whereNull('deleted_at')->whereNull('purged_at')->exists();
+
+                if ($isRequiredForCurrentListing && ! $hasReplacement) {
+                    throw ValidationException::withMessages([
+                        'media' => 'Upload and select a replacement photo for this marketed room first.',
+                    ]);
+                }
+            }
+
+            $before = [
+                'deleted_at' => null,
+                'revision' => $media->revision,
+                'is_selected_for_listing' => $media->is_selected_for_listing,
+            ];
+            $media->deleted_at = now();
+            $media->is_selected_for_listing = false;
+            $media->revision++;
+            $media->save();
+            $property->content_revision++;
+            $property->save();
+
+            $correlationId = (string) Str::uuid();
+            $invalidatedListingIds = $this->invalidatePendingListings($property);
+            $this->writeAudit(
+                actorId: $owner->id,
+                entityType: 'property_media',
+                entityId: $media->id,
+                action: 'property_media.removed',
+                before: $before,
+                after: [
+                    'deleted_at' => $media->deleted_at?->toISOString(),
+                    'revision' => $media->revision,
+                    'property_content_revision' => $property->content_revision,
+                ],
+                correlationId: $correlationId,
+            );
+            $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+
+            return $media;
         }, 3);
     }
 

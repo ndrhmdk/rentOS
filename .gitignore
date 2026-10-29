@@ -10,6 +10,8 @@
 # Generated build files
 /frontend/dist/
 /backend/storage/*.key
+/supabase/.branches/
+/supabase/.temp/
 
 # Local editor and operating system files
 .vscode/

@@ -9,12 +9,12 @@ class PropertyPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->account_status === 'ACTIVE' && $user->email_verified_at !== null;
+        return $user->canManageOwnerProducts();
     }
 
     public function create(User $user): bool
     {
-        return $user->account_status === 'ACTIVE' && $user->email_verified_at !== null;
+        return $user->canManageOwnerProducts();
     }
 
     public function view(User $user, Property $property): bool
@@ -34,8 +34,7 @@ class PropertyPolicy
 
     private function ownsActiveAccount(User $user, Property $property): bool
     {
-        return $user->account_status === 'ACTIVE'
-            && $user->email_verified_at !== null
+        return $user->canManageOwnerProducts()
             && $user->id === $property->owner_id;
     }
 }

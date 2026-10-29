@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $property_id
@@ -68,5 +69,11 @@ class Unit extends Model
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class, 'property_id');
+    }
+
+    /** @return HasMany<PropertyMedia, $this> */
+    public function media(): HasMany
+    {
+        return $this->hasMany(PropertyMedia::class, 'unit_id');
     }
 }

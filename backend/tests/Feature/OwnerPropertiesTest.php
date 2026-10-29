@@ -841,6 +841,33 @@ class OwnerPropertiesTest extends TestCase
         ]);
     }
 
+    public function test_owner_can_remove_a_photo_without_deleting_its_storage_object(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $mediaId = $this->createMedia($owner->id, $propertyId, 0);
+
+        $response = $this->actingAs($owner)->deleteJson("/api/v1/owner/properties/{$propertyId}/media/{$mediaId}", [
+            'expected_content_revision' => 1,
+            'revision' => 1,
+        ]);
+        $response->assertOk()->assertJsonPath('data.id', $mediaId)->assertJsonMissingPath('data.storage_path');
+
+        $this->assertSoftDeleted('property_media', ['id' => $mediaId]);
+        $this->assertDatabaseHas('property_media', [
+            'id' => $mediaId,
+            'is_selected_for_listing' => false,
+            'revision' => 2,
+            'storage_path' => "properties/{$propertyId}/media/{$mediaId}.jpg",
+        ]);
+        $this->assertDatabaseHas('properties', ['id' => $propertyId, 'content_revision' => 2]);
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'property_media',
+            'entity_id' => $mediaId,
+            'action' => 'property_media.removed',
+        ]);
+    }
+
     public function test_owner_can_reorder_and_deselect_shared_gallery_photos(): void
     {
         $owner = User::factory()->create();

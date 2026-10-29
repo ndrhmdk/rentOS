@@ -22,7 +22,6 @@ class PropertyMedia extends Model
         'sort_order',
         'is_selected_for_listing',
         'revision',
-        'revision',
         'purged_at',
         'deleted_at',
         'sha256',
@@ -38,7 +37,6 @@ class PropertyMedia extends Model
         return [
             'sort_order' => 'integer',
             'is_selected_for_listing' => 'boolean',
-            'revision' => 'integer',
             'revision' => 'integer',
             'size_bytes' => 'integer',
             'purged_at' => 'datetime',

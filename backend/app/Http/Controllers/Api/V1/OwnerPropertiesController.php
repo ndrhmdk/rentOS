@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\OwnerProperties\PropertyWriteService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ArchivePropertyMediaRequest;
 use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\ArchiveUnitRequest;
 use App\Http\Requests\StorePropertyMediaRequest;
@@ -17,6 +18,7 @@ use App\Http\Resources\PropertyMediaResource;
 use App\Http\Resources\PropertyResource;
 use App\Http\Resources\UnitResource;
 use App\Models\Property;
+use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -31,13 +33,13 @@ class OwnerPropertiesController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        abort_unless($user->account_status === 'ACTIVE' && $user->email_verified_at !== null, 403);
+        abort_unless($user->canManageOwnerProducts(), 403);
         abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
         Gate::authorize('viewAny', Property::class);
 
         $properties = Property::query()
             ->where('owner_id', $user->id)
-            ->whereNull('archived_at')
+            ->when(! $request->boolean('include_archived'), fn ($query) => $query->whereNull('archived_at'))
             ->orderByDesc('created_at')
             ->with('units')
             ->paginate(20);
@@ -60,7 +62,7 @@ class OwnerPropertiesController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        abort_unless($user->account_status === 'ACTIVE' && $user->email_verified_at !== null, 403);
+        abort_unless($user->canManageOwnerProducts(), 403);
         abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
         Gate::authorize('view', $property);
 
@@ -165,7 +167,7 @@ class OwnerPropertiesController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        abort_unless($user->account_status === 'ACTIVE' && $user->email_verified_at !== null, 403);
+        abort_unless($user->canManageOwnerProducts(), 403);
         abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
         Gate::authorize('view', $property);
 
@@ -196,5 +198,21 @@ class OwnerPropertiesController extends Controller
             ->additional(['meta' => ['content_revision' => $result['content_revision']]])
             ->response()
             ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function archiveMedia(
+        ArchivePropertyMediaRequest $request,
+        Property $property,
+        PropertyMedia $media,
+        PropertyWriteService $propertyWriter,
+    ): PropertyMediaResource {
+        $result = $propertyWriter->archiveMedia(
+            $request->user(),
+            $property,
+            $media,
+            $request->validated(),
+        );
+
+        return new PropertyMediaResource($result);
     }
 }

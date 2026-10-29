@@ -48,4 +48,8 @@ return [
         'max_media_per_property' => (int) env('SUPABASE_STORAGE_MAX_MEDIA_PER_PROPERTY', 20),
     ],
 
+    'owner' => [
+        'require_verified_email' => (bool) env('OWNER_REQUIRE_VERIFIED_EMAIL', true),
+    ],
+
 ];

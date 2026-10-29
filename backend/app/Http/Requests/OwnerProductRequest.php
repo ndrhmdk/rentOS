@@ -13,8 +13,7 @@ abstract class OwnerProductRequest extends FormRequest
         $user = $this->user();
 
         return $user instanceof User
-            && $user->account_status === 'ACTIVE'
-            && $user->email_verified_at !== null
+            && $user->canManageOwnerProducts()
             && ! ($user->currentAccessToken() instanceof PersonalAccessToken);
     }
 }

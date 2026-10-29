@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AdminListingsController;
 use App\Http\Controllers\Api\V1\CurrentUserController;
 use App\Http\Controllers\Api\V1\OwnerAmenityCatalogController;
+use App\Http\Controllers\Api\V1\OwnerListingsController;
 use App\Http\Controllers\Api\V1\OwnerPropertiesController;
 use App\Http\Controllers\Api\V1\TenantTenanciesController;
 use Illuminate\Support\Facades\Route;
@@ -31,4 +33,15 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
     Route::post('/owner/properties/{property}/media', [OwnerPropertiesController::class, 'storeMedia'])->name('api.v1.owner.properties.media.store');
     Route::get('/owner/properties/{property}/media', [OwnerPropertiesController::class, 'indexMedia'])->name('api.v1.owner.properties.media.index');
     Route::put('/owner/properties/{property}/gallery', [OwnerPropertiesController::class, 'updateGallery'])->name('api.v1.owner.properties.gallery.update');
+    Route::delete('/owner/properties/{property}/media/{media}', [OwnerPropertiesController::class, 'archiveMedia'])->name('api.v1.owner.properties.media.archive');
+    Route::get('/owner/properties/{property}/listing', [OwnerListingsController::class, 'show'])->name('api.v1.owner.properties.listing.show');
+    Route::post('/owner/properties/{property}/listing', [OwnerListingsController::class, 'store'])->name('api.v1.owner.properties.listing.store');
+    Route::patch('/owner/properties/{property}/listing', [OwnerListingsController::class, 'update'])->name('api.v1.owner.properties.listing.update');
+    Route::post('/owner/properties/{property}/listing/submit', [OwnerListingsController::class, 'submit'])->name('api.v1.owner.properties.listing.submit');
+    Route::post('/owner/properties/{property}/listing/publish', [OwnerListingsController::class, 'publish'])->name('api.v1.owner.properties.listing.publish');
+    Route::post('/owner/properties/{property}/listing/hide', [OwnerListingsController::class, 'hide'])->name('api.v1.owner.properties.listing.hide');
+    Route::post('/owner/properties/{property}/listing/archive', [OwnerListingsController::class, 'archive'])->name('api.v1.owner.properties.listing.archive');
+    Route::get('/admin/listings/pending', [AdminListingsController::class, 'pending'])->name('api.v1.admin.listings.pending');
+    Route::post('/admin/listings/{listing}/approve', [AdminListingsController::class, 'approve'])->name('api.v1.admin.listings.approve');
+    Route::post('/admin/listings/{listing}/reject', [AdminListingsController::class, 'reject'])->name('api.v1.admin.listings.reject');
 });
