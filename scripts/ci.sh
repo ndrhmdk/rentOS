@@ -27,6 +27,9 @@ run_suite backend "$root/backend" "composer run lint && composer run typecheck &
 wait "$(cat "$tmp/frontend.pid")" || true
 wait "$(cat "$tmp/backend.pid")" || true
 
+# Turbopack's workspace root is the repository, so a local build can leave .next here.
+rm -rf "$root/.next"
+
 frontend_status="$(cat "$tmp/frontend.status" 2>/dev/null || echo 1)"
 backend_status="$(cat "$tmp/backend.status" 2>/dev/null || echo 1)"
 
