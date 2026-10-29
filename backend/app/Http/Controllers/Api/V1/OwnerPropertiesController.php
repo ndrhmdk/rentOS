@@ -8,6 +8,7 @@ use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\ArchiveUnitRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\StoreUnitRequest;
+use App\Http\Requests\StoreUnitsBatchRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Requests\UpdateUnitRequest;
 use App\Http\Resources\PropertyResource;
@@ -121,5 +122,17 @@ class OwnerPropertiesController extends Controller
         );
 
         return new UnitResource($archivedUnit);
+    }
+
+    public function storeUnitsBatch(StoreUnitsBatchRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse {
+        $result = $propertyWriter->createUnitsBatch(
+            $request->user(),
+            $property,
+            $request->validated(),
+        );
+
+        return UnitResource::collection($result['units'])
+            ->response()
+            ->setStatusCode($result['replayed'] ? 200 : 201);
     }
 }

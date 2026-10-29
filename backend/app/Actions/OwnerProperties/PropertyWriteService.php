@@ -680,4 +680,154 @@ public function createUnit(User $owner, Property $property, array $attributes): 
             return $unit;
         }, 3);
     }
+
+    /**
+     * @param array<string, mixed> $attributes
+     * @return array{units: array<int, Unit>, replayed: bool}
+     */
+    public function createUnitsBatch(User $owner, Property $property, array $attributes): array {
+        $batchOperationId = $attributes['client_operation_id'];
+        $rows = $attributes['units'];
+
+        $requestHash = hash(
+            'sha256',
+            json_encode(
+                $this->canonicalize($attributes),
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE,
+            )
+        );
+
+        return DB::transaction(function () use ($owner, $property, $attributes, $batchOperationId, $requestHash, $rows): array {
+            $property = Property::query()
+                ->whereKey($property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            abort_if($property->archived_at !== null, 409);
+            abort_unless($property->rental_arrangement === 'SEPARATE_UNITS', 422);
+
+            $existingBatch = DB::table('idempotency_records')
+                ->where('actor_id', $owner->id)
+                ->where('action', 'unit.bulk.create')
+                ->where('client_operation_id', $batchOperationId)
+                ->first();
+
+            if ($existingBatch !== null) {
+                abort_unless(hash_equals($existingBatch->request_hash, $requestHash), 409);
+
+                $operationIds = array_column($rows, 'client_operation_id');
+                $unitsByOperation = $property->units()
+                    ->whereIn('client_operation_id', $operationIds)
+                    ->get()
+                    ->keyBy('client_operation_id');
+
+                abort_unless($unitsByOperation->count() === count($rows), 409);
+
+                return [
+                    'units' => array_map(
+                        fn (array $row): Unit => $unitsByOperation[$row['client_operation_id']],
+                        $rows,
+                    ),
+                    'replayed' => true,
+                ];
+            }
+
+            abort_unless($property->content_revision === (int) $attributes['expected_content_revision'], 409);
+
+            $seenLabels = [];
+
+            foreach ($rows as $index => $row) {
+                $labelKey = mb_strtolower(trim($row['label']));
+
+                if (isset($seenLabels[$labelKey])) {
+                    throw ValidationException::withMessages([
+                        "units.{$index}.label" => 'This label duplicates another unit in the batch.',
+                    ]);
+                }
+
+                $seenLabels[$labelKey] = true;
+
+                $labelExists = Unit::query()
+                    ->where('property_id', $property->id)
+                    ->whereRaw('lower(btrim(label)) = lower(btrim(?))', [$row['label']])
+                    ->exists();
+
+                if ($labelExists) {
+                    throw ValidationException::withMessages([
+                        "units.{$index}.label" => 'This label is already used by a unit on this property.',
+                    ]);
+                }
+            }
+
+            $createdUnits = [];
+            $correlationId = $batchOperationId;
+
+            foreach ($rows as $row) {
+                $amenities = $row['amenities'] ?? [];
+                unset($row['amenities']);
+
+                $unit = $property->units()->create([
+                    ...$row,
+                    'operational_status' => $row['operational_status'] ?? 'READY',
+                    'is_marketed' => false,
+                    'amenities' => (object) [
+                        'schema_version' => 1,
+                        'standard' => (object) ($amenities['standard'] ?? []),
+                        'custom' => $amenities['custom'] ?? [],
+                    ],
+                    'policy_overrides' => (object) ($row['policy_overrides'] ?? []),
+                ]);
+
+                $createdUnits[] = $unit;
+
+                $this->writeAudit(
+                    actorId: $owner->id,
+                    entityType: 'unit',
+                    entityId: $unit->id,
+                    action: 'unit.created',
+                    before: null,
+                    after: [
+                        'property_id' => $property->id,
+                        'label' => $unit->label,
+                        'operational_status' => $unit->operational_status,
+                        'is_marketed' => false,
+                        'property_content_revision' => $property->content_revision + 1,
+                    ],
+                    correlationId: $correlationId,
+                );
+            }
+
+            $property->content_revision++;
+            $property->save();
+
+            $invalidatedListingIds = $this->invalidatePendingListings($property);
+            $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+
+            $unitIds = array_map(
+                static fn (Unit $unit): string => $unit->id,
+                $createdUnits,
+            );
+            $resultIdsSql = implode(
+                ',',
+                array_map(static fn (string $id): string => "'{$id}'::uuid", $unitIds),
+            );
+
+            DB::table('idempotency_records')->insert([
+                'id' => (string) Str::uuid(),
+                'actor_id' => $owner->id,
+                'action' => 'unit.bulk.create',
+                'client_operation_id' => $batchOperationId,
+                'request_hash' => $requestHash,
+                'result_resource_type' => 'units',
+                'result_ids' => DB::raw("ARRAY[{$resultIdsSql}]::uuid[]"),
+                'response_status' => 201,
+                'created_at' => now(),
+            ]);
+
+            return ['units' => $createdUnits, 'replayed' => false];
+        }, 3);
+    }
 }

@@ -590,4 +590,126 @@ class OwnerPropertiesTest extends TestCase
             'operational_status' => 'READY',
         ]);
     }
+
+    /**
+ * @return array<string, mixed>
+ */
+    private function validBatchUnit(string $label): array
+    {
+        return [
+            'client_operation_id' => (string) Str::uuid(),
+            'label' => $label,
+            'unit_kind' => 'STUDIO',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+        ];
+    }
+    
+    public function test_owner_can_create_and_replay_a_unit_batch(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $payload = [
+            'expected_content_revision' => 1,
+            'client_operation_id' => (string) Str::uuid(),
+            'units' => [
+                $this->validBatchUnit('Studio 201'),
+                $this->validBatchUnit('Studio 202'),
+            ],
+        ];
+
+        $first = $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units/bulk",
+            $payload,
+        );
+
+        $first->assertCreated()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.label', 'Studio 201')
+            ->assertJsonPath('data.1.label', 'Studio 202');
+
+        $this->assertDatabaseCount('units', 2);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+        $this->assertDatabaseCount('audit_logs', 2);
+        $this->assertDatabaseHas('idempotency_records', [
+            'actor_id' => $owner->id,
+            'action' => 'unit.bulk.create',
+            'client_operation_id' => $payload['client_operation_id'],
+        ]);
+
+        $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units/bulk",
+            $payload,
+        )->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        $this->assertDatabaseCount('units', 2);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+    }
+
+    public function test_duplicate_normalized_labels_reject_entire_unit_batch(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units/bulk",
+            [
+                'expected_content_revision' => 1,
+                'client_operation_id' => (string) Str::uuid(),
+                'units' => [
+                    $this->validBatchUnit('Studio 201'),
+                    $this->validBatchUnit(' studio 201 '),
+                ],
+            ],
+        )->assertUnprocessable()
+            ->assertJsonValidationErrors('units.1.label');
+
+        $this->assertDatabaseCount('units', 0);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+    }
+
+    public function test_stale_revision_rejects_unit_batch_without_creating_rows(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+
+        $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/units/bulk",
+            [
+                'expected_content_revision' => 99,
+                'client_operation_id' => (string) Str::uuid(),
+                'units' => [
+                    $this->validBatchUnit('Studio 201'),
+                ],
+            ],
+        )->assertConflict();
+
+        $this->assertDatabaseCount('units', 0);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+    }
 }
