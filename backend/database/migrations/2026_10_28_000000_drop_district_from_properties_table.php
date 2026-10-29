@@ -36,28 +36,42 @@ return new class extends Migration
             "SELECT pg_get_functiondef('public.validate_listing_cover(uuid)'::regprocedure) AS definition",
         )->definition;
 
-        $districtRequirement = "                          AND property.district IS NOT NULL\n"
-            . "                          AND btrim(property.district) <> ''\n";
-
         if ($addRequirement) {
-            $addressRequirement = "                          AND btrim(property.address_line) <> ''\n";
-            if (! str_contains($function, $addressRequirement)) {
-                throw new RuntimeException('Could not restore the listing address requirements.');
+            if (preg_match('/property\\s*\\.\\s*district/i', $function) === 1) {
+                return;
             }
 
-            $function = str_replace(
+            $addressRequirement = '/^([ \\t]*)AND[ \\t]+btrim\\(property\\.address_line\\)[ \\t]*<>[ \\t]*\'\'[ \\t]*$/mi';
+            $updatedFunction = preg_replace_callback(
                 $addressRequirement,
-                $addressRequirement.$districtRequirement,
+                static fn (array $matches): string => $matches[0]."\n"
+                    .$matches[1]."AND property.district IS NOT NULL\n"
+                    .$matches[1]."AND btrim(property.district) <> ''",
                 $function,
+                1,
+                $replacementCount,
             );
+
+            if ($updatedFunction === null || $replacementCount !== 1) {
+                throw new RuntimeException('Could not restore the listing address requirements.');
+            }
         } else {
-            if (! str_contains($function, $districtRequirement)) {
+            $districtRequirement = '/^[ \\t]*AND[ \\t]+property\\.district[ \\t]+IS[ \\t]+NOT[ \\t]+NULL[ \\t]*\\R[ \\t]*AND[ \\t]+btrim\\(property\\.district\\)[ \\t]*<>[ \\t]*\'\'[ \\t]*(?:\\R|$)/mi';
+            $updatedFunction = preg_replace($districtRequirement, '', $function, -1, $replacementCount);
+
+            if ($updatedFunction === null) {
                 throw new RuntimeException('Could not remove the listing district requirement.');
             }
 
-            $function = str_replace($districtRequirement, '', $function);
+            if ($replacementCount === 0 && preg_match('/property\\s*\\.\\s*district/i', $function) === 1) {
+                throw new RuntimeException('Could not remove the listing district requirement.');
+            }
+
+            if ($replacementCount === 0) {
+                return;
+            }
         }
 
-        DB::unprepared($function);
+        DB::unprepared($updatedFunction);
     }
 };

@@ -14,7 +14,6 @@ class OwnerPropertiesTest extends TestCase
 
     public function test_guest_cannot_access_owner_properties(): void
     {
-        echo("test api");
         $response = $this->getJson('/api/v1/owner/properties');
         $response->assertUnauthorized();
     }
@@ -142,7 +141,7 @@ class OwnerPropertiesTest extends TestCase
     public function test_personal_access_token_cannot_create_owner_property(): void
     {
         $owner = User::factory()->create();
-        $token = $owner->createToken('owner script')->plainTextToken;
+        $token = $owner->createToken('owner script', ['account:read'], now()->addHour())->plainTextToken;
 
         $this->withToken($token)
             ->postJson('/api/v1/owner/properties', $this->validProperty())

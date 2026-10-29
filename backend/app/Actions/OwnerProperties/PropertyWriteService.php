@@ -55,6 +55,7 @@ class PropertyWriteService
             $property = Property::query()->create([
                 'owner_id' => $owner->id,
                 'client_operation_id' => $operationId,
+                'content_revision' => 1,
                 'name' => $attributes['name'],
                 'property_type' => $attributes['property_type'],
                 'rental_arrangement' => $attributes['rental_arrangement'],
