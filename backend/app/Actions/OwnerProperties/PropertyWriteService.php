@@ -491,4 +491,110 @@ public function createUnit(User $owner, Property $property, array $attributes): 
             return $unit;
         }, 3);
     }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function updateUnit(User $owner, Property $property, Unit $unit, array $attributes): Unit {
+        return DB::transaction(function () use ($owner, $property, $unit, $attributes): Unit {
+            $property = Property::query()
+                ->whereKey($property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $unit = Unit::query()
+                ->whereKey($unit->id)
+                ->where('property_id', $property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            abort_if($property->archived_at !== null || $unit->archived_at !== null, 409);
+            abort_unless(
+                $property->content_revision === (int) $attributes['expected_content_revision'],
+                409);
+
+            $before = [
+                'label' => $unit->label,
+                'unit_kind' => $unit->unit_kind,
+                'description' => $unit->description,
+                'floor' => $unit->floor,
+                'area_m2' => $unit->area_m2,
+                'bedrooms' => $unit->bedrooms,
+                'bathrooms' => $unit->bathrooms,
+                'bathroom_arrangement' => $unit->bathroom_arrangement,
+                'advertised_monthly_rent' => $unit->advertised_monthly_rent,
+                'deposit' => $unit->deposit,
+                'minimum_rental_months' => $unit->minimum_rental_months,
+                'max_occupants' => $unit->max_occupants,
+                'operational_status' => $unit->operational_status,
+                'is_marketed' => $unit->is_marketed,
+                'amenities' => $unit->amenities,
+                'policy_overrides' => $unit->policy_overrides,
+                'property_content_revision' => $property->content_revision];
+
+            unset($attributes['expected_content_revision']);
+
+            if (array_key_exists('amenities', $attributes)) {
+                $amenities = $attributes['amenities'];
+                $attributes['amenities'] = (object) [
+                    'schema_version' => 1,
+                    'standard' => (object) ($amenities['standard'] ?? []),
+                    'custom' => $amenities['custom'] ?? []
+                ];
+            }
+
+            if (array_key_exists('policy_overrides', $attributes)) {
+                $attributes['policy_overrides'] = (object) $attributes['policy_overrides'];
+            }
+
+            $unit->fill($attributes);
+
+            if (! $unit->isDirty()) {
+                return $unit;
+            }
+
+            $unit->save();
+
+            $property->content_revision++;
+            $property->save();
+
+            $correlationId = (string) Str::uuid();
+            $invalidatedListingIds = $this->invalidatePendingListings($property);
+
+            $this->writeAudit(
+                actorId: $owner->id,
+                entityType: 'unit',
+                entityId: $unit->id,
+                action: 'unit.updated',
+                before: $before,
+                after: [
+                    'label' => $unit->label,
+                    'unit_kind' => $unit->unit_kind,
+                    'description' => $unit->description,
+                    'floor' => $unit->floor,
+                    'area_m2' => $unit->area_m2,
+                    'bedrooms' => $unit->bedrooms,
+                    'bathrooms' => $unit->bathrooms,
+                    'bathroom_arrangement' => $unit->bathroom_arrangement,
+                    'advertised_monthly_rent' => $unit->advertised_monthly_rent,
+                    'deposit' => $unit->deposit,
+                    'minimum_rental_months' => $unit->minimum_rental_months,
+                    'max_occupants' => $unit->max_occupants,
+                    'operational_status' => $unit->operational_status,
+                    'is_marketed' => $unit->is_marketed,
+                    'amenities' => $unit->amenities,
+                    'policy_overrides' => $unit->policy_overrides,
+                    'property_content_revision' => $property->content_revision,
+                ],
+                correlationId: $correlationId,
+            );
+
+            $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+
+            return $unit;
+        }, 3);
+    }
 }

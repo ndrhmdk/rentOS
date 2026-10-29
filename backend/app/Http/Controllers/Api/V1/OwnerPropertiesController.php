@@ -8,9 +8,11 @@ use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdatePropertyRequest;
+use App\Http\Requests\UpdateUnitRequest;
 use App\Http\Resources\PropertyResource;
 use App\Http\Resources\UnitResource;
 use App\Models\Property;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -96,5 +98,16 @@ class OwnerPropertiesController extends Controller
         return (new UnitResource($unit))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function updateUnit(UpdateUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource {
+        $updatedUnit = $propertyWriter->updateUnit(
+            $request->user(),
+            $property,
+            $unit,
+            $request->validated(),
+        );
+
+        return new UnitResource($updatedUnit);
     }
 }
