@@ -17,4 +17,9 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
     Route::patch('/me', [CurrentUserController::class, 'update'])->name('api.v1.me.update');
     Route::get('/tenant/tenancies', [TenantTenanciesController::class, 'index'])->name('api.v1.tenant.tenancies');
     Route::get('/owner/properties', [OwnerPropertiesController::class, 'index'])->name('api.v1.owner.properties');
+    Route::post('/owner/properties', [OwnerPropertiesController::class, 'store'])->name('api.v1.owner.properties.store');
+    Route::get('/owner/properties/{property}', [OwnerPropertiesController::class, 'show'])->name('api.v1.owner.properties.show');
+    Route::put('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('api.v1.owner.properties.update');
+    Route::patch('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('api.v1.owner.properties.patch');
+    Route::patch('/owner/properties/{property}/archive', [OwnerPropertiesController::class, 'archive'])->name('api.v1.owner.properties.archive');
 });

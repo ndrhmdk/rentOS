@@ -211,7 +211,6 @@ class BaselineSeeder extends Seeder
                     'rental_arrangement' => $place['rental_arrangement'],
                     'address_line' => $published ? $place['address_line'] : null,
                     'ward' => $published ? $place['ward'] : null,
-                    'district' => $published ? $place['district'] : null,
                     'city' => $place['city'],
                     'description' => $place['description'],
                     'shared_amenities' => json_encode([
@@ -454,7 +453,6 @@ class BaselineSeeder extends Seeder
      *     rental_arrangement: string,
      *     address_line: string,
      *     ward: string,
-     *     district: string,
      *     city: string,
      *     description: string,
      *     latitude: string,
@@ -523,7 +521,6 @@ class BaselineSeeder extends Seeder
             'rental_arrangement' => $whole ? 'WHOLE_SPACE' : 'SEPARATE_UNITS',
             'address_line' => "{$houseNumber} {$area['street']}",
             'ward' => $area['ward'],
-            'district' => $area['district'],
             'city' => $area['city'],
             'description' => "Rental property in {$area['ward']}, {$area['district']}, {$area['city']}.",
             'latitude' => number_format($latitude, 7, '.', ''),
