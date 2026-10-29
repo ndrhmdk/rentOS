@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Actions\OwnerProperties\AmenityCatalog;
+use App\Actions\OwnerProperties\PropertyPolicySchema;
 use App\Models\Property;
 use App\Models\Unit;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +13,11 @@ use Illuminate\Validation\Validator;
 
 class UpdateUnitRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(AmenityCatalog::normalizeUnitInput($this->all()));
+    }
+
     public function authorize(): bool
     {
         $property = $this->route('property');
@@ -52,14 +59,20 @@ class UpdateUnitRequest extends FormRequest
             ])],
             'is_marketed' => ['sometimes', 'boolean'],
 
-            'amenities' => ['sometimes', 'array'],
+            'amenities' => ['sometimes', 'array:schema_version,standard,custom'],
             'amenities.schema_version' => ['required_with:amenities', 'integer', Rule::in([1])],
-            'amenities.standard' => ['required_with:amenities', 'array'],
-            'amenities.custom' => ['required_with:amenities', 'array', 'max:50'],
-            'amenities.custom.*' => ['string', 'max:120'],
+            'amenities.standard' => ['present_with:amenities', 'array'],
+            'amenities.standard.*' => ['array:enabled,details'],
+            'amenities.standard.*.enabled' => ['required', 'boolean'],
+            'amenities.standard.*.details' => ['sometimes', 'nullable', 'string', 'max:160'],
+            'amenities.custom' => ['present_with:amenities', 'array', 'max:50'],
+            'amenities.custom.*' => ['required', 'string', 'not_regex:/^\s*$/u', 'max:120'],
 
-            'policy_overrides' => ['sometimes', 'array'],
-            'policy_overrides.*' => ['string'],
+            'policy_overrides' => ['sometimes', 'array:pets,smoking,additional_rules'],
+            'policy_overrides.pets' => ['sometimes', Rule::in(PropertyPolicySchema::pets())],
+            'policy_overrides.smoking' => ['sometimes', Rule::in(PropertyPolicySchema::smoking())],
+            'policy_overrides.additional_rules' => ['sometimes', 'array', 'max:20'],
+            'policy_overrides.additional_rules.*' => ['required', 'string', 'not_regex:/^\s*$/u', 'max:200'],
         ];
     }
 
@@ -70,10 +83,15 @@ class UpdateUnitRequest extends FormRequest
                 return;
             }
 
+            AmenityCatalog::validateUnitInput($this->all(), '', $validator);
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
             $property = $this->route('property');
             $unit = $this->route('unit');
 
-            if (! $property instanceof Property || !$unit instanceof Unit) {
+            if (! $property instanceof Property || ! $unit instanceof Unit) {
                 return;
             }
 
@@ -105,7 +123,7 @@ class UpdateUnitRequest extends FormRequest
 
             foreach ($requiredWhenMarketed as $field => $value) {
                 if ($value === null || ($field === 'description' && trim((string) $value) === '')) {
-                    $validator->errors()->add($field, "This field is required when the unit is marketed.");
+                    $validator->errors()->add($field, 'This field is required when the unit is marketed.');
                 }
             }
         });

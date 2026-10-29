@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Actions\OwnerProperties\AmenityCatalog;
+use App\Actions\OwnerProperties\PropertyPolicySchema;
 use App\Models\Property;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +12,23 @@ use Illuminate\Validation\Validator;
 
 class StoreUnitsBatchRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $units = $this->input('units');
+
+        if (! is_array($units)) {
+            return;
+        }
+
+        foreach ($units as $index => $unit) {
+            if (is_array($unit)) {
+                $units[$index] = AmenityCatalog::normalizeUnitInput($unit);
+            }
+        }
+
+        $this->merge(['units' => $units]);
+    }
+
     public function authorize(): bool
     {
         $property = $this->route('property');
@@ -44,19 +63,35 @@ class StoreUnitsBatchRequest extends FormRequest
             'units.*.max_occupants' => ['nullable', 'integer', 'min:1'],
             'units.*.operational_status' => ['sometimes', Rule::in(['READY', 'MAINTENANCE', 'RETIRED'])],
             'units.*.is_marketed' => ['prohibited'],
-            'units.*.amenities' => ['sometimes', 'array'],
+            'units.*.amenities' => ['sometimes', 'array:schema_version,standard,custom'],
             'units.*.amenities.schema_version' => ['required_with:units.*.amenities', 'integer', Rule::in([1])],
-            'units.*.amenities.standard' => ['required_with:units.*.amenities', 'array'],
-            'units.*.amenities.custom' => ['required_with:units.*.amenities', 'array', 'max:50'],
-            'units.*.amenities.custom.*' => ['string', 'max:120'],
-            'units.*.policy_overrides' => ['sometimes', 'array'],
-            'units.*.policy_overrides.*' => ['string'],
+            'units.*.amenities.standard' => ['present_with:units.*.amenities', 'array'],
+            'units.*.amenities.standard.*' => ['array:enabled,details'],
+            'units.*.amenities.standard.*.enabled' => ['required', 'boolean'],
+            'units.*.amenities.standard.*.details' => ['sometimes', 'nullable', 'string', 'max:160'],
+            'units.*.amenities.custom' => ['present_with:units.*.amenities', 'array', 'max:50'],
+            'units.*.amenities.custom.*' => ['required', 'string', 'not_regex:/^\s*$/u', 'max:120'],
+            'units.*.policy_overrides' => ['sometimes', 'array:pets,smoking,additional_rules'],
+            'units.*.policy_overrides.pets' => ['sometimes', Rule::in(PropertyPolicySchema::pets())],
+            'units.*.policy_overrides.smoking' => ['sometimes', Rule::in(PropertyPolicySchema::smoking())],
+            'units.*.policy_overrides.additional_rules' => ['sometimes', 'array', 'max:20'],
+            'units.*.policy_overrides.additional_rules.*' => ['required', 'string', 'not_regex:/^\s*$/u', 'max:200'],
         ];
     }
 
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            foreach ($this->input('units', []) as $index => $unit) {
+                if (is_array($unit)) {
+                    AmenityCatalog::validateUnitInput($unit, "units.{$index}", $validator);
+                }
+            }
+
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }

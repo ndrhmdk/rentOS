@@ -44,6 +44,8 @@ return [
             'connect_timeout' => 5,
             'timeout' => 30,
         ],
+        'max_file_size_kilobytes' => (int) env('SUPABASE_STORAGE_MAX_FILE_SIZE_KILOBYTES', 10240),
+        'max_media_per_property' => (int) env('SUPABASE_STORAGE_MAX_MEDIA_PER_PROPERTY', 20),
     ],
 
 ];

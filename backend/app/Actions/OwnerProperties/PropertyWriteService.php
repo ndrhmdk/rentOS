@@ -3,12 +3,19 @@
 namespace App\Actions\OwnerProperties;
 
 use App\Models\Property;
+use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class PropertyWriteService
 {
@@ -80,7 +87,7 @@ class PropertyWriteService
                     'bathroom_arrangement' => 'PRIVATE',
                     'minimum_rental_months' => 3,
                     'amenities' => self::emptyAmenities(),
-                    'policy_overrides' => new \stdClass(),
+                    'policy_overrides' => new \stdClass,
                 ]);
             }
 
@@ -240,7 +247,7 @@ class PropertyWriteService
      */
     private static function emptyAmenities(): object
     {
-        return (object) ['schema_version' => 1, 'standard' => new \stdClass(), 'custom' => []];
+        return (object) ['schema_version' => 1, 'standard' => new \stdClass, 'custom' => []];
     }
 
     /**
@@ -248,11 +255,25 @@ class PropertyWriteService
      */
     private function amenitiesObject(array $amenities): object
     {
+        $amenities = AmenityCatalog::normalizeDocument($amenities);
+
         return (object) [
             'schema_version' => 1,
             'standard' => (object) ($amenities['standard'] ?? []),
             'custom' => $amenities['custom'] ?? [],
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function policyOverridesObject(array $overrides): object
+    {
+        if (is_array($overrides['additional_rules'] ?? null)) {
+            $overrides['additional_rules'] = AmenityCatalog::normalizeRules($overrides['additional_rules']);
+        }
+
+        return (object) $overrides;
     }
 
     /**
@@ -423,12 +444,12 @@ class PropertyWriteService
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     /**
- * @param array<string, mixed> $attributes
- */
-public function createUnit(User $owner, Property $property, array $attributes): Unit
+     * @param  array<string, mixed>  $attributes
+     */
+    public function createUnit(User $owner, Property $property, array $attributes): Unit
     {
         return DB::transaction(function () use ($owner, $property, $attributes): Unit {
             $property = Property::query()
@@ -456,12 +477,8 @@ public function createUnit(User $owner, Property $property, array $attributes): 
                 'client_operation_id' => $operationId,
                 'operational_status' => $attributes['operational_status'] ?? 'READY',
                 'is_marketed' => $attributes['is_marketed'] ?? false,
-                'amenities' => (object) [
-                    'schema_version' => 1,
-                    'standard' => (object) ($amenities['standard'] ?? []),
-                    'custom' => $amenities['custom'] ?? [],
-                ],
-                'policy_overrides' => (object) ($attributes['policy_overrides'] ?? []),
+                'amenities' => $this->amenitiesObject($amenities),
+                'policy_overrides' => $this->policyOverridesObject($attributes['policy_overrides'] ?? []),
             ]);
 
             $property->content_revision++;
@@ -493,9 +510,10 @@ public function createUnit(User $owner, Property $property, array $attributes): 
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
-    public function updateUnit(User $owner, Property $property, Unit $unit, array $attributes): Unit {
+    public function updateUnit(User $owner, Property $property, Unit $unit, array $attributes): Unit
+    {
         return DB::transaction(function () use ($owner, $property, $unit, $attributes): Unit {
             $property = Property::query()
                 ->whereKey($property->id)
@@ -539,15 +557,11 @@ public function createUnit(User $owner, Property $property, array $attributes): 
 
             if (array_key_exists('amenities', $attributes)) {
                 $amenities = $attributes['amenities'];
-                $attributes['amenities'] = (object) [
-                    'schema_version' => 1,
-                    'standard' => (object) ($amenities['standard'] ?? []),
-                    'custom' => $amenities['custom'] ?? []
-                ];
+                $attributes['amenities'] = $this->amenitiesObject($amenities);
             }
 
             if (array_key_exists('policy_overrides', $attributes)) {
-                $attributes['policy_overrides'] = (object) $attributes['policy_overrides'];
+                $attributes['policy_overrides'] = $this->policyOverridesObject($attributes['policy_overrides']);
             }
 
             if (isset($attributes['label'])) {
@@ -612,7 +626,8 @@ public function createUnit(User $owner, Property $property, array $attributes): 
         }, 3);
     }
 
-    public function archiveUnit(User $owner, Property $property, Unit $unit, int $expectedContentRevision): Unit {
+    public function archiveUnit(User $owner, Property $property, Unit $unit, int $expectedContentRevision): Unit
+    {
         return DB::transaction(function () use ($owner, $property, $unit, $expectedContentRevision): Unit {
             $property = Property::query()
                 ->whereKey($property->id)
@@ -642,7 +657,7 @@ public function createUnit(User $owner, Property $property, array $attributes): 
                 'operational_status' => $unit->operational_status,
                 'is_marketed' => $unit->is_marketed,
                 'archived_at' => null,
-                'property_content_revision' => $property->content_revision
+                'property_content_revision' => $property->content_revision,
             ];
 
             $unit->archived_at = now();
@@ -682,10 +697,11 @@ public function createUnit(User $owner, Property $property, array $attributes): 
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      * @return array{units: array<int, Unit>, replayed: bool}
      */
-    public function createUnitsBatch(User $owner, Property $property, array $attributes): array {
+    public function createUnitsBatch(User $owner, Property $property, array $attributes): array
+    {
         $batchOperationId = $attributes['client_operation_id'];
         $rows = $attributes['units'];
 
@@ -773,12 +789,8 @@ public function createUnit(User $owner, Property $property, array $attributes): 
                     ...$row,
                     'operational_status' => $row['operational_status'] ?? 'READY',
                     'is_marketed' => false,
-                    'amenities' => (object) [
-                        'schema_version' => 1,
-                        'standard' => (object) ($amenities['standard'] ?? []),
-                        'custom' => $amenities['custom'] ?? [],
-                    ],
-                    'policy_overrides' => (object) ($row['policy_overrides'] ?? []),
+                    'amenities' => $this->amenitiesObject($amenities),
+                    'policy_overrides' => $this->policyOverridesObject($row['policy_overrides'] ?? []),
                 ]);
 
                 $createdUnits[] = $unit;
@@ -829,5 +841,369 @@ public function createUnit(User $owner, Property $property, array $attributes): 
 
             return ['units' => $createdUnits, 'replayed' => false];
         }, 3);
+    }
+
+    /**
+     * Update ordering and listing selection for shared property photos.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array{media: EloquentCollection<int, PropertyMedia>, content_revision: int}
+     */
+    public function updateGallery(User $owner, Property $property, array $attributes): array
+    {
+        return DB::transaction(function () use ($owner, $property, $attributes): array {
+            $property = Property::query()
+                ->whereKey($property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            abort_if($property->archived_at !== null, 409);
+            abort_unless(
+                $property->content_revision === (int) $attributes['expected_content_revision'],
+                409,
+            );
+
+            $items = $attributes['items'];
+            $mediaIds = array_column($items, 'media_id');
+            $mediaById = PropertyMedia::query()
+                ->where('property_id', $property->id)
+                ->whereNull('unit_id')
+                ->whereNull('deleted_at')
+                ->whereNull('purged_at')
+                ->whereIn('id', $mediaIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            if ($mediaById->count() !== count($mediaIds)) {
+                throw ValidationException::withMessages([
+                    'items' => 'Every photo must be an active shared photo belonging to this property.',
+                ]);
+            }
+
+            $changedItems = [];
+            $deselectedCoverIds = [];
+
+            foreach ($items as $item) {
+                /** @var PropertyMedia $media */
+                $media = $mediaById->get($item['media_id']);
+
+                abort_unless($media->revision === (int) $item['revision'], 409);
+
+                $isSelected = (bool) $item['is_selected_for_listing'];
+                if (
+                    $media->sort_order === (int) $item['sort_order']
+                    && $media->is_selected_for_listing === $isSelected
+                ) {
+                    continue;
+                }
+
+                if (! $isSelected) {
+                    $deselectedCoverIds[] = $media->id;
+                }
+
+                $changedItems[] = [
+                    'media' => $media,
+                    'before' => [
+                        'sort_order' => $media->sort_order,
+                        'is_selected_for_listing' => $media->is_selected_for_listing,
+                        'revision' => $media->revision,
+                    ],
+                    'sort_order' => (int) $item['sort_order'],
+                    'is_selected_for_listing' => $isSelected,
+                ];
+            }
+
+            if ($deselectedCoverIds !== [] && DB::table('listings')
+                ->where('property_id', $property->id)
+                ->whereIn('cover_media_id', $deselectedCoverIds)
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    'items' => 'Replace a listing cover before removing that photo from the selected gallery.',
+                ]);
+            }
+
+            if ($changedItems !== []) {
+                $correlationId = (string) Str::uuid();
+                $nextContentRevision = $property->content_revision + 1;
+
+                foreach ($changedItems as $change) {
+                    /** @var PropertyMedia $media */
+                    $media = $change['media'];
+                    $media->sort_order = $change['sort_order'];
+                    $media->is_selected_for_listing = $change['is_selected_for_listing'];
+                    $media->revision++;
+                    $media->save();
+
+                    $this->writeAudit(
+                        actorId: $owner->id,
+                        entityType: 'property_media',
+                        entityId: $media->id,
+                        action: 'property_media.gallery_updated',
+                        before: $change['before'],
+                        after: [
+                            'sort_order' => $media->sort_order,
+                            'is_selected_for_listing' => $media->is_selected_for_listing,
+                            'revision' => $media->revision,
+                            'property_content_revision' => $nextContentRevision,
+                        ],
+                        correlationId: $correlationId,
+                    );
+                }
+
+                $property->content_revision = $nextContentRevision;
+                $property->save();
+
+                $invalidatedListingIds = $this->invalidatePendingListings($property);
+                $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+            }
+
+            $media = PropertyMedia::query()
+                ->where('property_id', $property->id)
+                ->whereNull('unit_id')
+                ->whereNull('deleted_at')
+                ->whereNull('purged_at')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+
+            return [
+                'media' => $media,
+                'content_revision' => $property->content_revision,
+            ];
+        }, 3);
+    }
+
+    private function deleteStoredObject(string $supabaseUrl, string $serviceRoleKey, string $bucket, string $storagePath): void
+    {
+        $encodedPath = implode('/', array_map(
+            'rawurlencode',
+            explode('/', $storagePath),
+        ));
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$serviceRoleKey,
+                'apikey' => $serviceRoleKey,
+            ])
+                ->connectTimeout((int) config('services.supabase.storage.connect_timeout', 5))
+                ->timeout((int) config('services.supabase.storage.timeout', 30))
+                ->delete(
+                    rtrim($supabaseUrl, '/')
+                    .'/storage/v1/object/'.rawurlencode($bucket).'/'.$encodedPath,
+                );
+
+            if (! $response->successful()) {
+                Log::warning('Could not remove an unreferenced uploaded media object.', [
+                    'storage_path' => $storagePath,
+                    'status' => $response->status(),
+                ]);
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Could not remove an unreferenced uploaded media object.', [
+                'storage_path' => $storagePath,
+                'exception' => $exception::class,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array{media: PropertyMedia, replayed: bool}
+     */
+    public function uploadMedia(User $owner, Property $property, UploadedFile $photo, array $attributes): array
+    {
+        $mimeType = $photo->getMimeType();
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+
+        abort_unless(isset($extensions[$mimeType]), 422);
+
+        $sha256 = hash_file('sha256', $photo->getRealPath());
+        $sizeBytes = $photo->getSize();
+
+        abort_unless(is_string($sha256) && is_int($sizeBytes) && $sizeBytes > 0, 422);
+
+        $operationId = $attributes['client_operation_id'];
+        $unitId = $attributes['unit_id'] ?? null;
+        $caption = $attributes['caption'] ?? null;
+        $mediaId = (string) Str::uuid();
+        $storagePath = "properties/{$property->id}/media/{$mediaId}.{$extensions[$mimeType]}";
+
+        $supabaseUrl = config('services.supabase.url');
+        $serviceRoleKey = config('services.supabase.service_role_key');
+        $bucket = config('services.supabase.storage.bucket');
+
+        abort_unless(
+            is_string($supabaseUrl)
+                && is_string($serviceRoleKey)
+                && is_string($bucket)
+                && $supabaseUrl !== ''
+                && $serviceRoleKey !== ''
+                && $bucket !== '',
+            503,
+            'Photo storage is not configured.',
+        );
+
+        $encodedPath = implode('/', array_map(
+            'rawurlencode',
+            explode('/', $storagePath),
+        ));
+
+        $storageUrl = rtrim($supabaseUrl, '/')
+            .'/storage/v1/object/'.rawurlencode($bucket).'/'.$encodedPath;
+
+        $headers = [
+            'Authorization' => 'Bearer '.$serviceRoleKey,
+            'apikey' => $serviceRoleKey,
+            'x-upsert' => 'false',
+        ];
+
+        try {
+            $uploadResponse = Http::withHeaders($headers)
+                ->connectTimeout((int) config('services.supabase.storage.connect_timeout', 5))
+                ->timeout((int) config('services.supabase.storage.timeout', 30))
+                ->withBody($photo->getContent(), $mimeType)
+                ->post($storageUrl);
+        } catch (ConnectionException) {
+            abort(503, 'Photo storage is unavailable.');
+        }
+
+        if (! $uploadResponse->successful()) {
+            abort(502, 'Photo upload failed.');
+        }
+
+        try {
+            $result = DB::transaction(function () use (
+                $owner,
+                $property,
+                $attributes,
+                $operationId,
+                $unitId,
+                $caption,
+                $mediaId,
+                $storagePath,
+                $sha256,
+                $sizeBytes,
+                $mimeType,
+            ): array {
+                $property = Property::query()
+                    ->whereKey($property->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $owner = $this->lockActiveOwner($owner);
+                Gate::authorize('update', $property);
+
+                $existing = PropertyMedia::query()
+                    ->where('uploaded_by', $owner->id)
+                    ->where('client_operation_id', $operationId)
+                    ->first();
+
+                if ($existing !== null) {
+                    abort_unless(
+                        $existing->property_id === $property->id
+                            && $existing->unit_id === $unitId
+                            && $existing->caption === $caption
+                            && $existing->sha256 === $sha256,
+                        409,
+                    );
+
+                    return ['media' => $existing, 'replayed' => true];
+                }
+
+                abort_if($property->archived_at !== null, 409);
+                abort_unless(
+                    $property->content_revision === (int) $attributes['expected_content_revision'],
+                    409,
+                );
+
+                if ($unitId !== null) {
+                    $unit = Unit::query()
+                        ->whereKey($unitId)
+                        ->where('property_id', $property->id)
+                        ->whereNull('archived_at')
+                        ->first();
+
+                    abort_if($unit === null, 422);
+                }
+
+                $activeMediaCount = $property->media()
+                    ->whereNull('deleted_at')
+                    ->whereNull('purged_at')
+                    ->count();
+
+                abort_if(
+                    $activeMediaCount >= (int) config(
+                        'services.supabase.storage.max_media_per_property',
+                        20,
+                    ),
+                    422,
+                    'This property has reached its photo limit.',
+                );
+
+                $sortOrder = (int) ($property->media()->max('sort_order') ?? -1) + 1;
+
+                $media = $property->media()->create([
+                    'id' => $mediaId,
+                    'unit_id' => $unitId,
+                    'uploaded_by' => $owner->id,
+                    'client_operation_id' => $operationId,
+                    'storage_path' => $storagePath,
+                    'caption' => $caption,
+                    'sort_order' => $sortOrder,
+                    'is_selected_for_listing' => true,
+                    'sha256' => $sha256,
+                    'mime_type' => $mimeType,
+                    'size_bytes' => $sizeBytes,
+                ]);
+
+                $property->content_revision++;
+                $property->save();
+
+                $correlationId = (string) Str::uuid();
+                $invalidatedListingIds = $this->invalidatePendingListings($property);
+
+                $this->writeAudit(
+                    actorId: $owner->id,
+                    entityType: 'property_media',
+                    entityId: $media->id,
+                    action: 'property_media.uploaded',
+                    before: null,
+                    after: [
+                        'property_id' => $property->id,
+                        'unit_id' => $media->unit_id,
+                        'mime_type' => $media->mime_type,
+                        'size_bytes' => $media->size_bytes,
+                        'sha256' => $media->sha256,
+                        'property_content_revision' => $property->content_revision,
+                    ],
+                    correlationId: $correlationId,
+                );
+
+                $this->auditInvalidatedListings(
+                    $owner->id,
+                    $invalidatedListingIds,
+                    $correlationId,
+                );
+
+                return ['media' => $media, 'replayed' => false];
+            }, 3);
+        } catch (Throwable $exception) {
+            $this->deleteStoredObject($supabaseUrl, $serviceRoleKey, $bucket, $storagePath);
+            throw $exception;
+        }
+
+        if ($result['replayed']) {
+            $this->deleteStoredObject($supabaseUrl, $serviceRoleKey, $bucket, $storagePath);
+        }
+
+        return $result;
     }
 }

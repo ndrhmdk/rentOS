@@ -70,4 +70,12 @@ class Property extends Model
     {
         return $this->hasMany(Unit::class, 'property_id');
     }
+
+    /**
+     * @return HasMany<PropertyMedia, $this>
+     */
+    public function media(): HasMany
+    {
+        return $this->hasMany(PropertyMedia::class, 'property_id');
+    }
 }

@@ -6,11 +6,14 @@ use App\Actions\OwnerProperties\PropertyWriteService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\ArchiveUnitRequest;
+use App\Http\Requests\StorePropertyMediaRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\StoreUnitsBatchRequest;
+use App\Http\Requests\UpdatePropertyGalleryRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Requests\UpdateUnitRequest;
+use App\Http\Resources\PropertyMediaResource;
 use App\Http\Resources\PropertyResource;
 use App\Http\Resources\UnitResource;
 use App\Models\Property;
@@ -90,7 +93,8 @@ class OwnerPropertiesController extends Controller
         ));
     }
 
-    public function storeUnit(StoreUnitRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse {
+    public function storeUnit(StoreUnitRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse
+    {
         $unit = $propertyWriter->createUnit(
             $request->user(),
             $property,
@@ -102,7 +106,8 @@ class OwnerPropertiesController extends Controller
             ->setStatusCode(201);
     }
 
-    public function updateUnit(UpdateUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource {
+    public function updateUnit(UpdateUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource
+    {
         $updatedUnit = $propertyWriter->updateUnit(
             $request->user(),
             $property,
@@ -113,7 +118,8 @@ class OwnerPropertiesController extends Controller
         return new UnitResource($updatedUnit);
     }
 
-    public function archiveUnit(ArchiveUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource {
+    public function archiveUnit(ArchiveUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource
+    {
         $archivedUnit = $propertyWriter->archiveUnit(
             $request->user(),
             $property,
@@ -124,7 +130,8 @@ class OwnerPropertiesController extends Controller
         return new UnitResource($archivedUnit);
     }
 
-    public function storeUnitsBatch(StoreUnitsBatchRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse {
+    public function storeUnitsBatch(StoreUnitsBatchRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse
+    {
         $result = $propertyWriter->createUnitsBatch(
             $request->user(),
             $property,
@@ -134,5 +141,60 @@ class OwnerPropertiesController extends Controller
         return UnitResource::collection($result['units'])
             ->response()
             ->setStatusCode($result['replayed'] ? 200 : 201);
+    }
+
+    public function storeMedia(StorePropertyMediaRequest $request, Property $property, PropertyWriteService $propertyWriter): JsonResponse
+    {
+        $attributes = $request->validated();
+        $photo = $attributes['photo'];
+        unset($attributes['photo']);
+
+        $result = $propertyWriter->uploadMedia(
+            $request->user(),
+            $property,
+            $photo,
+            $attributes,
+        );
+
+        return (new PropertyMediaResource($result['media']))
+            ->response()
+            ->setStatusCode($result['replayed'] ? 200 : 201);
+    }
+
+    public function indexMedia(Request $request, Property $property): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($user->account_status === 'ACTIVE' && $user->email_verified_at !== null, 403);
+        abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
+        Gate::authorize('view', $property);
+
+        $media = $property->media()
+            ->whereNull('deleted_at')
+            ->whereNull('purged_at')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return PropertyMediaResource::collection($media)
+            ->response()
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function updateGallery(
+        UpdatePropertyGalleryRequest $request,
+        Property $property,
+        PropertyWriteService $propertyWriter,
+    ): JsonResponse {
+        $result = $propertyWriter->updateGallery(
+            $request->user(),
+            $property,
+            $request->validated(),
+        );
+
+        return PropertyMediaResource::collection($result['media'])
+            ->additional(['meta' => ['content_revision' => $result['content_revision']]])
+            ->response()
+            ->header('Cache-Control', 'private, no-store');
     }
 }

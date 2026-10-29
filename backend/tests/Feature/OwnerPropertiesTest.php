@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -174,7 +176,7 @@ class OwnerPropertiesTest extends TestCase
     }
 
     private function createProperty(
-        string $ownerId, 
+        string $ownerId,
         ?string $archivedAt = null,
         string $rentalArrangement = 'WHOLE_SPACE'): string
     {
@@ -367,6 +369,7 @@ class OwnerPropertiesTest extends TestCase
             'rental_arrangement' => 'WHOLE_SPACE',
         ], $overrides);
     }
+
     public function test_owner_can_create_unit_for_separate_unit_property(): void
     {
         $owner = User::factory()->create();
@@ -511,7 +514,7 @@ class OwnerPropertiesTest extends TestCase
         $this->assertDatabaseHas('audit_logs', [
             'entity_type' => 'unit',
             'entity_id' => $unitId,
-            'action' => 'unit.updated'
+            'action' => 'unit.updated',
         ]);
     }
 
@@ -592,8 +595,8 @@ class OwnerPropertiesTest extends TestCase
     }
 
     /**
- * @return array<string, mixed>
- */
+     * @return array<string, mixed>
+     */
     private function validBatchUnit(string $label): array
     {
         return [
@@ -606,7 +609,7 @@ class OwnerPropertiesTest extends TestCase
             'minimum_rental_months' => 3,
         ];
     }
-    
+
     public function test_owner_can_create_and_replay_a_unit_batch(): void
     {
         $owner = User::factory()->create();
@@ -711,5 +714,290 @@ class OwnerPropertiesTest extends TestCase
             'id' => $propertyId,
             'content_revision' => 1,
         ]);
+    }
+
+    private function fakeSupabaseStorage(): void
+    {
+        config([
+            'services.supabase.url' => 'http://127.0.0.1:54321',
+            'services.supabase.service_role_key' => 'test-service-role-key',
+            'services.supabase.storage.bucket' => 'property-media',
+        ]);
+
+        Http::fake(fn () => Http::response([], 200));
+    }
+
+    public function test_owner_can_upload_a_property_photo_to_storage(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+
+        $this->fakeSupabaseStorage();
+
+        $response = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            [
+                'client_operation_id' => (string) Str::uuid(),
+                'expected_content_revision' => 1,
+                'caption' => 'Living room',
+                'photo' => UploadedFile::fake()->image('living-room.jpg'),
+            ],
+        );
+
+        $response->assertCreated()
+            ->assertJsonPath('data.property_id', $propertyId)
+            ->assertJsonPath('data.caption', 'Living room')
+            ->assertJsonPath('data.mime_type', 'image/jpeg');
+
+        $mediaId = $response->json('data.id');
+
+        $this->assertDatabaseHas('property_media', [
+            'id' => $mediaId,
+            'property_id' => $propertyId,
+            'uploaded_by' => $owner->id,
+            'caption' => 'Living room',
+        ]);
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'property_media',
+            'entity_id' => $mediaId,
+            'action' => 'property_media.uploaded',
+        ]);
+
+        Http::assertSent(fn ($request): bool => str_contains(
+            $request->url(),
+            '/storage/v1/object/property-media/',
+        ));
+    }
+
+    public function test_invalid_image_bytes_do_not_create_media(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+
+        $this->fakeSupabaseStorage();
+
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            [
+                'client_operation_id' => (string) Str::uuid(),
+                'expected_content_revision' => 1,
+                'photo' => UploadedFile::fake()->createWithContent(
+                    'not-an-image.jpg',
+                    'this is not image data',
+                ),
+            ],
+        )->assertUnprocessable();
+
+        $this->assertDatabaseCount('property_media', 0);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_upload_retry_with_same_operation_id_returns_existing_media(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $operationId = (string) Str::uuid();
+        $photo = UploadedFile::fake()->image('living-room.jpg');
+
+        $this->fakeSupabaseStorage();
+
+        $payload = [
+            'client_operation_id' => $operationId,
+            'expected_content_revision' => 1,
+            'caption' => 'Living room',
+            'photo' => $photo,
+        ];
+
+        $first = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        );
+
+        $first->assertCreated();
+        $mediaId = $first->json('data.id');
+
+        $retry = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        );
+
+        $retry->assertOk()->assertJsonPath('data.id', $mediaId);
+
+        $this->assertDatabaseCount('property_media', 1);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+    }
+
+    public function test_owner_can_reorder_and_deselect_shared_gallery_photos(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $firstMediaId = $this->createMedia($owner->id, $propertyId, 0);
+        $secondMediaId = $this->createMedia($owner->id, $propertyId, 1);
+
+        $response = $this->actingAs($owner)->putJson(
+            "/api/v1/owner/properties/{$propertyId}/gallery",
+            [
+                'expected_content_revision' => 1,
+                'items' => [
+                    [
+                        'media_id' => $firstMediaId,
+                        'revision' => 1,
+                        'sort_order' => 1,
+                        'is_selected_for_listing' => true,
+                    ],
+                    [
+                        'media_id' => $secondMediaId,
+                        'revision' => 1,
+                        'sort_order' => 0,
+                        'is_selected_for_listing' => false,
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $secondMediaId)
+            ->assertJsonPath('data.0.is_selected_for_listing', false)
+            ->assertJsonPath('data.0.revision', 2)
+            ->assertJsonPath('data.1.id', $firstMediaId)
+            ->assertJsonPath('data.1.sort_order', 1)
+            ->assertJsonPath('data.1.revision', 2)
+            ->assertJsonPath('meta.content_revision', 2);
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'property_media',
+            'entity_id' => $secondMediaId,
+            'action' => 'property_media.gallery_updated',
+        ]);
+    }
+
+    public function test_owner_can_list_property_photos_without_exposing_storage_paths(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $firstMediaId = $this->createMedia($owner->id, $propertyId, 1);
+        $secondMediaId = $this->createMedia($owner->id, $propertyId, 0);
+
+        $this->actingAs($owner)
+            ->getJson("/api/v1/owner/properties/{$propertyId}/media")
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $secondMediaId)
+            ->assertJsonPath('data.0.revision', 1)
+            ->assertJsonPath('data.1.id', $firstMediaId)
+            ->assertJsonMissingPath('data.0.storage_path');
+    }
+
+    public function test_stale_media_revision_cannot_overwrite_gallery_state(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $mediaId = $this->createMedia($owner->id, $propertyId, 0);
+
+        $this->actingAs($owner)->putJson(
+            "/api/v1/owner/properties/{$propertyId}/gallery",
+            [
+                'expected_content_revision' => 1,
+                'items' => [[
+                    'media_id' => $mediaId,
+                    'revision' => 2,
+                    'sort_order' => 3,
+                    'is_selected_for_listing' => false,
+                ]],
+            ],
+        )->assertConflict();
+
+        $this->assertDatabaseHas('property_media', [
+            'id' => $mediaId,
+            'revision' => 1,
+            'sort_order' => 0,
+            'is_selected_for_listing' => true,
+        ]);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+    }
+
+    public function test_gallery_cannot_deselect_a_listing_cover(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $mediaId = $this->createMedia($owner->id, $propertyId, 0);
+
+        DB::table('listings')->insert([
+            'id' => (string) Str::uuid(),
+            'property_id' => $propertyId,
+            'client_operation_id' => (string) Str::uuid(),
+            'title' => 'Listing title',
+            'description' => 'Listing description',
+            'cover_media_id' => $mediaId,
+        ]);
+
+        $this->actingAs($owner)->putJson(
+            "/api/v1/owner/properties/{$propertyId}/gallery",
+            [
+                'expected_content_revision' => 1,
+                'items' => [[
+                    'media_id' => $mediaId,
+                    'revision' => 1,
+                    'sort_order' => 0,
+                    'is_selected_for_listing' => false,
+                ]],
+            ],
+        )->assertUnprocessable()
+            ->assertJsonValidationErrors('items');
+
+        $this->assertDatabaseHas('property_media', [
+            'id' => $mediaId,
+            'is_selected_for_listing' => true,
+            'revision' => 1,
+        ]);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+    }
+
+    private function createMedia(string $ownerId, string $propertyId, int $sortOrder): string
+    {
+        $mediaId = (string) Str::uuid();
+
+        DB::table('property_media')->insert([
+            'id' => $mediaId,
+            'property_id' => $propertyId,
+            'uploaded_by' => $ownerId,
+            'client_operation_id' => (string) Str::uuid(),
+            'storage_path' => "properties/{$propertyId}/media/{$mediaId}.jpg",
+            'caption' => 'Test photo',
+            'sort_order' => $sortOrder,
+            'is_selected_for_listing' => true,
+            'sha256' => str_repeat('a', 64),
+            'mime_type' => 'image/jpeg',
+            'size_bytes' => 100,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $mediaId;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\CurrentUserController;
+use App\Http\Controllers\Api\V1\OwnerAmenityCatalogController;
 use App\Http\Controllers\Api\V1\OwnerPropertiesController;
 use App\Http\Controllers\Api\V1\TenantTenanciesController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,7 @@ Route::get('/health', function () {
 Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
     Route::get('/me', [CurrentUserController::class, 'show'])->name('api.v1.me.show');
     Route::patch('/me', [CurrentUserController::class, 'update'])->name('api.v1.me.update');
+    Route::get('/amenities', [OwnerAmenityCatalogController::class, 'index'])->name('api.v1.amenities.index');
     Route::get('/tenant/tenancies', [TenantTenanciesController::class, 'index'])->name('api.v1.tenant.tenancies');
     Route::get('/owner/properties', [OwnerPropertiesController::class, 'index'])->name('api.v1.owner.properties');
     Route::post('/owner/properties', [OwnerPropertiesController::class, 'store'])->name('api.v1.owner.properties.store');
@@ -26,4 +28,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function (): void {
     Route::patch('/owner/properties/{property}/units/{unit}', [OwnerPropertiesController::class, 'updateUnit'])->name('api.v1.owner.properties.units.update');
     Route::patch('/owner/properties/{property}/units/{unit}/archive', [OwnerPropertiesController::class, 'archiveUnit'])->name('api.v1.owner.properties.units.archive');
     Route::post('/owner/properties/{property}/units/bulk', [OwnerPropertiesController::class, 'storeUnitsBatch'])->name('api.v1.owner.properties.units.bulk');
+    Route::post('/owner/properties/{property}/media', [OwnerPropertiesController::class, 'storeMedia'])->name('api.v1.owner.properties.media.store');
+    Route::get('/owner/properties/{property}/media', [OwnerPropertiesController::class, 'indexMedia'])->name('api.v1.owner.properties.media.index');
+    Route::put('/owner/properties/{property}/gallery', [OwnerPropertiesController::class, 'updateGallery'])->name('api.v1.owner.properties.gallery.update');
 });

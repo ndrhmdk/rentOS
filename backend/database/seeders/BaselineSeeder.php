@@ -215,7 +215,10 @@ class BaselineSeeder extends Seeder
                     'description' => $place['description'],
                     'shared_amenities' => json_encode([
                         'schema_version' => 1,
-                        'standard' => $place['shared_amenities'],
+                        'standard' => array_map(
+                            static fn (bool $enabled): array => ['enabled' => $enabled],
+                            $place['shared_amenities'],
+                        ),
                         'custom' => [],
                     ], JSON_THROW_ON_ERROR),
                     'policies' => json_encode([
@@ -256,7 +259,10 @@ class BaselineSeeder extends Seeder
                     'bathroom_arrangement' => $place['bathroom_arrangement'],
                     'amenities' => json_encode([
                         'schema_version' => 1,
-                        'standard' => $place['unit_amenities'],
+                        'standard' => array_map(
+                            static fn (bool $enabled): array => ['enabled' => $enabled],
+                            $place['unit_amenities'],
+                        ),
                         'custom' => [],
                     ], JSON_THROW_ON_ERROR),
                     'advertised_monthly_rent' => $published ? $place['rent'] : null,
