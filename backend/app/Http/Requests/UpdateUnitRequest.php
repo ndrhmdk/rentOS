@@ -5,7 +5,9 @@ namespace App\Http\Requests;
 use App\Models\Property;
 use App\Models\Unit;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateUnitRequest extends FormRequest
 {
@@ -59,5 +61,53 @@ class UpdateUnitRequest extends FormRequest
             'policy_overrides' => ['sometimes', 'array'],
             'policy_overrides.*' => ['string'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $property = $this->route('property');
+            $unit = $this->route('unit');
+
+            if (! $property instanceof Property || !$unit instanceof Unit) {
+                return;
+            }
+
+            $label = $this->input('label');
+
+            if (is_string($label) && DB::table('units')
+                ->where('property_id', $property->id)
+                ->where('id', '<>', $unit->id)
+                ->whereRaw('lower(btrim(label)) = lower(btrim(?))', [$label])
+                ->exists()) {
+                $validator->errors()->add('label', 'This label is already used by another unit.');
+            }
+
+            $isMarketed = (bool) $this->input('is_marketed', $unit->is_marketed);
+            if (! $isMarketed) {
+                return;
+            }
+
+            $requiredWhenMarketed = [
+                'description' => $this->input('description', $unit->description),
+                'area_m2' => $this->input('area_m2', $unit->area_m2),
+                'advertised_monthly_rent' => $this->input(
+                    'advertised_monthly_rent',
+                    $unit->advertised_monthly_rent,
+                ),
+                'deposit' => $this->input('deposit', $unit->deposit),
+                'max_occupants' => $this->input('max_occupants', $unit->max_occupants),
+            ];
+
+            foreach ($requiredWhenMarketed as $field => $value) {
+                if ($value === null || ($field === 'description' && trim((string) $value) === '')) {
+                    $validator->errors()->add($field, "This field is required when the unit is marketed.");
+                }
+            }
+        });
     }
 }

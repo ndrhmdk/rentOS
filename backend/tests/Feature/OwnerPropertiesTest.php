@@ -472,4 +472,122 @@ class OwnerPropertiesTest extends TestCase
 
         $this->assertDatabaseCount('units', 1);
     }
+
+    public function test_owner_can_update_unit_and_change_operational_status(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS'
+        );
+        $unitId = (string) Str::uuid();
+
+        DB::table('units')->insert([
+            'id' => $unitId,
+            'property_id' => $propertyId,
+            'client_operation_id' => (string) Str::uuid(),
+            'label' => 'Room 101',
+            'unit_kind' => 'ROOM',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+        ]);
+
+        $this->actingAs($owner)
+            ->patchJson("/api/v1/owner/properties/{$propertyId}/units/{$unitId}", [
+                'expected_content_revision' => 1,
+                'operational_status' => 'MAINTENANCE',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.id', $unitId)
+            ->assertJsonPath('data.operational_status', 'MAINTENANCE');
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'unit',
+            'entity_id' => $unitId,
+            'action' => 'unit.updated'
+        ]);
+    }
+
+    public function test_stale_unit_update_returns_conflict_without_overwriting_date(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+        $unitId = (string) Str::uuid();
+
+        DB::table('units')->insert([
+            'id' => $unitId,
+            'property_id' => $propertyId,
+            'client_operation_id' => (string) Str::uuid(),
+            'label' => 'Room 101',
+            'unit_kind' => 'ROOM',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+        ]);
+
+        $this->actingAs($owner)
+            ->patchJson("/api/v1/owner/properties/{$propertyId}/units/{$unitId}", [
+                'expected_content_revision' => 1,
+                'operational_status' => 'MAINTENANCE',
+            ])
+            ->assertOk();
+
+        $this->actingAs($owner)
+            ->patchJson("/api/v1/owner/properties/{$propertyId}/units/{$unitId}", [
+                'expected_content_revision' => 1,
+                'operational_status' => 'RETIRED',
+            ])
+            ->assertConflict();
+
+        $this->assertDatabaseHas('units', [
+            'id' => $unitId,
+            'operational_status' => 'MAINTENANCE',
+        ]);
+    }
+
+    public function test_foreign_owner_cannot_update_unit(): void
+    {
+        $owner = User::factory()->create();
+        $otherOwner = User::factory()->create();
+        $propertyId = $this->createProperty(
+            $owner->id,
+            rentalArrangement: 'SEPARATE_UNITS',
+        );
+        $unitId = (string) Str::uuid();
+
+        DB::table('units')->insert([
+            'id' => $unitId,
+            'property_id' => $propertyId,
+            'client_operation_id' => (string) Str::uuid(),
+            'label' => 'Room 101',
+            'unit_kind' => 'ROOM',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+        ]);
+
+        $this->actingAs($otherOwner)
+            ->patchJson("/api/v1/owner/properties/{$propertyId}/units/{$unitId}", [
+                'expected_content_revision' => 1,
+                'operational_status' => 'MAINTENANCE',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('units', [
+            'id' => $unitId,
+            'operational_status' => 'READY',
+        ]);
+    }
 }

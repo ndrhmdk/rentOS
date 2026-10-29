@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\OwnerProperties\PropertyWriteService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArchivePropertyRequest;
+use App\Http\Requests\ArchiveUnitRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\StoreUnitRequest;
 use App\Http\Requests\UpdatePropertyRequest;
@@ -109,5 +110,16 @@ class OwnerPropertiesController extends Controller
         );
 
         return new UnitResource($updatedUnit);
+    }
+
+    public function archiveUnit(ArchiveUnitRequest $request, Property $property, Unit $unit, PropertyWriteService $propertyWriter): UnitResource {
+        $archivedUnit = $propertyWriter->archiveUnit(
+            $request->user(),
+            $property,
+            $unit,
+            (int) $request->validated('expected_content_revision')
+        );
+
+        return new UnitResource($archivedUnit);
     }
 }

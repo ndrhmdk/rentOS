@@ -550,6 +550,20 @@ public function createUnit(User $owner, Property $property, array $attributes): 
                 $attributes['policy_overrides'] = (object) $attributes['policy_overrides'];
             }
 
+            if (isset($attributes['label'])) {
+                $duplicateLabel = Unit::query()
+                    ->where('property_id', $property->id)
+                    ->where('id', '<>', $unit->id)
+                    ->whereRaw('lower(btrim(label)) = lower(btrim(?))', [$attributes['label']])
+                    ->exists();
+
+                if ($duplicateLabel) {
+                    throw ValidationException::withMessages([
+                        'label' => 'This label is already used by another unit.',
+                    ]);
+                }
+            }
+
             $unit->fill($attributes);
 
             if (! $unit->isDirty()) {
@@ -593,6 +607,75 @@ public function createUnit(User $owner, Property $property, array $attributes): 
             );
 
             $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+
+            return $unit;
+        }, 3);
+    }
+
+    public function archiveUnit(User $owner, Property $property, Unit $unit, int $expectedContentRevision): Unit {
+        return DB::transaction(function () use ($owner, $property, $unit, $expectedContentRevision): Unit {
+            $property = Property::query()
+                ->whereKey($property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $unit = Unit::query()
+                ->whereKey($unit->id)
+                ->where('property_id', $property->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            abort_unless($property->rental_arrangement === 'SEPARATE_UNITS', 422);
+
+            if ($unit->archived_at !== null) {
+                return $unit;
+            }
+
+            abort_if($property->archived_at !== null, 409);
+            abort_unless($property->content_revision === $expectedContentRevision, 409);
+
+            $before = [
+                'label' => $unit->label,
+                'operational_status' => $unit->operational_status,
+                'is_marketed' => $unit->is_marketed,
+                'archived_at' => null,
+                'property_content_revision' => $property->content_revision
+            ];
+
+            $unit->archived_at = now();
+            $unit->is_marketed = false;
+            $unit->save();
+
+            $property->content_revision++;
+            $property->save();
+
+            $correlationId = (string) Str::uuid();
+            $invalidatedListingIds = $this->invalidatePendingListings($property);
+
+            $this->writeAudit(
+                actorId: $owner->id,
+                entityType: 'unit',
+                entityId: $unit->id,
+                action: 'unit.archived',
+                before: $before,
+                after: [
+                    'label' => $unit->label,
+                    'operational_status' => $unit->operational_status,
+                    'is_marketed' => $unit->is_marketed,
+                    'archived_at' => $unit->archived_at?->toISOString(),
+                    'property_content_revision' => $property->content_revision,
+                ],
+                correlationId: $correlationId
+            );
+
+            $this->auditInvalidatedListings(
+                $owner->id,
+                $invalidatedListingIds,
+                $correlationId
+            );
 
             return $unit;
         }, 3);
