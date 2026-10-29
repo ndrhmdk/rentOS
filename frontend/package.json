@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:admin-queue": "node --experimental-strip-types --test src/lib/admin-review-queue.test.mjs",
+    "test:admin-review": "node --experimental-strip-types --test src/lib/admin-review-queue.test.mjs src/lib/admin-review-decision.test.mjs"
   },
   "dependencies": {
     "next": "16.4.2",

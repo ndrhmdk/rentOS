@@ -51,7 +51,7 @@ export type OwnerProperty = {
   updated_at: string;
 };
 
-function csrfToken(): string | null {
+export function csrfToken(): string | null {
   if (typeof document === "undefined") return null;
 
   const cookie = document.cookie
