@@ -5,7 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $deleted_at
+ * @property Carbon|null $purged_at
+ * @property-read string|null $preview_url
+ */
 class PropertyMedia extends Model
 {
     use HasUuids;

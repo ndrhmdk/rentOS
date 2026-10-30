@@ -75,7 +75,7 @@ class StorePropertyMediaRequest extends OwnerProductRequest
 
                 if (
                     ! is_array($image)
-                    || ! in_array($image['mime'] ?? null, [
+                    || ! in_array($image['mime'], [
                         'image/jpeg',
                         'image/png',
                         'image/webp',

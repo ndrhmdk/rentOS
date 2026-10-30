@@ -129,7 +129,6 @@ class UpdateUnitRequest extends FormRequest
                         'advertised_monthly_rent' => 'Nhập giá thuê tháng trước khi chọn phòng này để đăng tin.',
                         'deposit' => 'Nhập tiền đặt cọc trước khi chọn phòng này để đăng tin.',
                         'max_occupants' => 'Nhập số người tối đa trước khi chọn phòng này để đăng tin.',
-                        default => 'Hoàn thiện thông tin trước khi chọn phòng này để đăng tin.',
                     });
                 }
             }

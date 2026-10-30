@@ -243,9 +243,6 @@ class PropertyWriteService
         }, 3);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private static function emptyAmenities(): object
     {
         return (object) ['schema_version' => 1, 'standard' => new \stdClass, 'custom' => []];
