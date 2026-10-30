@@ -35,9 +35,7 @@ class PropertyMedia extends Model
         'size_bytes',
     ];
 
-    /**
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -50,25 +48,19 @@ class PropertyMedia extends Model
         ];
     }
 
-    /**
-     * @return BelongsTo<Property, $this>
-     */
+    /** @return BelongsTo<Property, $this> */
     public function property(): BelongsTo
     {
-        return $this->belongsTo(Property::class);
+        return $this->belongsTo(Property::class, 'property_id');
     }
 
-    /**
-     * @return BelongsTo<Unit, $this>
-     */
+    /** @return BelongsTo<Unit, $this> */
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(Unit::class);
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
+    /** @return BelongsTo<User, $this> */
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');

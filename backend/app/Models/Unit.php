@@ -40,11 +40,7 @@ class Unit extends Model
         'archived_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -63,11 +59,7 @@ class Unit extends Model
         ];
     }
 
-    /**
-     * Get the property that owns the unit.
-     *
-     * @return BelongsTo<Property, $this>
-     */
+    /** @return BelongsTo<Property, $this> */
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class, 'property_id');

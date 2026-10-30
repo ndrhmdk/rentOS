@@ -6,10 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * @property-read Property $property
- */
+/** @property-read Property $property */
 class Listing extends Model
 {
     use HasUuids;
@@ -37,6 +36,7 @@ class Listing extends Model
         'suspension_reason',
     ];
 
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -50,21 +50,32 @@ class Listing extends Model
         ];
     }
 
-    /**
-     * @return BelongsTo<Property, $this>
-     */
+    /** @return BelongsTo<Property, $this> */
     public function property(): BelongsTo
     {
-        return $this->belongsTo(Property::class);
+        return $this->belongsTo(Property::class, 'property_id');
     }
 
+    /** @return BelongsTo<PropertyMedia, $this> */
     public function cover(): BelongsTo
     {
         return $this->belongsTo(PropertyMedia::class, 'cover_media_id');
     }
 
+    /** @return BelongsTo<PropertyMedia, $this> */
+    public function coverMedia(): BelongsTo
+    {
+        return $this->belongsTo(PropertyMedia::class, 'cover_media_id');
+    }
+
+    /** @return HasMany<Unit, $this> */
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class, 'property_id', 'property_id');
+    }
+
     /**
-     * Keep public discovery and detail queries behind the same visibility rules.
+     * Keep owner listings and public discovery behind the same visibility rules.
      * Date-based availability remains a separate query concern.
      *
      * @param  Builder<self>  $query
@@ -81,7 +92,7 @@ class Listing extends Model
                 ->whereNotNull('address_line')->whereRaw("btrim(address_line) <> ''")
                 ->whereNotNull('city')->whereRaw("btrim(city) <> ''")
                 ->whereNotNull('description')->whereRaw("btrim(description) <> ''"))
-            ->whereHas('cover', fn (Builder $media) => $media
+            ->whereHas('coverMedia', fn (Builder $media) => $media
                 ->whereNull('unit_id')->where('is_selected_for_listing', true)
                 ->whereNull('deleted_at')->whereNull('purged_at'))
             ->whereHas('property.units', fn (Builder $unit) => $unit

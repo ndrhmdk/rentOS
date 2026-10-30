@@ -36,11 +36,7 @@ class Property extends Model
         'archived_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return array<string, string> */
     protected function casts(): array
     {
         return [
@@ -53,31 +49,27 @@ class Property extends Model
         ];
     }
 
-    /**
-     * Get the owner of the property.
-     *
-     * @return BelongsTo<User, $this>
-     */
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
 
-    /**
-     * Get the rentable units belonging to the property.
-     *
-     * @return HasMany<Unit, $this>
-     */
+    /** @return HasMany<Unit, $this> */
     public function units(): HasMany
     {
         return $this->hasMany(Unit::class, 'property_id');
     }
 
-    /**
-     * @return HasMany<PropertyMedia, $this>
-     */
+    /** @return HasMany<PropertyMedia, $this> */
     public function media(): HasMany
     {
         return $this->hasMany(PropertyMedia::class, 'property_id');
+    }
+
+    /** @return HasMany<Listing, $this> */
+    public function listings(): HasMany
+    {
+        return $this->hasMany(Listing::class, 'property_id');
     }
 }
