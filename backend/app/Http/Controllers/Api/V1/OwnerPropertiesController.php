@@ -21,13 +21,14 @@ use App\Models\Property;
 use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -225,7 +226,7 @@ class OwnerPropertiesController extends Controller
     /**
      * Attach short-lived URLs for viewing objects in the private media bucket.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, PropertyMedia>  $media
+     * @param  Collection<int, PropertyMedia>  $media
      */
     private function attachPreviewUrls(EloquentCollection $media): void
     {
