@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
@@ -19,10 +20,20 @@ import {
   type OwnerProperty,
   type OwnerPropertyDetail,
   type OwnerPropertyMedia,
+  type OwnerUnit,
 } from "@/lib/auth-api";
 
 type FieldErrors = Record<string, string[]>;
 type Action = "save" | "submit" | "publish" | "hide" | "archive" | null;
+
+function unitIsCompleteForListing(unit: OwnerUnit): boolean {
+  return unit.operational_status === "READY"
+    && Boolean(unit.description?.trim())
+    && unit.area_m2 !== null
+    && unit.advertised_monthly_rent !== null
+    && unit.deposit !== null
+    && unit.max_occupants !== null;
+}
 
 const inputClass = "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 
@@ -240,6 +251,15 @@ export default function OwnerListingsPage() {
   const canEdit = !listing || listing.moderation_status !== "PENDING";
   const currentStatus = listing ? statusLabel(listing) : "Chưa có tin đăng";
   const hasFieldErrors = Object.entries(fieldErrors);
+  const marketedUnits = property?.units.filter((unit) => !unit.archived_at && unit.is_marketed) ?? [];
+  const marketedUnitsComplete = marketedUnits.length > 0 && marketedUnits.every(unitIsCompleteForListing);
+  const unitsReadyForListing = marketedUnitsComplete;
+  const unitReadinessHint = marketedUnits.length === 0
+    ? "Bật “Quảng cáo” cho ít nhất một căn trong Quản lý bất động sản → Danh sách căn."
+    : !marketedUnitsComplete
+      ? "Mỗi căn đang quảng cáo cần ở trạng thái Sẵn sàng và có mô tả, diện tích, giá thuê, tiền cọc, số người tối đa."
+      : "Các căn đang quảng cáo đã đủ thông tin.";
+  const coverPhoto = sharedPhotos.find((photo) => photo.id === coverId) ?? null;
   const rows = properties.filter((item) => !item.archived_at).map((item) => ({
     property: item,
     detail: propertyDetails[item.id],
@@ -341,7 +361,7 @@ export default function OwnerListingsPage() {
               {saving && <span className="text-sm text-slate-500" aria-live="polite">Đang cập nhật…</span>}
             </div>
           </form>}
-          {editorView === "preview" && <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="flex aspect-[16/8] items-center justify-center bg-[#d9e3ed] text-sm text-slate-500">{sharedPhotos.find((photo) => photo.id === coverId)?.caption || "Ảnh bìa tin đăng"}</div><div className="space-y-3 p-5"><p className="text-sm font-semibold text-[#3368a0]">{property.name}</p><h2 className="text-xl font-bold text-slate-900">{title || "Tiêu đề tin đăng"}</h2><p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">{description || "Mô tả sẽ xuất hiện tại đây."}</p><p className="text-xs text-slate-500">{property.address_line || "Chưa nhập địa chỉ"} · {property.city || "Chưa chọn thành phố"}</p></div></article>}
+          {editorView === "preview" && <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="relative flex aspect-[16/8] items-center justify-center overflow-hidden bg-[#d9e3ed] text-sm text-slate-500">{coverPhoto?.preview_url ? <Image src={coverPhoto.preview_url} alt={coverPhoto.caption || title || "Ảnh bìa tin đăng"} fill unoptimized sizes="(max-width: 1024px) 100vw, 66vw" className="object-cover" /> : <span>{coverPhoto?.caption || "Ảnh bìa tin đăng"}</span>}</div><div className="space-y-3 p-5"><p className="text-sm font-semibold text-[#3368a0]">{property.name}</p><h2 className="text-xl font-bold text-slate-900">{title || "Tiêu đề tin đăng"}</h2><p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">{description || "Mô tả sẽ xuất hiện tại đây."}</p><p className="text-xs text-slate-500">{property.address_line || "Chưa nhập địa chỉ"} · {property.city || "Chưa chọn thành phố"}</p></div></article>}
 
           <div className="space-y-4">
             <aside className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 sm:p-5">
@@ -354,7 +374,7 @@ export default function OwnerListingsPage() {
               <ul className="mt-3 space-y-3">
                 <li className="flex gap-2"><span className={property.address_line && property.city ? "text-emerald-700" : "text-rose-700"}>{property.address_line && property.city ? "✓" : "×"}</span>Địa chỉ đầy đủ</li>
                 <li className="flex gap-2"><span className={sharedPhotos.length ? "text-emerald-700" : "text-rose-700"}>{sharedPhotos.length ? "✓" : "×"}</span>Có ít nhất một ảnh dùng chung</li>
-                <li className="flex gap-2"><span className={property.units.some((unit) => !unit.archived_at && unit.is_marketed && unit.operational_status === "READY") ? "text-emerald-700" : "text-rose-700"}>{property.units.some((unit) => !unit.archived_at && unit.is_marketed && unit.operational_status === "READY") ? "✓" : "×"}</span>Có căn sẵn sàng để đăng</li>
+                <li className="flex gap-2"><span className={unitsReadyForListing ? "text-emerald-700" : "text-rose-700"}>{unitsReadyForListing ? "✓" : "×"}</span><div><p>Căn được chọn quảng cáo đã đủ điều kiện đăng</p><p className={`mt-1 text-xs leading-5 ${unitsReadyForListing ? "text-slate-500" : "text-rose-700"}`}>{unitReadinessHint}</p></div></li>
                 <li className="flex gap-2"><span className={Boolean(coverId) ? "text-emerald-700" : "text-rose-700"}>{coverId ? "✓" : "×"}</span>Đã chọn ảnh bìa</li>
               </ul>
               <Link href="/owner/properties" className="mt-4 inline-flex font-semibold text-[#3368a0] hover:underline">Quản lý bất động sản, căn và ảnh →</Link>

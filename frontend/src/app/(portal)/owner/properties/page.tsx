@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { VietnamLocationPicker } from "@/components/vietnam-location-picker";
 import {
@@ -34,6 +35,24 @@ const secondaryButtonClass = "inline-flex min-h-10 items-center justify-center r
 
 function fieldValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "").trim();
+}
+
+function listingUnitFieldErrors(unit: {
+  description?: string | null;
+  area_m2?: string | number | null;
+  advertised_monthly_rent?: string | number | null;
+  deposit?: string | number | null;
+  max_occupants?: number | null;
+  operational_status?: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!unit.description?.trim()) errors.description = "Nhập mô tả phòng.";
+  if (unit.area_m2 == null || Number(unit.area_m2) <= 0) errors.area_m2 = "Nhập diện tích lớn hơn 0.";
+  if (unit.advertised_monthly_rent == null || Number(unit.advertised_monthly_rent) <= 0) errors.advertised_monthly_rent = "Nhập giá thuê tháng lớn hơn 0.";
+  if (unit.deposit == null || Number(unit.deposit) < 0) errors.deposit = "Nhập tiền đặt cọc.";
+  if (unit.max_occupants == null || unit.max_occupants < 1) errors.max_occupants = "Nhập số người tối đa.";
+  if (unit.operational_status && unit.operational_status !== "READY") errors.operational_status = "Chuyển trạng thái vận hành sang Sẵn sàng.";
+  return errors;
 }
 
 function numberValue(form: FormData, name: string): number | null {
@@ -89,6 +108,8 @@ export default function OwnerPropertiesPage() {
   const [workspaceTab, setWorkspaceTab] = useState<"overview" | "units" | "photos">("overview");
   const [showArchived, setShowArchived] = useState(false);
   const [summaries, setSummaries] = useState<Array<{ property: OwnerPropertyDetail; listing: OwnerListing | null }>>([]);
+  const [pendingPhotos, setPendingPhotos] = useState<Array<{ file: File; operationId: string }>>([]);
+  const [uploadedPhotoCount, setUploadedPhotoCount] = useState(0);
 
   const sharedMedia = useMemo(() => media.filter((item) => item.unit_id === null), [media]);
   const unitMedia = useMemo(() => media.filter((item) => item.unit_id !== null), [media]);
@@ -222,7 +243,6 @@ export default function OwnerPropertiesPage() {
     event.preventDefault();
     if (!property) return;
     const form = new FormData(event.currentTarget);
-    setBusy(true);
     setError(null);
     setFieldErrors({});
     const payload = {
@@ -247,6 +267,15 @@ export default function OwnerPropertiesPage() {
         additional_rules: fieldValue(form, "additional_rules").split("\n").map((item) => item.trim()).filter(Boolean),
       },
     };
+    if (payload.is_marketed) {
+      const listingErrors = listingUnitFieldErrors(payload);
+      if (Object.keys(listingErrors).length > 0) {
+        setError("Hoàn thiện thông tin bắt buộc trước khi chọn căn này để đăng tin.");
+        setFieldErrors(Object.fromEntries(Object.entries(listingErrors).map(([field, message]) => [field, [message]])));
+        return;
+      }
+    }
+    setBusy(true);
     try {
       if (editingUnit) {
         await updateOwnerUnit(property.id, editingUnit.id, { ...payload, expected_content_revision: property.content_revision });
@@ -257,6 +286,35 @@ export default function OwnerPropertiesPage() {
         setNotice("Phòng đã được thêm.");
       }
       await reloadProperty();
+    } catch (caught) {
+      reportError(caught);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleUnitMarketing(unit: OwnerUnit) {
+    if (!property) return;
+    if (!unit.is_marketed) {
+      const listingErrors = listingUnitFieldErrors(unit);
+      if (Object.keys(listingErrors).length > 0) {
+        setEditingUnit(unit);
+        setError("Hoàn thiện các thông tin dưới đây rồi lưu căn để bật quảng cáo.");
+        setFieldErrors(Object.fromEntries(Object.entries(listingErrors).map(([field, message]) => [field, [message]])));
+        return;
+      }
+    }
+
+    setBusy(true);
+    setError(null);
+    setFieldErrors({});
+    try {
+      await updateOwnerUnit(property.id, unit.id, {
+        expected_content_revision: property.content_revision,
+        is_marketed: !unit.is_marketed,
+      });
+      await reloadProperty();
+      setNotice(unit.is_marketed ? "Đã tắt quảng cáo cho căn này." : "Đã bật quảng cáo cho căn này.");
     } catch (caught) {
       reportError(caught);
     } finally {
@@ -315,54 +373,56 @@ export default function OwnerPropertiesPage() {
     if (!property) return;
     const form = new FormData(event.currentTarget);
     const formElement = event.currentTarget;
-    const file = form.get("photo");
-    if (!(file instanceof File)) return;
-    if (!/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) || file.size > 8 * 1024 * 1024) {
+    const files = pendingPhotos.map((photo) => photo.file);
+    if (files.length === 0) return;
+    if (files.some((file) => !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) || file.size > 8 * 1024 * 1024)) {
       setError("Chỉ hỗ trợ JPG, PNG hoặc WEBP tối đa 8 MB mỗi ảnh.");
       return;
     }
-    if (media.length >= 30) {
-      setError("Mỗi bất động sản có thể lưu tối đa 30 ảnh.");
+    if (media.length + files.length - uploadedPhotoCount > 20) {
+      setError("Mỗi bất động sản có thể lưu tối đa 20 ảnh.");
       return;
     }
     setBusy(true);
-    setNotice("Đang tải ảnh lên…");
+    setNotice(`Đang tải ${files.length - uploadedPhotoCount} ảnh lên…`);
     setError(null);
     try {
-      await uploadOwnerMedia(property.id, {
-        file,
-        client_operation_id: crypto.randomUUID(),
-        expected_content_revision: property.content_revision,
-        unit_id: fieldValue(form, "unit_id") || undefined,
-        caption: fieldValue(form, "caption") || undefined,
-      });
+      let currentProperty = property;
+      for (let index = uploadedPhotoCount; index < pendingPhotos.length; index++) {
+        const photo = pendingPhotos[index];
+        await uploadOwnerMedia(currentProperty.id, {
+          file: photo.file,
+          client_operation_id: photo.operationId,
+          expected_content_revision: currentProperty.content_revision,
+          unit_id: fieldValue(form, "unit_id") || undefined,
+          caption: fieldValue(form, "caption") || undefined,
+        });
+        setUploadedPhotoCount(index + 1);
+        currentProperty = await getOwnerProperty(currentProperty.id);
+        setProperty(currentProperty);
+      }
       formElement.reset();
-      await reloadProperty();
+      setPendingPhotos([]);
+      setUploadedPhotoCount(0);
+      await loadProperty(property.id);
       setNotice("Ảnh đã được tải lên.");
     } catch (caught) {
+      setNotice(null);
       reportError(caught);
     } finally {
       setBusy(false);
     }
   }
 
-  function moveGalleryItem(index: number, direction: -1 | 1) {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= galleryItems.length) return;
-    setGalleryItems((items) => {
-      const reordered = [...items];
-      [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
-      return reordered;
-    });
-  }
-
-  async function saveGallery() {
-    if (!property) return;
+  async function saveGalleryItems(items: OwnerPropertyMedia[]): Promise<boolean> {
+    if (!property) return false;
     setBusy(true);
+    setError(null);
+    setNotice(null);
     try {
       await updateOwnerGallery(property.id, {
         expected_content_revision: property.content_revision,
-        items: galleryItems.map((item, index) => ({
+        items: items.map((item, index) => ({
           media_id: item.id,
           revision: item.revision,
           sort_order: index,
@@ -370,12 +430,28 @@ export default function OwnerPropertiesPage() {
         })),
       });
       await reloadProperty();
-      setNotice("Thứ tự và trạng thái ảnh đã được lưu.");
+      setNotice("Thứ tự ảnh và lựa chọn hiển thị đã được lưu.");
+      return true;
     } catch (caught) {
       reportError(caught);
+      return false;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function moveGalleryItem(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (busy || targetIndex < 0 || targetIndex >= galleryItems.length) return;
+    const previousItems = galleryItems;
+    const reordered = [...galleryItems];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    setGalleryItems(reordered);
+    if (!await saveGalleryItems(reordered)) setGalleryItems(previousItems);
+  }
+
+  async function saveGallery() {
+    await saveGalleryItems(galleryItems);
   }
 
   async function removePhoto(photo: OwnerPropertyMedia) {
@@ -451,7 +527,7 @@ export default function OwnerPropertiesPage() {
       {!creating && property && workspaceTab === "units" && <div className="space-y-5">
         <div className="space-y-5">
           <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h2 className="text-lg font-semibold text-slate-900">Danh sách căn</h2><p className="mt-1 text-sm text-slate-600">Trạng thái vận hành độc lập với việc chọn căn đăng tin.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{units.length} căn</span></div>
-            {units.length === 0 ? <p className="m-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Chưa có căn. Thêm căn hoặc dùng công cụ tạo hàng loạt.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-50 text-xs font-semibold text-slate-500"><tr><th className="px-4 py-3">Căn</th><th className="px-4 py-3">Loại · diện tích</th><th className="px-4 py-3">Giá thuê</th><th className="px-4 py-3">Tiền cọc</th><th className="px-4 py-3">Vận hành</th><th className="px-4 py-3">Quảng cáo</th><th className="px-4 py-3">Thao tác</th></tr></thead><tbody className="divide-y divide-slate-100">{units.map((unit) => <tr key={unit.id}><td className="px-4 py-3 font-semibold text-[#3368a0]">{unit.label}</td><td className="px-4 py-3 text-slate-700">{unit.unit_kind}{unit.area_m2 ? ` · ${unit.area_m2} m²` : ""}</td><td className="px-4 py-3 text-slate-700">{unit.advertised_monthly_rent ? `${Number(unit.advertised_monthly_rent).toLocaleString("vi-VN")} ₫` : "—"}</td><td className="px-4 py-3 text-slate-700">{unit.deposit ? `${Number(unit.deposit).toLocaleString("vi-VN")} ₫` : "—"}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${unit.operational_status === "READY" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{unit.operational_status === "READY" ? "Sẵn sàng" : unit.operational_status === "MAINTENANCE" ? "Bảo trì" : "Ngừng"}</span></td><td className="px-4 py-3"><button type="button" role="switch" aria-checked={unit.is_marketed} onClick={() => void updateOwnerUnit(property.id, unit.id, { expected_content_revision: property.content_revision, is_marketed: !unit.is_marketed }).then(() => reloadProperty()).catch(reportError)} disabled={busy} className={`h-6 w-11 rounded-full p-1 transition ${unit.is_marketed ? "bg-[#3368a0]" : "bg-slate-300"}`}><span className={`block size-4 rounded-full bg-white transition ${unit.is_marketed ? "translate-x-5" : "translate-x-0"}`} /></button></td><td className="px-4 py-3"><button type="button" onClick={() => setEditingUnit(unit)} className="font-semibold text-[#3368a0] hover:underline">Sửa</button>{property.rental_arrangement === "SEPARATE_UNITS" && <button type="button" onClick={() => void archiveUnit(unit)} disabled={busy} className="ml-3 font-semibold text-rose-700 hover:underline">Lưu trữ</button>}</td></tr>)}</tbody></table></div>}
+            {units.length === 0 ? <p className="m-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Chưa có căn. Thêm căn hoặc dùng công cụ tạo hàng loạt.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-50 text-xs font-semibold text-slate-500"><tr><th className="px-4 py-3">Căn</th><th className="px-4 py-3">Loại · diện tích</th><th className="px-4 py-3">Giá thuê</th><th className="px-4 py-3">Tiền cọc</th><th className="px-4 py-3">Vận hành</th><th className="px-4 py-3">Quảng cáo</th><th className="px-4 py-3">Thao tác</th></tr></thead><tbody className="divide-y divide-slate-100">{units.map((unit) => <tr key={unit.id}><td className="px-4 py-3 font-semibold text-[#3368a0]">{unit.label}</td><td className="px-4 py-3 text-slate-700">{unit.unit_kind}{unit.area_m2 ? ` · ${unit.area_m2} m²` : ""}</td><td className="px-4 py-3 text-slate-700">{unit.advertised_monthly_rent ? `${Number(unit.advertised_monthly_rent).toLocaleString("vi-VN")} ₫` : "—"}</td><td className="px-4 py-3 text-slate-700">{unit.deposit ? `${Number(unit.deposit).toLocaleString("vi-VN")} ₫` : "—"}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${unit.operational_status === "READY" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{unit.operational_status === "READY" ? "Sẵn sàng" : unit.operational_status === "MAINTENANCE" ? "Bảo trì" : "Ngừng"}</span></td><td className="px-4 py-3"><button type="button" role="switch" aria-checked={unit.is_marketed} onClick={() => void toggleUnitMarketing(unit)} disabled={busy} className={`h-6 w-11 rounded-full p-1 transition ${unit.is_marketed ? "bg-[#3368a0]" : "bg-slate-300"}`}><span className={`block size-4 rounded-full bg-white transition ${unit.is_marketed ? "translate-x-5" : "translate-x-0"}`} /></button></td><td className="px-4 py-3"><button type="button" onClick={() => setEditingUnit(unit)} className="font-semibold text-[#3368a0] hover:underline">Sửa</button>{property.rental_arrangement === "SEPARATE_UNITS" && <button type="button" onClick={() => void archiveUnit(unit)} disabled={busy} className="ml-3 font-semibold text-rose-700 hover:underline">Lưu trữ</button>}</td></tr>)}</tbody></table></div>}
           </section>
 
           {(property.rental_arrangement === "SEPARATE_UNITS" || editingUnit !== null) && <div className="space-y-5">
@@ -484,9 +560,9 @@ export default function OwnerPropertiesPage() {
       </div>}
 
       {!creating && property && workspaceTab === "photos" && <div className="space-y-5">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-semibold text-slate-900">Tải ảnh</h2><p className="mt-1 text-sm text-slate-600">JPG, PNG, WEBP · tối đa 8 MB mỗi ảnh · tối đa 30 ảnh</p><form onSubmit={uploadPhoto} className="mt-4 space-y-3"><label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-blue-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-700"><span className="text-2xl text-[#3368a0]">↑</span><span className="mt-2 font-semibold">Kéo ảnh vào đây hoặc chọn tệp</span><input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required disabled={busy || media.length >= 30} className="mt-3 block max-w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-800" /></label><label className="block text-sm font-medium text-slate-700">Lưu vào<select name="unit_id" className={fieldClass}><option value="">Ảnh dùng chung</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.label}</option>)}</select></label><label className="block text-sm font-medium text-slate-700">Chú thích<input name="caption" maxLength={500} className={fieldClass} /></label><button type="submit" disabled={busy || media.length >= 30} className={buttonClass}>{busy ? "Đang tải ảnh…" : "Tải ảnh lên"}</button>{busy && <div className="h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Đang tải ảnh"><div className="h-full w-2/3 animate-pulse rounded-full bg-[#3368a0]" /></div>}</form></section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-semibold text-slate-900">Tải ảnh</h2><p className="mt-1 text-sm text-slate-600">JPG, PNG, WEBP · tối đa 8 MB mỗi ảnh · tối đa 20 ảnh</p><form onSubmit={uploadPhoto} className="mt-4 space-y-3"><label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-blue-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-700"><span className="text-2xl text-[#3368a0]">↑</span><span className="mt-2 font-semibold">Kéo ảnh vào đây hoặc chọn tệp</span><input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={busy || media.length >= 20} onChange={(event) => { const incoming = Array.from(event.currentTarget.files ?? []); const additions = incoming.map((file) => ({ file, operationId: crypto.randomUUID() })); const next = [...pendingPhotos]; for (const photo of additions) { if (!next.some((item) => item.file.name === photo.file.name && item.file.size === photo.file.size && item.file.lastModified === photo.file.lastModified)) next.push(photo); } if (media.length + next.length - uploadedPhotoCount > 20 || incoming.some((file) => !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) || file.size > 8 * 1024 * 1024)) { setError("Chọn ảnh JPG, PNG hoặc WEBP, mỗi ảnh không quá 8 MB; tổng tối đa 20 ảnh."); } else { setPendingPhotos(next); setError(null); setNotice(null); } event.currentTarget.value = ""; }} className="mt-3 block max-w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-800" /></label>{pendingPhotos.length > 0 && <ul className="space-y-2">{pendingPhotos.map((photo, index) => <li key={photo.operationId} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm"><span className="min-w-0 truncate text-slate-700">{photo.file.name} <span className="text-xs text-slate-500">{index < uploadedPhotoCount ? "· Đã tải" : `· ${(photo.file.size / (1024 * 1024)).toFixed(1)} MB`}</span></span>{index >= uploadedPhotoCount && <button type="button" onClick={() => setPendingPhotos((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="shrink-0 text-rose-700 hover:underline">Xóa</button>}</li>)}</ul>}<label className="block text-sm font-medium text-slate-700">Lưu vào<select name="unit_id" className={fieldClass}><option value="">Ảnh dùng chung</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.label}</option>)}</select></label><label className="block text-sm font-medium text-slate-700">Chú thích<input name="caption" maxLength={500} className={fieldClass} /></label><button type="submit" disabled={busy || pendingPhotos.length === 0 || media.length >= 20} className={buttonClass}>{busy ? `Đang tải ảnh ${uploadedPhotoCount + 1}/${pendingPhotos.length}…` : `Tải ${pendingPhotos.length || "ảnh"} lên`}</button>{busy && <div className="h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Đang tải ảnh"><div className="h-full w-2/3 animate-pulse rounded-full bg-[#3368a0]" /></div>}</form></section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-slate-900">Ảnh bất động sản</h2><p className="mt-1 text-sm text-slate-600">Chọn ảnh xuất hiện trong tin đăng và thay đổi thứ tự.</p></div><button type="button" onClick={() => void saveGallery()} disabled={busy || sharedMedia.length === 0} className={secondaryButtonClass}>Lưu thứ tự và lựa chọn</button></div>{galleryItems.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Chưa có ảnh dùng chung.</p> : <ol className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{galleryItems.map((item, index) => <li key={item.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="flex aspect-[4/3] items-center justify-center bg-[#d9e3ed] text-sm text-slate-500"><span>{item.mime_type.split("/")[1]?.toUpperCase() ?? "ẢNH"}</span></div><div className="space-y-3 p-3"><p className="truncate text-sm font-semibold text-slate-800">{item.caption || `Ảnh dùng chung ${index + 1}`}</p><p className="text-xs text-slate-500">{(item.size_bytes / (1024 * 1024)).toFixed(1)} MB</p><div className="flex items-center justify-between gap-2"><label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700"><input type="checkbox" checked={item.is_selected_for_listing} onChange={(event) => setGalleryItems((items) => items.map((candidate) => candidate.id === item.id ? { ...candidate, is_selected_for_listing: event.target.checked } : candidate))} className="size-4 accent-[#3368a0]" />Hiển thị trên tin đăng</label><div className="flex gap-1"><button type="button" onClick={() => moveGalleryItem(index, -1)} disabled={index === 0} aria-label="Di chuyển ảnh lên" className="size-8 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">↑</button><button type="button" onClick={() => moveGalleryItem(index, 1)} disabled={index === galleryItems.length - 1} aria-label="Di chuyển ảnh xuống" className="size-8 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">↓</button><button type="button" onClick={() => void removePhoto(item)} disabled={busy} className="size-8 rounded-lg text-rose-700 hover:bg-rose-50" aria-label="Gỡ ảnh">×</button></div></div></div></li>)}</ol>}</section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold text-slate-900">Ảnh bất động sản</h2><p className="mt-1 text-sm text-slate-600">Thay đổi thứ tự bằng mũi tên; thay đổi được lưu ngay. Bấm nút để lưu lựa chọn hiển thị.</p></div><button type="button" onClick={() => void saveGallery()} disabled={busy || sharedMedia.length === 0} className={secondaryButtonClass}>Lưu lựa chọn hiển thị</button></div>{galleryItems.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Chưa có ảnh dùng chung.</p> : <ol className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{galleryItems.map((item, index) => <li key={item.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white"><div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#d9e3ed] text-sm text-slate-500">{item.preview_url ? <Image src={item.preview_url} alt={item.caption || `Ảnh bất động sản ${index + 1}`} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover" /> : <span>{item.mime_type.split("/")[1]?.toUpperCase() ?? "ẢNH"}</span>}</div><div className="space-y-3 p-3"><p className="truncate text-sm font-semibold text-slate-800">{item.caption || `Ảnh dùng chung ${index + 1}`}</p><p className="text-xs text-slate-500">{(item.size_bytes / (1024 * 1024)).toFixed(1)} MB</p><div className="flex items-center justify-between gap-2"><label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700"><input type="checkbox" checked={item.is_selected_for_listing} onChange={(event) => setGalleryItems((items) => items.map((candidate) => candidate.id === item.id ? { ...candidate, is_selected_for_listing: event.target.checked } : candidate))} className="size-4 accent-[#3368a0]" />Hiển thị trên tin đăng</label><div className="flex gap-1"><button type="button" onClick={() => void moveGalleryItem(index, -1)} disabled={busy || galleryItems.length < 2 || index === 0} aria-label="Di chuyển ảnh lên" title={galleryItems.length < 2 ? "Cần ít nhất hai ảnh để sắp xếp" : "Di chuyển ảnh lên"} className="size-8 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">↑</button><button type="button" onClick={() => void moveGalleryItem(index, 1)} disabled={busy || galleryItems.length < 2 || index === galleryItems.length - 1} aria-label="Di chuyển ảnh xuống" title={galleryItems.length < 2 ? "Cần ít nhất hai ảnh để sắp xếp" : "Di chuyển ảnh xuống"} className="size-8 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-40">↓</button><button type="button" onClick={() => void removePhoto(item)} disabled={busy} className="size-8 rounded-lg text-rose-700 hover:bg-rose-50" aria-label="Gỡ ảnh">×</button></div></div></div></li>)}</ol>}</section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-semibold text-slate-900">Ảnh các phòng</h2><p className="mt-1 text-sm text-slate-600">Ảnh gắn với phòng được chọn cho tin đăng khi tải lên.</p>{unitMedia.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Chưa có ảnh phòng.</p> : <ul className="mt-4 space-y-2">{unitMedia.map((item) => <li key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"><div><p className="text-sm font-semibold text-slate-800">{property.units.find((unit) => unit.id === item.unit_id)?.label ?? "Phòng đã lưu trữ"}</p><p className="mt-1 text-xs text-slate-500">{item.caption || item.id.slice(0, 8)} · {item.mime_type}</p></div><button type="button" onClick={() => void removePhoto(item)} disabled={busy} className="min-h-10 shrink-0 rounded-lg px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50">Gỡ ảnh</button></li>)}</ul>}</section>
           <p className="text-sm text-slate-500">Bỏ chọn ảnh chỉ ẩn ảnh khỏi tin đăng; gỡ ảnh sẽ lưu lại tệp trong lịch sử.</p>

@@ -57,6 +57,8 @@ export default function NewOwnerPropertyPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [status, setStatus] = useState("");
   const [createdProperty, setCreatedProperty] = useState<OwnerPropertyDetail | null>(null);
   const [rentalArrangement, setRentalArrangement] = useState<"WHOLE_SPACE" | "SEPARATE_UNITS">("WHOLE_SPACE");
   const [unitCount, setUnitCount] = useState(1);
@@ -107,14 +109,15 @@ export default function NewOwnerPropertyPage() {
       setStep(0);
       return;
     }
-    const files = form.getAll("photos").filter((file): file is File => file instanceof File && file.size > 0);
-    if (files.length > 30 || files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024)) {
-      setError("Chọn tối đa 30 ảnh JPG, PNG hoặc WEBP, mỗi ảnh không quá 8 MB.");
+    const files = selectedPhotos;
+    if (files.length > 20 || files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024)) {
+      setError("Chọn tối đa 20 ảnh JPG, PNG hoặc WEBP, mỗi ảnh không quá 8 MB.");
       return;
     }
 
     setSaving(true);
     setError("");
+    setStatus("");
     setFieldErrors({});
     let property = createdProperty;
     try {
@@ -190,6 +193,10 @@ export default function NewOwnerPropertyPage() {
       }
 
       if (setupComplete) property = await getOwnerProperty(property.id);
+      if (files.length === 0) {
+        setStatus("Bản nháp đã được lưu. Chọn ảnh ở trên rồi bấm ‘Tiếp tục tải ảnh’ để tải lên.");
+        return;
+      }
       for (const file of files.slice(uploadedCount)) {
         await uploadOwnerMedia(property.id, {
           file,
@@ -206,8 +213,8 @@ export default function NewOwnerPropertyPage() {
         setError(caught.message);
         setFieldErrors(caught.errors);
       } else {
-        setError(createdProperty
-          ? "Bản nháp đã được tạo. Hoàn tất ảnh còn lại trong mục Hình ảnh của bất động sản."
+        setError(property
+          ? "Bản nháp đã được tạo nhưng tải ảnh thất bại. Kiểm tra kết nối rồi tiếp tục tải ảnh trong bất động sản này."
           : "Không thể tạo bất động sản. Vui lòng thử lại.");
       }
     } finally {
@@ -267,11 +274,13 @@ export default function NewOwnerPropertyPage() {
         </div>
 
         <div hidden={step !== 4} className="space-y-4">
-          <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-blue-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-700"><span className="text-3xl text-[#3368a0]">↑</span><span className="mt-2 font-semibold">Kéo ảnh vào đây hoặc chọn tệp</span><span className="mt-1 text-xs text-slate-500">JPG, PNG, WEBP · tối đa 8 MB mỗi ảnh · tối đa 30 ảnh</span><input name="photos" type="file" multiple accept="image/jpeg,image/png,image/webp" className="mt-4 max-w-full text-xs" /></label>
+          <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-blue-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-700"><span className="text-3xl text-[#3368a0]">↑</span><span className="mt-2 font-semibold">Kéo ảnh vào đây hoặc chọn tệp</span><span className="mt-1 text-xs text-slate-500">JPG, PNG, WEBP · tối đa 8 MB mỗi ảnh · tối đa 20 ảnh</span><input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => { const incoming = Array.from(event.currentTarget.files ?? []); const next = [...selectedPhotos]; for (const file of incoming) { if (!next.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) next.push(file); } if (next.length > 20 || incoming.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024)) { setError("Chọn tối đa 20 ảnh JPG, PNG hoặc WEBP, mỗi ảnh không quá 8 MB."); } else { setSelectedPhotos(next); setError(""); setStatus(""); } event.currentTarget.value = ""; }} className="mt-4 max-w-full text-xs" /></label>
+          {selectedPhotos.length > 0 && <ul className="space-y-2" aria-label="Ảnh đã chọn">{selectedPhotos.map((file, index) => <li key={`${file.name}-${file.size}-${file.lastModified}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm"><span className="min-w-0 truncate text-slate-700">{file.name} <span className="text-xs text-slate-500">({index < uploadedCount ? "Đã tải" : `${(file.size / 1024 / 1024).toFixed(1)} MB`})</span></span>{index >= uploadedCount && <button type="button" onClick={() => setSelectedPhotos((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="shrink-0 text-sm font-medium text-rose-700 hover:underline">Xóa</button>}</li>)}</ul>}
           <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-700"><strong>Kiểm tra trước khi lưu</strong><ul className="mt-2 list-disc space-y-1 pl-5"><li>Thông tin bất động sản và địa chỉ đã được nhập ở bước 1.</li><li>{rentalArrangement === "WHOLE_SPACE" ? "Một căn toàn bộ không gian sẽ được tạo tự động." : `${unitLabels.length} căn sẽ được tạo từ danh sách xem trước.`}</li><li>Giá và điều khoản được lưu cùng các căn.</li><li>Tiện nghi, chính sách và nội quy dùng chung đã sẵn sàng.</li></ul></div>
         </div>
 
         {error && <div role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}{createdProperty && <button type="button" onClick={() => router.push("/owner/properties")} className="ml-2 font-semibold underline">Mở bất động sản đã tạo</button>}</div>}
+        {status && <p role="status" className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{status}</p>}
         {Object.entries(fieldErrors).length > 0 && <ul role="alert" className="mt-3 list-disc rounded-xl border border-rose-200 bg-rose-50 px-8 py-3 text-sm text-rose-800">{Object.entries(fieldErrors).map(([field, messages]) => <li key={field}>{field}: {messages[0]}</li>)}</ul>}
         {uploadedCount > 0 && <p className="mt-3 text-sm text-slate-600" role="status">Đã tải {uploadedCount} ảnh.</p>}
 

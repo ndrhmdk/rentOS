@@ -73,6 +73,7 @@ export type OwnerPropertyMedia = {
   revision: number;
   mime_type: string;
   size_bytes: number;
+  preview_url: string | null;
 };
 
 export type OwnerListing = {
@@ -286,7 +287,11 @@ export async function getAmenityCatalog(): Promise<AmenityCatalogEntry[]> {
 }
 
 export async function getOwnerProperty(propertyId: string): Promise<OwnerPropertyDetail> {
-  return request<OwnerPropertyDetail>(`/api/v1/owner/properties/${propertyId}`);
+  const property = await request<OwnerPropertyDetail>(`/api/v1/owner/properties/${propertyId}`);
+  return {
+    ...property,
+    units: Array.isArray(property.units) ? property.units : [],
+  };
 }
 
 export async function getOwnerPropertyMedia(propertyId: string): Promise<OwnerPropertyMedia[]> {
