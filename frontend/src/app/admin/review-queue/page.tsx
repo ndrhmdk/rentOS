@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AdminIcon } from "@/components/admin/admin-icons";
 import { AdminPreviewReset } from "@/components/admin/admin-preview-reset";
@@ -167,20 +167,13 @@ export default function ReviewQueuePage() {
             <p className="admin-queueResults" role="status">
               Hiển thị {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, total)} / {total} tin
             </p>
-            <label className="admin-queuePageSize">
-              Số tin mỗi trang
-              <select
-                value={pageSize}
-                onChange={(event) => {
-                  setPageSize(Number(event.target.value));
-                  setPage(1);
-                }}
-              >
-                <option value={2}>2</option>
-                <option value={4}>4</option>
-                <option value={8}>8</option>
-              </select>
-            </label>
+            <div className="admin-queuePageSize">
+              <span id="queue-page-size-label">Số tin mỗi trang</span>
+              <PageSizeSelect value={pageSize} onChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }} />
+            </div>
             <div className="admin-queuePageControls">
               <button
                 type="button"
@@ -204,4 +197,64 @@ export default function ReviewQueuePage() {
       {adminPreviewMode && <AdminPreviewReset />}
     </section>
   );
+}
+
+const pageSizes = [2, 4, 8];
+
+function PageSizeSelect({ value, onChange }: { value: number; onChange: (size: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const container = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const options = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    options.current[active]?.focus();
+  }, [open, active]);
+
+  useEffect(() => {
+    if (!open) return;
+    function closeOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !container.current?.contains(event.target)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [open]);
+
+  return <div ref={container} className="admin-queuePageSizeSelect"
+    onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}
+    onKeyDown={(event) => {
+      if (event.key === "Escape" && open) {
+        event.preventDefault();
+        setOpen(false);
+        trigger.current?.focus();
+      } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (!open) {
+          setActive(pageSizes.indexOf(value));
+          setOpen(true);
+        } else setActive((index) => (index + (event.key === "ArrowDown" ? 1 : -1) + pageSizes.length) % pageSizes.length);
+      } else if (open && (event.key === "Home" || event.key === "End")) {
+        event.preventDefault();
+        setActive(event.key === "Home" ? 0 : pageSizes.length - 1);
+      } else if (open && pageSizes.some((size) => String(size) === event.key)) {
+        event.preventDefault();
+        setActive(pageSizes.indexOf(Number(event.key)));
+      }
+    }}>
+    <button ref={trigger} type="button" className="admin-queuePageSizeTrigger"
+      aria-labelledby="queue-page-size-label queue-page-size-value" aria-haspopup="listbox" aria-expanded={open} aria-controls="queue-page-size-options"
+      onClick={() => { setActive(pageSizes.indexOf(value)); setOpen((current) => !current); }}>
+      <span id="queue-page-size-value">{value}</span>
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d="m5 7.5 5 5 5-5" /></svg>
+    </button>
+    {open && <div id="queue-page-size-options" role="listbox" aria-labelledby="queue-page-size-label" className="admin-queuePageSizeOptions">
+      {pageSizes.map((size, index) => <button key={size} ref={(element) => { options.current[index] = element; }}
+        type="button" role="option" aria-selected={value === size} tabIndex={-1}
+        onClick={() => { setOpen(false); trigger.current?.focus(); onChange(size); }}>
+        {size}
+      </button>)}
+    </div>}
+  </div>;
 }

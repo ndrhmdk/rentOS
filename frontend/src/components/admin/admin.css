@@ -151,7 +151,15 @@
 .admin-queuePagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-top: 20px; color: var(--admin-muted); font-size: 13px; }
 .admin-queueResults { margin: 0; }
 .admin-queuePageSize { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-.admin-queuePageSize select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--admin-border); border-radius: 10px; background: var(--surface-card); color: var(--text-primary); font: inherit; }
+.admin-queuePageSizeSelect { position: relative; flex-shrink: 0; }
+.admin-queuePageSizeTrigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 64px; height: 36px; padding: 0 10px; border: 1px solid var(--admin-border); border-radius: 10px; background: var(--surface-card); color: var(--admin-text); font: inherit; font-weight: 600; cursor: pointer; }
+.admin-queuePageSizeTrigger:hover, .admin-queuePageSizeTrigger[aria-expanded="true"] { border-color: var(--action-primary); }
+.admin-queuePageSizeTrigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.admin-queuePageSizeOptions { position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; display: grid; gap: 2px; width: 64px; padding: 4px; border: 1px solid var(--admin-border); border-radius: 10px; background: var(--surface-card); box-shadow: 0 6px 20px rgb(9 18 22 / 12%); }
+.admin-queuePageSizeOptions button { display: grid; place-items: center; min-height: 32px; padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--admin-text); font: inherit; cursor: pointer; }
+.admin-queuePageSizeOptions button:hover, .admin-queuePageSizeOptions button[aria-selected="true"] { background: var(--surface-brand-soft); color: var(--admin-link); }
+.admin-queuePageSizeOptions button[aria-selected="true"] { font-weight: 600; }
+.admin-queuePageSizeTrigger:focus-visible, .admin-queuePageSizeOptions button:focus-visible { outline: 2px solid var(--action-primary); outline-offset: 2px; }
 .admin-queuePageControls { display: flex; align-items: center; gap: 12px; }
 .admin-queuePageControls button { min-height: 44px; padding: 8px 16px; border: 1px solid var(--admin-border); border-radius: 10px; background: var(--surface-card); color: var(--admin-link); font: inherit; font-weight: 600; }
 .admin-queuePageControls button:enabled:hover { background: var(--surface-brand-soft); }
