@@ -20,7 +20,7 @@ class OwnerPropertyMetadataTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.key', 'air_conditioning')
-            ->assertJsonPath('data.0.label', 'Air conditioning');
+            ->assertJsonPath('data.0.label', 'Điều hòa');
     }
 
     public function test_property_policy_and_amenity_text_is_normalized_and_audited(): void

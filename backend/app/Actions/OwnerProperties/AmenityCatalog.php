@@ -14,27 +14,72 @@ class AmenityCatalog
         'wifi' => [
             'label' => 'Wi-Fi',
             'scopes' => ['shared', 'unit'],
-            'aliases' => ['wi-fi', 'wifi'],
+            'aliases' => ['wi-fi', 'wireless', 'internet'],
         ],
         'elevator' => [
-            'label' => 'Elevator',
+            'label' => 'Thang máy',
             'scopes' => ['shared'],
             'aliases' => ['lift'],
         ],
         'air_conditioning' => [
-            'label' => 'Air conditioning',
+            'label' => 'Điều hòa',
             'scopes' => ['unit'],
-            'aliases' => ['ac', 'aircon', 'air conditioning'],
+            'aliases' => ['aircon', 'air con', 'ac', 'máy lạnh'],
         ],
         'parking' => [
-            'label' => 'Parking',
-            'scopes' => ['shared', 'unit'],
-            'aliases' => [],
+            'label' => 'Chỗ đỗ xe',
+            'scopes' => ['shared'],
+            'aliases' => ['motorbike parking', 'car parking'],
+        ],
+        'pool' => [
+            'label' => 'Hồ bơi',
+            'scopes' => ['shared'],
+            'aliases' => ['swimming pool'],
+        ],
+        'gym' => [
+            'label' => 'Phòng tập',
+            'scopes' => ['shared'],
+            'aliases' => ['fitness room'],
+        ],
+        'shared_laundry' => [
+            'label' => 'Khu giặt chung',
+            'scopes' => ['shared'],
+            'aliases' => ['shared washing area'],
+        ],
+        'security' => [
+            'label' => 'An ninh',
+            'scopes' => ['shared'],
+            'aliases' => ['security cameras', 'guard'],
+        ],
+        'balcony' => [
+            'label' => 'Ban công',
+            'scopes' => ['unit'],
+            'aliases' => ['terrace'],
+        ],
+        'kitchen' => [
+            'label' => 'Nhà bếp',
+            'scopes' => ['unit'],
+            'aliases' => ['cooking area'],
         ],
         'washing_machine' => [
-            'label' => 'Washing machine',
+            'label' => 'Máy giặt riêng',
             'scopes' => ['unit'],
             'aliases' => ['washer'],
+        ],
+        'refrigerator' => [
+            'label' => 'Tủ lạnh',
+            'scopes' => ['unit'],
+            'aliases' => ['fridge'],
+        ],
+        'water_heater' => [
+            'label' => 'Bình nước nóng',
+            'scopes' => ['unit'],
+            'aliases' => ['hot water'],
+        ],
+        'furnished' => [
+            'label' => 'Có nội thất',
+            'scopes' => ['unit'],
+            'aliases' => ['furniture'],
         ],
     ];
 
@@ -200,7 +245,7 @@ class AmenityCatalog
             if (! is_string($key) || ! self::supportsScope($key, $scope)) {
                 $validator->errors()->add(
                     "{$attribute}.standard.{$key}",
-                    'Choose a canonical amenity available in this scope.',
+                    'Vui lòng chọn tiện ích tiêu chuẩn thuộc phạm vi này.',
                 );
 
                 continue;
@@ -209,7 +254,7 @@ class AmenityCatalog
             if (is_array($item) && is_string($item['details'] ?? null) && ! self::isPlainText($item['details'])) {
                 $validator->errors()->add(
                     "{$attribute}.standard.{$key}.details",
-                    'Amenity details must be plain text.',
+                    'Thông tin tiện ích chỉ được chứa văn bản thuần.',
                 );
             }
         }
@@ -218,7 +263,7 @@ class AmenityCatalog
             if (is_string($label) && ! self::isPlainText($label)) {
                 $validator->errors()->add(
                     "{$attribute}.custom.{$index}",
-                    'Custom amenity labels must be plain text.',
+                    'Tên tiện ích khác chỉ được chứa văn bản thuần.',
                 );
             }
         }
