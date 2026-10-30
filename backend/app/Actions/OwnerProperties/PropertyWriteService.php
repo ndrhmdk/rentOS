@@ -678,7 +678,7 @@ class PropertyWriteService
                     'label' => $unit->label,
                     'operational_status' => $unit->operational_status,
                     'is_marketed' => $unit->is_marketed,
-                    'archived_at' => $unit->archived_at?->toISOString(),
+                    'archived_at' => $unit->archived_at->toISOString(),
                     'property_content_revision' => $property->content_revision,
                 ],
                 correlationId: $correlationId
@@ -1038,7 +1038,7 @@ class PropertyWriteService
                 action: 'property_media.removed',
                 before: $before,
                 after: [
-                    'deleted_at' => $media->deleted_at?->toISOString(),
+                    'deleted_at' => $media->deleted_at->toISOString(),
                     'revision' => $media->revision,
                     'property_content_revision' => $property->content_revision,
                 ],
