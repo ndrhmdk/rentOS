@@ -192,6 +192,25 @@ export async function resendVerification(): Promise<void> {
   await request<void>("/email/verification-notification", { method: "POST", body: "{}" });
 }
 
+export async function forgotPassword(input: { email: string }): Promise<{ message: string }> {
+  return request<{ message: string }>("/forgot-password", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function resetPassword(input: {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}): Promise<{ message: string }> {
+  return request<{ message: string }>("/reset-password", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function getTenantTenancies(): Promise<TenantTenancy[]> {
   return request<TenantTenancy[]>("/api/v1/tenant/tenancies");
 }
