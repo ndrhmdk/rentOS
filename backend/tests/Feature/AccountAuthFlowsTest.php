@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -276,7 +277,7 @@ class AccountAuthFlowsTest extends TestCase
         $this->assertNull($other->fresh()->email_verified_at);
     }
 
-    public function test_resend_is_throttled_and_reset_email_endpoints_are_unavailable(): void
+    public function test_resend_is_throttled_and_password_reset_requests_are_supported(): void
     {
         Notification::fake();
         $user = User::factory()->unverified()->create();
@@ -285,8 +286,10 @@ class AccountAuthFlowsTest extends TestCase
         }
         $this->postJson('/email/verification-notification')->assertTooManyRequests();
         Notification::assertSentToTimes($user, VerifyEmail::class, 6);
-        $this->postJson('/forgot-password', ['email' => $user->email])->assertNotFound();
-        $this->postJson('/reset-password', [])->assertNotFound();
+        $this->postJson('/logout')->assertNoContent();
+        $this->postJson('/forgot-password', ['email' => $user->email])->assertAccepted();
+        Notification::assertSentTo($user, ResetPassword::class);
+        $this->postJson('/reset-password', [])->assertUnprocessable();
     }
 
     public function test_profile_ignores_empty_prohibited_fields_and_preserves_identity(): void

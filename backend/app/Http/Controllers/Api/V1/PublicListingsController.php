@@ -68,7 +68,9 @@ class PublicListingsController extends Controller
 
             $media = $this->selectedMedia($model->property_id);
             $model->setAttribute('public_gallery', $this->mediaPayload($media->whereNull('unit_id')));
-            $model->setAttribute('public_shared_amenities', $this->amenityPayload($model->property->shared_amenities['standard'] ?? []));
+            $sharedAmenities = $this->documentAsArray($model->property->shared_amenities);
+            $model->setAttribute('public_shared_amenities', $this->amenityPayload($sharedAmenities['standard'] ?? []));
+            $model->setAttribute('public_custom_amenities', $sharedAmenities['custom'] ?? []);
             $model->setAttribute('public_units', $units);
             $model->setAttribute('search_summary', $this->summary($units, null, $model));
 
@@ -97,6 +99,20 @@ class PublicListingsController extends Controller
             page: $request->integer('page', 1),
             perPage: $request->integer('per_page', 12),
         );
+    }
+
+    /** @return array<string, mixed> */
+    private function documentAsArray(mixed $document): array
+    {
+        if (is_array($document)) {
+            return $document;
+        }
+
+        if (is_object($document)) {
+            return json_decode(json_encode($document, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+        }
+
+        return [];
     }
 
     /**
@@ -194,11 +210,13 @@ class PublicListingsController extends Controller
                 ? $described['available_now']
                 : UnitAvailability::stayIsFree($moveInDate, (int) $unit->minimum_rental_months, $unitBlocks);
 
-            $standard = $unit->amenities['standard'] ?? [];
+            $amenities = $this->documentAsArray($unit->amenities);
+            $policyOverrides = $this->documentAsArray($unit->policy_overrides);
+            $standard = $amenities['standard'] ?? [];
             $unit->setAttribute('public_availability', $described);
-            $unit->setAttribute('effective_pets', $unit->policy_overrides['pets'] ?? $property->policies['pets'] ?? null);
+            $unit->setAttribute('effective_pets', $policyOverrides['pets'] ?? $property->policies['pets'] ?? null);
             $unit->setAttribute('public_amenities', $this->amenityPayload(is_array($standard) ? $standard : []));
-            $unit->setAttribute('public_custom_amenities', $unit->amenities['custom'] ?? []);
+            $unit->setAttribute('public_custom_amenities', $amenities['custom'] ?? []);
             $unit->setAttribute('public_photos', $this->mediaPayload($media->get((string) $unit->id, collect())));
         }
     }
