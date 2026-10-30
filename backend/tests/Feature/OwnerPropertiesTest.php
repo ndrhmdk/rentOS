@@ -923,6 +923,7 @@ class OwnerPropertiesTest extends TestCase
         $propertyId = $this->createProperty($owner->id);
         $firstMediaId = $this->createMedia($owner->id, $propertyId, 1);
         $secondMediaId = $this->createMedia($owner->id, $propertyId, 0);
+        Http::fake(fn () => Http::response([], 200));
 
         $this->actingAs($owner)
             ->getJson("/api/v1/owner/properties/{$propertyId}/media")

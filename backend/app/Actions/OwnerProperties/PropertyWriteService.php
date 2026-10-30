@@ -1152,7 +1152,24 @@ class PropertyWriteService
         }
 
         if (! $uploadResponse->successful()) {
-            abort(502, 'Photo upload failed.');
+            $storageError = $uploadResponse->json('message');
+            $storageError = is_string($storageError) && $storageError !== ''
+                ? $storageError
+                : trim($uploadResponse->body());
+            $storageError = mb_substr($storageError, 0, 500);
+
+            Log::warning('Supabase Storage rejected a property photo upload.', [
+                'status' => $uploadResponse->status(),
+                'bucket' => $bucket,
+                'storage_path' => $storagePath,
+                'response' => $storageError,
+            ]);
+
+            $message = app()->environment('local') && $storageError !== ''
+                ? 'Photo upload failed: '.mb_substr($storageError, 0, 300)
+                : 'Photo upload failed.';
+
+            abort(502, $message);
         }
 
         try {

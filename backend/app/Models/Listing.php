@@ -87,9 +87,7 @@ class Listing extends Model
                         ->orWhereNotNull('archived_at')
                         ->orWhereNull('description')->orWhereRaw("btrim(description) = ''")
                         ->orWhereNull('area_m2')->orWhereNull('advertised_monthly_rent')
-                        ->orWhereNull('deposit')->orWhereNull('max_occupants')
-                        ->orWhereDoesntHave('media', fn (Builder $media) => $media
-                            ->where('is_selected_for_listing', true)->whereNull('deleted_at')->whereNull('purged_at'));
+                        ->orWhereNull('deposit')->orWhereNull('max_occupants');
                 }));
     }
 }

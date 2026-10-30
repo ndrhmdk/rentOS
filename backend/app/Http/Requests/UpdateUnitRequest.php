@@ -123,7 +123,14 @@ class UpdateUnitRequest extends FormRequest
 
             foreach ($requiredWhenMarketed as $field => $value) {
                 if ($value === null || ($field === 'description' && trim((string) $value) === '')) {
-                    $validator->errors()->add($field, 'This field is required when the unit is marketed.');
+                    $validator->errors()->add($field, match ($field) {
+                        'description' => 'Nhập mô tả phòng trước khi chọn phòng này để đăng tin.',
+                        'area_m2' => 'Nhập diện tích phòng trước khi chọn phòng này để đăng tin.',
+                        'advertised_monthly_rent' => 'Nhập giá thuê tháng trước khi chọn phòng này để đăng tin.',
+                        'deposit' => 'Nhập tiền đặt cọc trước khi chọn phòng này để đăng tin.',
+                        'max_occupants' => 'Nhập số người tối đa trước khi chọn phòng này để đăng tin.',
+                        default => 'Hoàn thiện thông tin trước khi chọn phòng này để đăng tin.',
+                    });
                 }
             }
         });

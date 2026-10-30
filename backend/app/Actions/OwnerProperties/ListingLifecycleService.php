@@ -243,32 +243,27 @@ class ListingLifecycleService
         $missing = [];
         foreach (['address_line', 'city', 'description'] as $field) {
             if (! is_string($property->{$field}) || trim($property->{$field}) === '') {
-                $missing["property.{$field}"] = 'Complete this property field before submitting or publishing.';
+                $missing["property.{$field}"] = 'Vui lòng hoàn thiện thông tin bất động sản này trước khi gửi duyệt hoặc đăng tin.';
             }
         }
         if (trim($listing->title) === '' || trim($listing->description) === '') {
-            $missing['listing'] = 'Add a listing title and description.';
+            $missing['listing'] = 'Vui lòng nhập tiêu đề và mô tả tin đăng.';
         }
         $this->assertCover($property, $listing->cover_media_id);
         if ($listing->cover_media_id === null) {
-            $missing['cover_media_id'] = 'Select a shared property photo as the listing cover.';
+            $missing['cover_media_id'] = 'Vui lòng chọn một ảnh dùng chung làm ảnh bìa tin đăng.';
         }
 
         $marketed = DB::table('units')->where('property_id', $property->id)->where('is_marketed', true)->whereNull('archived_at')->get();
         if ($marketed->isEmpty()) {
-            $missing['units'] = 'Mark at least one complete unit for listing.';
+            $missing['units'] = 'Bật mục “Quảng cáo” cho ít nhất một căn muốn đăng tin.';
         }
         foreach ($marketed as $unit) {
             if ($unit->operational_status !== 'READY' || ! is_string($unit->description) || trim($unit->description) === ''
                 || $unit->area_m2 === null || $unit->advertised_monthly_rent === null || $unit->deposit === null || $unit->max_occupants === null) {
-                $missing["units.{$unit->id}"] = 'Every marketed unit must be ready and have complete details.';
+                $missing["units.{$unit->id}"] = 'Mỗi căn đang bật “Quảng cáo” cần ở trạng thái Sẵn sàng và có mô tả, diện tích, giá thuê, tiền cọc, số người tối đa.';
 
                 continue;
-            }
-            $hasPhoto = DB::table('property_media')->where('property_id', $property->id)->where('unit_id', $unit->id)
-                ->where('is_selected_for_listing', true)->whereNull('deleted_at')->whereNull('purged_at')->exists();
-            if (! $hasPhoto) {
-                $missing["units.{$unit->id}.photos"] = 'Add a selected live photo for each marketed unit.';
             }
         }
         if ($missing !== []) {

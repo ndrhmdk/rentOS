@@ -32,6 +32,7 @@ class PropertyMediaResource extends JsonResource
             'revision' => $this->revision,
             'mime_type' => $this->mime_type,
             'size_bytes' => $this->size_bytes,
+            'preview_url' => $this->preview_url,
             'created_at' => $this->created_at,
         ];
     }

@@ -21,10 +21,14 @@ use App\Models\Property;
 use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class OwnerPropertiesController extends Controller
@@ -178,6 +182,8 @@ class OwnerPropertiesController extends Controller
             ->orderBy('id')
             ->get();
 
+        $this->attachPreviewUrls($media);
+
         return PropertyMediaResource::collection($media)
             ->response()
             ->header('Cache-Control', 'private, no-store');
@@ -214,5 +220,75 @@ class OwnerPropertiesController extends Controller
         );
 
         return new PropertyMediaResource($result);
+    }
+
+    /**
+     * Attach short-lived URLs for viewing objects in the private media bucket.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, PropertyMedia>  $media
+     */
+    private function attachPreviewUrls(EloquentCollection $media): void
+    {
+        if ($media->isEmpty()) {
+            return;
+        }
+
+        $supabaseUrl = config('services.supabase.url');
+        $serviceRoleKey = config('services.supabase.service_role_key');
+        $bucket = config('services.supabase.storage.bucket');
+
+        if (! is_string($supabaseUrl) || ! is_string($serviceRoleKey) || ! is_string($bucket)
+            || $supabaseUrl === '' || $serviceRoleKey === '' || $bucket === '') {
+            return;
+        }
+
+        $previewUrls = [];
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$serviceRoleKey,
+                'apikey' => $serviceRoleKey,
+            ])->connectTimeout(5)->timeout(10)->post(
+                rtrim($supabaseUrl, '/').'/storage/v1/object/sign/'.rawurlencode($bucket),
+                [
+                    'expiresIn' => 3600,
+                    'paths' => $media->pluck('storage_path')->all(),
+                ],
+            );
+
+            if (! $response->successful()) {
+                Log::warning('Could not create property photo preview URLs.', [
+                    'status' => $response->status(),
+                    'bucket' => $bucket,
+                    'response' => mb_substr($response->body(), 0, 500),
+                ]);
+            } else {
+                $storageBaseUrl = rtrim($supabaseUrl, '/').'/storage/v1';
+
+                $signedItems = $response->json();
+
+                foreach (is_array($signedItems) ? $signedItems : [] as $item) {
+                    if (! is_array($item) || ! is_string($item['path'] ?? null) || ! is_string($item['signedURL'] ?? null)) {
+                        continue;
+                    }
+
+                    $signedUrl = $item['signedURL'];
+                    if (! str_starts_with($signedUrl, 'http://') && ! str_starts_with($signedUrl, 'https://')) {
+                        $relativeUrl = preg_replace('#^/storage/v1/#', '', $signedUrl);
+                        $signedUrl = $storageBaseUrl.'/'.ltrim((string) $relativeUrl, '/');
+                    }
+
+                    $previewUrls[$item['path']] = $signedUrl;
+                }
+            }
+        } catch (ConnectionException $exception) {
+            Log::warning('Could not connect to Supabase Storage to create property photo preview URLs.', [
+                'exception' => $exception::class,
+            ]);
+        }
+
+        foreach ($media as $photo) {
+            $photo->setAttribute('preview_url', $previewUrls[$photo->storage_path] ?? null);
+        }
     }
 }
