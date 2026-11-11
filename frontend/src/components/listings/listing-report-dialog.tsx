@@ -55,7 +55,6 @@ export function ListingReportDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-
     if (!reason) {
       setError("Chọn lý do báo cáo.");
       return;

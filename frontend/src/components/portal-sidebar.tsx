@@ -4,10 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useNotificationInbox } from "@/lib/notification-inbox";
 import {
   HelpIcon,
   OWNER_PORTAL_CONFIG,
   TENANT_PORTAL_CONFIG,
+  type NavBadge,
+  type NavigationItem,
 } from "@/config/navigation";
 
 export function PortalSidebar() {
@@ -17,6 +20,19 @@ export function PortalSidebar() {
 
   const isOwnerView = pathname.startsWith("/owner");
   const portalConfig = isOwnerView ? OWNER_PORTAL_CONFIG : TENANT_PORTAL_CONFIG;
+  const inbox = useNotificationInbox(
+    user?.id,
+    isOwnerView ? "OWNER" : "TENANT",
+  );
+
+  function badgeFor(item: NavigationItem): NavBadge | undefined {
+    const isNotifications = item.id === "owner-notifications"
+      || item.id === "tenant-notifications";
+    if (!isNotifications) return item.badge;
+    if (inbox.unread < 1) return undefined;
+
+    return { count: inbox.unread, color: "blue" };
+  }
 
   const sidebarContent = (
     <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none bg-[#0e1a20] text-[#BCD0DB]">
@@ -31,8 +47,10 @@ export function PortalSidebar() {
         {/* Navigation Links */}
         <nav className="space-y-1.5" aria-label="Điều hướng các Cổng">
           {portalConfig.items.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href
+              || ((item.id === "tenant-requests" || item.id === "owner-requests") && pathname.startsWith(item.href + "/"));
             const Icon = item.icon;
+            const badge = badgeFor(item);
 
             return (
               <Link
@@ -54,13 +72,13 @@ export function PortalSidebar() {
                   />
                   <span className="truncate">{item.name}</span>
                 </div>
-                {item.badge && (
+                {badge && (
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white shrink-0 ${
-                      item.badge.color === "orange" ? "bg-[#c2410c]" : "bg-[#3368a0]"
+                      badge.color === "orange" ? "bg-[#c2410c]" : "bg-[#3368a0]"
                     }`}
                   >
-                    {item.badge.count}
+                    {badge.count}
                   </span>
                 )}
               </Link>
@@ -74,7 +92,8 @@ export function PortalSidebar() {
             Một tài khoản, hai vai trò.
           </strong>
           <p className="text-[11px] text-[#aeb8c6] leading-relaxed mb-3">
-            Dễ dàng chuyển giữa tìm nhà và quản lý bất động sản cho thuê của bạn.
+            Dễ dàng chuyển giữa tìm nhà và quản lý bất động sản cho thuê của
+            bạn.
           </p>
           <Link
             href={portalConfig.roleSwitcher.targetHref}
@@ -127,7 +146,13 @@ export function PortalSidebar() {
           aria-expanded={mobileOpen}
           aria-label="Mở menu chuyển Cổng"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -135,7 +160,8 @@ export function PortalSidebar() {
           <span>Danh mục Cổng</span>
         </button>
         <span className="text-xs text-[#BCD0DB] font-medium">
-          {portalConfig.items.find((i) => i.href === pathname)?.name || portalConfig.sectionTitle}
+          {portalConfig.items.find((i) => i.href === pathname)?.name ||
+            portalConfig.sectionTitle}
         </span>
       </div>
 
@@ -155,7 +181,13 @@ export function PortalSidebar() {
                 className="p-2 text-[#BCD0DB] hover:text-white rounded-md hover:bg-white/10"
                 aria-label="Đóng menu"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
