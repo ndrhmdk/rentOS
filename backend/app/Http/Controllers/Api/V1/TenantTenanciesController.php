@@ -55,7 +55,7 @@ class TenantTenanciesController extends Controller
                 'version_number' => $result['contract']->version_number,
                 'replayed' => $result['replayed'],
             ],
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function declineContract(
@@ -84,6 +84,6 @@ class TenantTenanciesController extends Controller
                 'reason' => $result['contract']->tenant_rejection_reason,
                 'replayed' => $result['replayed'],
             ],
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 }
