@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tenancies\RequestTenancyRenewal;
+use App\Actions\Tenancies\ResolveTenancyRenewalRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTenancyRenewalRequest;
+use App\Http\Requests\WithdrawTenancyRenewalRequest;
 use App\Models\User;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
@@ -41,5 +43,43 @@ class TenantTenancyRenewalRequestsController extends Controller
             ],
         ])->setStatusCode($result['created'] ? 201 : 200)
             ->header('Cache-Control', 'private, no-store');
+    }
+
+    #[Response(200, description: 'Đề nghị gia hạn đã được rút.', type: 'array{data: array{id: string, tenancy_id: string, status: "CANCELLED", reviewed_at: string, replayed: bool}}')]
+    #[Response(409, description: 'Đề nghị gia hạn không còn chờ xử lý.', type: 'array{message: string}')]
+    public function withdraw(
+        WithdrawTenancyRenewalRequest $request,
+        string $tenancy,
+        string $renewalRequest,
+        ResolveTenancyRenewalRequest $resolve,
+    ): JsonResponse {
+        /** @var User $tenant */
+        $tenant = $request->user();
+        $result = $resolve->handle(
+            $tenant,
+            strtolower($tenancy),
+            strtolower($renewalRequest),
+            'withdraw',
+            $request->validated(),
+        );
+
+        return $this->decisionResponse($result);
+    }
+
+    /**
+     * @param  array{renewal_request: object, tenancy: object, replayed: bool}  $result
+     */
+    private function decisionResponse(array $result): JsonResponse
+    {
+        return response()->json([
+            'data' => [
+                'id' => $result['renewal_request']->id,
+                'tenancy_id' => $result['renewal_request']->tenancy_id,
+                'status' => $result['renewal_request']->status,
+                'reviewed_at' => $result['renewal_request']->reviewed_at,
+                'blocked_end_date' => $result['tenancy']->blocked_end_date,
+                'replayed' => $result['replayed'],
+            ],
+        ])->header('Cache-Control', 'private, no-store');
     }
 }

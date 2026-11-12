@@ -15,6 +15,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
         [TenantTenancyRenewalRequestsController::class, 'store'],
     )->whereUuid('tenancy')->name('tenant.tenancies.renewal-requests.store');
     Route::post(
+        '/tenant/tenancies/{tenancy}/renewal-requests/{renewalRequest}/withdraw',
+        [TenantTenancyRenewalRequestsController::class, 'withdraw'],
+    )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenant.tenancies.renewal-requests.withdraw');
+    Route::post(
         '/tenant/tenancies/{tenancy}/contracts/{contract}/confirm',
         [TenantTenanciesController::class, 'confirmContract'],
     )->name('tenant.tenancies.contracts.confirm');
