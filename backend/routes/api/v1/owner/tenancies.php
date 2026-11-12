@@ -11,6 +11,10 @@ Route::middleware('auth:sanctum')
     ->name('api.v1.owner.')
     ->group(function (): void {
         Route::post(
+            '/owner/tenancies/{tenancy}/renewal-requests/{renewalRequest}/proposal',
+            [OwnerTenancyRenewalRequestsController::class, 'propose'],
+        )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenancies.renewal-requests.proposal');
+        Route::post(
             '/owner/tenancies/{tenancy}/renewal-requests/{renewalRequest}/reject',
             [OwnerTenancyRenewalRequestsController::class, 'reject'],
         )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenancies.renewal-requests.reject');
