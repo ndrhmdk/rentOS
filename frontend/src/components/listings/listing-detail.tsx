@@ -320,7 +320,9 @@ export function ListingDetailView({
       </div>
       {reportOpen ? (
         <ListingReportDialog
+          listingId={listing.id}
           listingTitle={listing.title}
+          isSignedIn={isSignedIn}
           onClose={() => setReportOpen(false)}
         />
       ) : null}
