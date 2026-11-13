@@ -15,6 +15,10 @@ Route::middleware('auth:sanctum')
             [OwnerTenancyRenewalRequestsController::class, 'propose'],
         )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenancies.renewal-requests.proposal');
         Route::post(
+            '/owner/tenancies/{tenancy}/renewal-requests/{renewalRequest}/corrections',
+            [OwnerTenancyRenewalRequestsController::class, 'correct'],
+        )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenancies.renewal-requests.corrections');
+        Route::post(
             '/owner/tenancies/{tenancy}/renewal-requests/{renewalRequest}/reject',
             [OwnerTenancyRenewalRequestsController::class, 'reject'],
         )->whereUuid('tenancy')->whereUuid('renewalRequest')->name('tenancies.renewal-requests.reject');
