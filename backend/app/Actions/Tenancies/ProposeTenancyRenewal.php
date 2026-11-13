@@ -40,10 +40,24 @@ class ProposeTenancyRenewal
         $context = DB::table('tenancies')
             ->join('units', 'units.id', '=', 'tenancies.unit_id')
             ->where('tenancies.id', $tenancyId)
-            ->select('tenancies.unit_id', 'units.property_id')
+            ->join('properties', 'properties.id', '=', 'units.property_id')
+            ->select(
+                'tenancies.unit_id',
+                'units.property_id',
+                'properties.owner_id',
+                'tenancies.confirmed_end_date',
+            )
             ->first();
 
         abort_if($context === null, 404);
+        abort_unless($context->owner_id === $owner->id, 404);
+        abort_unless($context->confirmed_end_date !== null, 409);
+
+        app(ExpireTenancyReservation::class)->reapDueConflicts(
+            (string) $context->unit_id,
+            CarbonImmutable::parse($context->confirmed_end_date)->addDay()->toDateString(),
+            $attributes['end_date'],
+        );
 
         $contractId = (string) Str::uuid();
 

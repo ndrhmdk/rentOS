@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tenancies\ConfirmTenancyContract;
 use App\Actions\Tenancies\DeclineTenancyContract;
+use App\Actions\Tenancies\ExpireTenancyReservation;
 use App\Actions\Tenancies\ListParticipantTenancies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmTenancyContractRequest;
@@ -34,9 +35,12 @@ class TenantTenanciesController extends Controller
         string $tenancy,
         string $contract,
         ConfirmTenancyContract $confirmation,
+        ExpireTenancyReservation $expiry,
     ): JsonResponse {
         /** @var User $tenant */
         $tenant = $request->user();
+
+        $expiry->handle(strtolower($tenancy), strtolower($contract), actor: $tenant);
 
         $result = $confirmation->handle(
             $tenant,
@@ -63,9 +67,12 @@ class TenantTenanciesController extends Controller
         string $tenancy,
         string $contract,
         DeclineTenancyContract $decline,
+        ExpireTenancyReservation $expiry,
     ): JsonResponse {
         /** @var User $tenant */
         $tenant = $request->user();
+
+        $expiry->handle(strtolower($tenancy), strtolower($contract), actor: $tenant);
 
         $result = $decline->handle(
             $tenant,
