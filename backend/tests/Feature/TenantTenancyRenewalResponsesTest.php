@@ -192,8 +192,22 @@ class TenantTenancyRenewalResponsesTest extends TestCase
         $this->assertDatabaseHas('tenancies', [
             'id' => $case['tenancy']->id,
             'confirmed_end_date' => $case['end_date'],
-            'blocked_end_date' => $case['proposal_end_date'],
-            'pending_contract_id' => $case['contract']->id,
+            'blocked_start_date' => $case['start_date'],
+            'blocked_end_date' => $case['end_date'],
+            'latest_confirmed_contract_id' => $case['basis']->id,
+            'pending_contract_id' => null,
+            'confirmation_expires_at' => null,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => null,
+            'entity_type' => 'tenancy_renewal_request',
+            'entity_id' => $case['renewal']->id,
+            'action' => 'tenancy.renewal.proposal.expired',
+            'correlation_id' => $case['contract']->id,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => $case['tenant']->id,
+            'event_key' => 'tenancy.renewal.proposal.expired:'.$case['contract']->id,
         ]);
         $this->assertDatabaseHas('tenancy_contracts', [
             'id' => $case['contract']->id,
