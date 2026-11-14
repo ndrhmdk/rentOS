@@ -270,7 +270,7 @@ export function ListingDetailView({
                 </p>
               ) : null}
               {listing.property.description &&
-              listing.property.description !== listing.description ? (
+                listing.property.description !== listing.description ? (
                 <p className="text-base leading-7 text-[#2b3544]">
                   {listing.property.description}
                 </p>
@@ -320,7 +320,9 @@ export function ListingDetailView({
       </div>
       {reportOpen ? (
         <ListingReportDialog
+          listingId={listing.id}
           listingTitle={listing.title}
+          isSignedIn={isSignedIn}
           onClose={() => setReportOpen(false)}
         />
       ) : null}
