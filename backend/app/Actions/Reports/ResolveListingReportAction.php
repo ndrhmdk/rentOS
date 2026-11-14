@@ -2,10 +2,10 @@
 
 namespace App\Actions\Reports;
 
+use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
 use App\Models\ListingReport;
-use App\Models\NotificationOutbox;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -99,17 +99,16 @@ class ResolveListingReportAction
                     // Notify owner if available
                     $ownerId = $lockedListing->property?->owner_id;
                     if ($ownerId) {
-                        NotificationOutbox::create([
-                            'event_key' => 'listing.suspended:'.$lockedListing->id.':'.$now->timestamp,
-                            'recipient_id' => $ownerId,
-                            'event_type' => 'listing.suspended',
-                            'payload' => [
-                                'listing_id' => $lockedListing->id,
-                                'suspension_reason' => $reason,
-                                'suspended_at' => $now->toIso8601String(),
-                            ],
-                            'status' => 'PENDING',
-                        ]);
+                        app(RecordNotification::class)->record(
+                            recipientId: (string) $ownerId,
+                            audience: 'OWNER',
+                            eventKey: 'listing.suspended:'.$lockedListing->id.':'.$now->timestamp,
+                            title: 'Tin đăng đã bị đình chỉ',
+                            body: 'Tin đăng của bạn đã bị đình chỉ với lý do: '.$reason,
+                            resourceType: 'listing',
+                            resourceId: (string) $lockedListing->id,
+                            actorId: (string) $admin->id,
+                        );
                     }
                 }
             }
@@ -140,18 +139,16 @@ class ResolveListingReportAction
             ]);
 
             // Notify reporter of safe outcome
-            NotificationOutbox::create([
-                'event_key' => 'listing_report.resolved:'.$lockedReport->id.':'.$now->timestamp,
-                'recipient_id' => $lockedReport->reporter_id,
-                'event_type' => 'listing_report.resolved',
-                'payload' => [
-                    'report_id' => $lockedReport->id,
-                    'listing_id' => $lockedReport->listing_id,
-                    'status' => ListingReport::STATUS_RESOLVED,
-                    'resolution_summary' => trim($resolutionSummary),
-                ],
-                'status' => 'PENDING',
-            ]);
+            app(RecordNotification::class)->record(
+                recipientId: (string) $lockedReport->reporter_id,
+                audience: 'TENANT',
+                eventKey: 'listing_report.resolved:'.$lockedReport->id.':'.$now->timestamp,
+                title: 'Báo cáo tin đăng đã được xử lý',
+                body: trim($resolutionSummary),
+                resourceType: 'listing_report',
+                resourceId: (string) $lockedReport->id,
+                actorId: (string) $admin->id,
+            );
 
             return $lockedReport;
         });

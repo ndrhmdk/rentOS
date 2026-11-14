@@ -2,9 +2,9 @@
 
 namespace App\Actions\Reports;
 
+use App\Actions\Notifications\RecordNotification;
 use App\Models\Listing;
 use App\Models\ListingReport;
-use App\Models\NotificationOutbox;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -84,22 +84,15 @@ class SubmitListingReportAction
                 'status' => ListingReport::STATUS_OPEN,
             ]);
 
-            // Determine admin recipient for notification outbox
-            $adminUser = User::query()->where('is_admin', true)->first();
-            $recipientId = $adminUser ? $adminUser->id : $reporter->id;
-
-            NotificationOutbox::create([
-                'event_key' => 'listing_report.created:'.$report->id,
-                'recipient_id' => $recipientId,
-                'event_type' => 'listing_report.created',
-                'payload' => [
-                    'report_id' => $report->id,
-                    'listing_id' => $lockedListing->id,
-                    'reporter_id' => $reporter->id,
-                    'reason_code' => $reasonCode,
-                ],
-                'status' => 'PENDING',
-            ]);
+            // Record notification for admins
+            app(RecordNotification::class)->recordForAdmins(
+                eventKey: 'listing_report.created:'.$report->id,
+                title: 'Báo cáo tin đăng mới',
+                body: 'Tin đăng "'.$lockedListing->title.'" vừa nhận được một báo cáo mới (Mã: '.$reasonCode.').',
+                resourceType: 'listing_report',
+                resourceId: (string) $report->id,
+                actorId: (string) $reporter->id,
+            );
 
             return $report;
         });

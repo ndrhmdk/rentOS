@@ -2,9 +2,9 @@
 
 namespace App\Actions\Reports;
 
+use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
-use App\Models\NotificationOutbox;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -69,17 +69,16 @@ class RestoreListingAction
 
             $ownerId = $lockedListing->property?->owner_id;
             if ($ownerId) {
-                NotificationOutbox::create([
-                    'event_key' => 'listing.restored:'.$lockedListing->id.':'.$now->timestamp,
-                    'recipient_id' => $ownerId,
-                    'event_type' => 'listing.restored',
-                    'payload' => [
-                        'listing_id' => $lockedListing->id,
-                        'restoration_reason' => $trimmedReason,
-                        'restored_at' => $now->toIso8601String(),
-                    ],
-                    'status' => 'PENDING',
-                ]);
+                app(RecordNotification::class)->record(
+                    recipientId: (string) $ownerId,
+                    audience: 'OWNER',
+                    eventKey: 'listing.restored:'.$lockedListing->id.':'.$now->timestamp,
+                    title: 'Tin đăng đã được khôi phục',
+                    body: 'Tin đăng của bạn đã được quản trị viên khôi phục: '.$trimmedReason,
+                    resourceType: 'listing',
+                    resourceId: (string) $lockedListing->id,
+                    actorId: (string) $admin->id,
+                );
             }
 
             return $lockedListing;

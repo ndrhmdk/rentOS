@@ -2,9 +2,9 @@
 
 namespace App\Actions\Reports;
 
+use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\ListingReport;
-use App\Models\NotificationOutbox;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -76,18 +76,16 @@ class DismissListingReportAction
             ]);
 
             // Notify reporter of safe outcome
-            NotificationOutbox::create([
-                'event_key' => 'listing_report.dismissed:'.$lockedReport->id.':'.$now->timestamp,
-                'recipient_id' => $lockedReport->reporter_id,
-                'event_type' => 'listing_report.dismissed',
-                'payload' => [
-                    'report_id' => $lockedReport->id,
-                    'listing_id' => $lockedReport->listing_id,
-                    'status' => ListingReport::STATUS_DISMISSED,
-                    'resolution_summary' => trim($resolutionSummary),
-                ],
-                'status' => 'PENDING',
-            ]);
+            app(RecordNotification::class)->record(
+                recipientId: (string) $lockedReport->reporter_id,
+                audience: 'TENANT',
+                eventKey: 'listing_report.dismissed:'.$lockedReport->id.':'.$now->timestamp,
+                title: 'Báo cáo tin đăng đã bị bác bỏ',
+                body: trim($resolutionSummary),
+                resourceType: 'listing_report',
+                resourceId: (string) $lockedReport->id,
+                actorId: (string) $admin->id,
+            );
 
             return $lockedReport;
         });

@@ -2,9 +2,9 @@
 
 namespace App\Actions\Reports;
 
+use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
-use App\Models\NotificationOutbox;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -69,17 +69,16 @@ class SuspendListingAction
 
             $ownerId = $lockedListing->property?->owner_id;
             if ($ownerId) {
-                NotificationOutbox::create([
-                    'event_key' => 'listing.suspended:'.$lockedListing->id.':'.$now->timestamp,
-                    'recipient_id' => $ownerId,
-                    'event_type' => 'listing.suspended',
-                    'payload' => [
-                        'listing_id' => $lockedListing->id,
-                        'suspension_reason' => $trimmedReason,
-                        'suspended_at' => $now->toIso8601String(),
-                    ],
-                    'status' => 'PENDING',
-                ]);
+                app(RecordNotification::class)->record(
+                    recipientId: (string) $ownerId,
+                    audience: 'OWNER',
+                    eventKey: 'listing.suspended:'.$lockedListing->id.':'.$now->timestamp,
+                    title: 'Tin đăng đã bị đình chỉ',
+                    body: 'Tin đăng của bạn đã bị quản trị viên đình chỉ với lý do: '.$trimmedReason,
+                    resourceType: 'listing',
+                    resourceId: (string) $lockedListing->id,
+                    actorId: (string) $admin->id,
+                );
             }
 
             return $lockedListing;

@@ -61,9 +61,10 @@ class ListingReportsFlowsTest extends TestCase
             'status' => 'OPEN',
         ]);
 
-        // Verify notification outbox recorded for admin
-        $this->assertDatabaseHas('notification_outbox', [
-            'event_type' => 'listing_report.created',
+        // Verify notification recorded for admin
+        $this->assertDatabaseHas('notifications', [
+            'event_key' => 'listing_report.created:'.$response->json('data.id'),
+            'audience' => 'ADMIN',
             'recipient_id' => $admin->id,
         ]);
 
@@ -230,9 +231,10 @@ class ListingReportsFlowsTest extends TestCase
             'actor_id' => $admin->id,
         ]);
 
-        // Verify Notification Outbox for reporter
-        $this->assertDatabaseHas('notification_outbox', [
-            'event_type' => 'listing_report.resolved',
+        // Verify Notification for reporter
+        $this->assertDatabaseHas('notifications', [
+            'event_key' => 'listing_report.resolved:'.$reportId.':'.now()->timestamp,
+            'audience' => 'TENANT',
             'recipient_id' => $reporter->id,
         ]);
     }
