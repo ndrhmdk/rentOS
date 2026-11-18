@@ -25,6 +25,7 @@ const buttonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-4 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-60";
 const secondaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60";
+type PendingPhoto = { file: File; operationId: string };
 
 export function UnitPhotoManager({
   propertyId,
@@ -36,12 +37,12 @@ export function UnitPhotoManager({
   const [property, setProperty] = useState<OwnerPropertyDetail | null>(null);
   const [media, setMedia] = useState<OwnerPropertyMedia[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [pending, setPending] = useState<File[]>([]);
+  const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const pendingUrls = useMemo(
-    () => pending.map((file) => URL.createObjectURL(file)),
+    () => pending.map(({ file }) => URL.createObjectURL(file)),
     [pending],
   );
 
@@ -115,12 +116,38 @@ export function UnitPhotoManager({
     selectedIds.length !== savedIds.length ||
     selectedIds.some((id) => !savedIds.includes(id));
 
+  function addPendingFiles(files: File[]) {
+    const images = files.filter((file) =>
+      /^(image\/jpeg|image\/png|image\/webp)$/.test(file.type),
+    );
+
+    if (images.length < files.length) {
+      toast.error("Chỉ nhận ảnh JPG, PNG hoặc WEBP.");
+    }
+
+    setPending((current) => {
+      const next = [...current];
+      for (const file of images) {
+        const alreadyQueued = next.some(
+          (item) =>
+            item.file.name === file.name &&
+            item.file.size === file.size &&
+            item.file.lastModified === file.lastModified,
+        );
+        if (!alreadyQueued) {
+          next.push({ file, operationId: crypto.randomUUID() });
+        }
+      }
+      return next;
+    });
+  }
+
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!property || pending.length === 0) return;
     if (
       pending.some(
-        (file) =>
+        ({ file }) =>
           !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) ||
           file.size > 8 * 1024 * 1024,
       ) ||
@@ -133,21 +160,37 @@ export function UnitPhotoManager({
     }
     setBusy(true);
     setError(null);
+    let completedUploads = false;
     try {
       let revision = property.content_revision;
-      for (const file of pending) {
+      for (const photo of pending) {
         const uploaded = await uploadOwnerMedia(property.id, {
-          file,
-          client_operation_id: crypto.randomUUID(),
+          file: photo.file,
+          client_operation_id: photo.operationId,
           expected_content_revision: revision,
           unit_id: unitId,
         });
         revision = uploaded.content_revision;
+        completedUploads = true;
+        setProperty((current) =>
+          current
+            ? { ...current, content_revision: uploaded.content_revision }
+            : current,
+        );
+        setPending((queued) =>
+          queued.filter((item) => item.operationId !== photo.operationId),
+        );
       }
-      setPending([]);
       await load();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
+      if (completedUploads) {
+        try {
+          await load();
+        } catch {
+          // Keep the failed files queued; their operation IDs remain stable.
+        }
+      }
       setError(
         caught instanceof ApiError ? caught.message : "Không thể tải ảnh lên.",
       );
@@ -236,7 +279,7 @@ export function UnitPhotoManager({
                   className="sr-only"
                   disabled={busy}
                   onChange={(event) => {
-                    setPending(Array.from(event.currentTarget.files ?? []));
+                    addPendingFiles(Array.from(event.currentTarget.files ?? []));
                     event.currentTarget.value = "";
                   }}
                 />
@@ -250,9 +293,9 @@ export function UnitPhotoManager({
           </div>
           {pending.length > 0 && (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {pending.map((file, index) => (
+              {pending.map(({ file, operationId }, index) => (
                 <li
-                  key={`${file.name}-${file.size}-${index}`}
+                  key={operationId}
                   className="overflow-hidden rounded-xl border border-slate-200"
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">

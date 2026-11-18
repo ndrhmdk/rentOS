@@ -41,6 +41,7 @@ const secondaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60";
 
 type WorkspaceTab = "overview" | "units" | "photos";
+type PendingPhoto = { file: File; operationId: string };
 
 function fieldValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "").trim();
@@ -844,13 +845,13 @@ function PropertyPhotos({
       ? initialUnitId
       : (units[0]?.id ?? ""),
   );
-  const [pending, setPending] = useState<File[]>([]);
+  const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [listingFlags, setListingFlags] = useState<Record<string, boolean>>({});
 
   // Create blob URLs from pending files (computed during render, not in effect)
   const pendingUrls = useMemo(() => {
-    return pending.map((file) => URL.createObjectURL(file));
+    return pending.map(({ file }) => URL.createObjectURL(file));
   }, [pending]);
 
   // Update URL parameters when scope or activeUnitId changes
@@ -924,11 +925,13 @@ function PropertyPhotos({
       for (const file of images) {
         const alreadyQueued = next.some(
           (item) =>
-            item.name === file.name &&
-            item.size === file.size &&
-            item.lastModified === file.lastModified,
+            item.file.name === file.name &&
+            item.file.size === file.size &&
+            item.file.lastModified === file.lastModified,
         );
-        if (!alreadyQueued) next.push(file);
+        if (!alreadyQueued) {
+          next.push({ file, operationId: crypto.randomUUID() });
+        }
       }
       return next;
     });
@@ -939,7 +942,7 @@ function PropertyPhotos({
     if (pending.length === 0) return;
     if (
       pending.some(
-        (file) =>
+        ({ file }) =>
           !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) ||
           file.size > 8 * 1024 * 1024,
       ) ||
@@ -951,21 +954,32 @@ function PropertyPhotos({
       return;
     }
     setBusy(true);
+    let completedUploads = false;
     try {
       let current = property;
-      for (const file of pending) {
+      for (const photo of pending) {
         const uploaded = await uploadOwnerMedia(current.id, {
-          file,
-          client_operation_id: crypto.randomUUID(),
+          file: photo.file,
+          client_operation_id: photo.operationId,
           expected_content_revision: current.content_revision,
           unit_id: scope === "unit" ? activeUnitId : undefined,
         });
         current = { ...current, content_revision: uploaded.content_revision };
+        completedUploads = true;
+        setPending((queued) =>
+          queued.filter((item) => item.operationId !== photo.operationId),
+        );
       }
-      setPending([]);
       await onReload();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
+      if (completedUploads) {
+        try {
+          await onReload();
+        } catch (reloadError) {
+          onError(reloadError);
+        }
+      }
       onError(caught);
       toast.error("Không thể tải ảnh lên. Vui lòng thử lại.");
     } finally {
@@ -1164,9 +1178,9 @@ function PropertyPhotos({
               </div>
               <div className="max-h-96 overflow-y-auto">
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {pending.map((file, index) => (
+                  {pending.map(({ file, operationId }, index) => (
                     <li
-                      key={`${file.name}-${file.size}-${index}`}
+                      key={operationId}
                       className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                     >
                       <div className="relative aspect-[4/3] bg-slate-100">
@@ -1184,7 +1198,9 @@ function PropertyPhotos({
                           type="button"
                           onClick={() =>
                             setPending((current) =>
-                              current.filter((_, i) => i !== index),
+                              current.filter(
+                                (item) => item.operationId !== operationId,
+                              ),
                             )
                           }
                           disabled={busy}
