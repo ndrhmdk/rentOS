@@ -5,12 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ApiError,
-  getOwnerListing,
   getOwnerProperties,
-  getOwnerProperty,
   type OwnerListing,
   type OwnerProperty,
-  type OwnerPropertyDetail,
 } from "@/lib/auth-api";
 
 function statusLabel(listing: OwnerListing): string {
@@ -30,9 +27,6 @@ export default function OwnerListingsPage() {
   const [listingByProperty, setListingByProperty] = useState<
     Record<string, OwnerListing | null>
   >({});
-  const [propertyDetails, setPropertyDetails] = useState<
-    Record<string, OwnerPropertyDetail>
-  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
@@ -49,23 +43,12 @@ export default function OwnerListingsPage() {
         const result = await getOwnerProperties();
         if (ignore) return;
         setProperties(result);
-        const rows = await Promise.all(
-          result
-            .filter((item) => !item.archived_at)
-            .map(async (item) => {
-              const [detail, listing] = await Promise.all([
-                getOwnerProperty(item.id),
-                getOwnerListing(item.id),
-              ]);
-              return { detail, listing };
-            }),
-        );
-        if (ignore) return;
-        setPropertyDetails(
-          Object.fromEntries(rows.map((row) => [row.detail.id, row.detail])),
-        );
         setListingByProperty(
-          Object.fromEntries(rows.map((row) => [row.detail.id, row.listing])),
+          Object.fromEntries(
+            result
+              .filter((item) => !item.archived_at)
+              .map((item) => [item.id, item.listing ?? null]),
+          ),
         );
       } catch (caught) {
         if (ignore) return;
@@ -90,7 +73,6 @@ export default function OwnerListingsPage() {
   );
   const rows = activeProperties.map((item) => ({
     property: item,
-    detail: propertyDetails[item.id],
     listing: listingByProperty[item.id] ?? null,
   }));
   const filteredRows = rows.filter(
@@ -200,9 +182,9 @@ export default function OwnerListingsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredRows.map(({ property: item, detail, listing }) => {
+                    {filteredRows.map(({ property: item, listing }) => {
                       const eligible =
-                        detail?.units.filter(
+                        item.units?.filter(
                           (unit) =>
                             !unit.archived_at &&
                             unit.is_marketed &&
@@ -226,7 +208,7 @@ export default function OwnerListingsPage() {
                           </td>
                           <td className="px-4 py-4 text-slate-700">
                             {eligible} /{" "}
-                            {detail?.units.filter((unit) => !unit.archived_at)
+                            {item.units?.filter((unit) => !unit.archived_at)
                               .length ?? 0}
                           </td>
                           <td className="px-4 py-4 text-slate-600">

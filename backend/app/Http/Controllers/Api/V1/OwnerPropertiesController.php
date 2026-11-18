@@ -49,7 +49,7 @@ class OwnerPropertiesController extends Controller
             ->where('owner_id', $user->id)
             ->when(! $request->boolean('include_archived'), fn ($query) => $query->whereNull('archived_at'))
             ->orderByDesc('created_at')
-            ->with('units')
+            ->with(['units', 'currentListing'])
             ->paginate(20);
 
         return PropertyResource::collection($properties);

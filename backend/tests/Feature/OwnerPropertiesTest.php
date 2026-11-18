@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -213,6 +214,43 @@ class OwnerPropertiesTest extends TestCase
         $returnedIds = collect($response->json('data'))->pluck('id')->all();
         $this->assertContains($prop1, $returnedIds);
         $this->assertContains($prop2, $returnedIds);
+    }
+
+    public function test_owner_property_list_includes_current_listings_with_a_fixed_query_count(): void
+    {
+        $owner = User::factory()->create();
+
+        foreach (range(1, 5) as $index) {
+            $propertyId = $this->createProperty($owner->id);
+            DB::table('listings')->insert([
+                'id' => (string) Str::uuid(),
+                'property_id' => $propertyId,
+                'client_operation_id' => (string) Str::uuid(),
+                'title' => "Demo listing {$index}",
+                'description' => 'A listing used to verify eager loading.',
+            ]);
+        }
+
+        $ownerQueries = [];
+        DB::listen(function (QueryExecuted $query) use (&$ownerQueries): void {
+            if (preg_match('/\\b(from|join)\s+"?(properties|units|listings)"?/i', $query->sql) === 1) {
+                $ownerQueries[] = $query->sql;
+            }
+        });
+
+        $response = $this->actingAs($owner)->getJson('/api/v1/owner/properties');
+
+        $response->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.total', 5);
+
+        $this->assertSame(4, count($ownerQueries), implode("\n", $ownerQueries));
+        $this->assertCount(5, collect($response->json('data'))->pluck('listing')->filter());
+        $this->assertSame(
+            1,
+            collect($ownerQueries)->filter(fn (string $sql): bool => str_contains($sql, '"listings"'))->count(),
+        );
     }
 
     public function test_archived_properties_are_excluded(): void
