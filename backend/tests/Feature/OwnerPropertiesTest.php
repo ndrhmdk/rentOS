@@ -880,6 +880,69 @@ class OwnerPropertiesTest extends TestCase
             'id' => $propertyId,
             'content_revision' => 2,
         ]);
+        Http::assertSentCount(1);
+
+        $payload['caption'] = 'A different photo caption';
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertConflict();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_photo_upload_can_retry_after_a_storage_failure_without_creating_partial_media(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $operationId = (string) Str::uuid();
+        $photo = UploadedFile::fake()->image('living-room.jpg');
+        $attempt = 0;
+
+        config([
+            'services.supabase.url' => 'http://127.0.0.1:54321',
+            'services.supabase.service_role_key' => 'test-service-role-key',
+            'services.supabase.storage.bucket' => 'property-media',
+        ]);
+
+        Http::fake(function () use (&$attempt) {
+            $attempt++;
+
+            return Http::response(
+                $attempt === 1 ? ['message' => 'Temporary storage failure'] : [],
+                $attempt === 1 ? 503 : 200,
+            );
+        });
+
+        $payload = [
+            'client_operation_id' => $operationId,
+            'expected_content_revision' => 1,
+            'caption' => 'Living room',
+            'photo' => $photo,
+        ];
+
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertStatus(502);
+
+        $this->assertDatabaseCount('property_media', 0);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertCreated();
+
+        Http::assertSentCount(2);
+        $this->assertDatabaseCount('property_media', 1);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
     }
 
     public function test_owner_can_remove_a_photo_without_deleting_its_storage_object(): void

@@ -40,6 +40,63 @@ class OwnerListingsTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['entity_type' => 'listing', 'entity_id' => $listingId, 'action' => 'listing.updated']);
     }
 
+    public function test_stale_listing_revision_cannot_overwrite_a_newer_edit(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $created = $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/listing",
+            $this->listingPayload(null),
+        )->assertCreated();
+        $listingId = $created->json('data.id');
+
+        $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
+            'expected_content_revision' => 1,
+            'title' => 'Current title',
+        ])->assertOk()->assertJsonPath('data.property_content_revision', 2);
+
+        $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
+            'expected_content_revision' => 1,
+            'title' => 'Stale title',
+        ])->assertConflict();
+
+        $this->assertDatabaseHas('listings', [
+            'id' => $listingId,
+            'title' => 'Current title',
+            'moderation_status' => 'DRAFT',
+        ]);
+        $this->assertDatabaseHas('properties', ['id' => $propertyId, 'content_revision' => 2]);
+        $this->assertDatabaseCount('audit_logs', 2);
+    }
+
+    public function test_owner_cannot_change_another_owners_listing(): void
+    {
+        $owner = User::factory()->create();
+        $otherOwner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $listing = $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/listing",
+            $this->listingPayload(null),
+        )->assertCreated();
+        $listingId = $listing->json('data.id');
+
+        $this->actingAs($otherOwner)->getJson("/api/v1/owner/listings/{$listingId}")->assertForbidden();
+        $this->actingAs($otherOwner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
+            'expected_content_revision' => 1,
+            'title' => 'Unauthorized change',
+        ])->assertForbidden();
+        $this->actingAs($otherOwner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/archive", [
+            'expected_content_revision' => 1,
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('listings', [
+            'id' => $listingId,
+            'title' => 'Sunny apartment near campus',
+            'archived_at' => null,
+        ]);
+        $this->assertDatabaseCount('audit_logs', 1);
+    }
+
     public function test_owner_cannot_create_a_second_current_listing_or_use_another_property_cover(): void
     {
         $owner = User::factory()->create();
@@ -193,6 +250,79 @@ class OwnerListingsTest extends TestCase
             'admin_suspended_at' => now(), 'admin_suspended_by' => $admin->id, 'suspension_reason' => 'Test suspension',
         ]);
         $this->assertSame(0, Listing::query()->publiclyVisible()->count());
+
+        $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
+            'expected_content_revision' => 1,
+            'title' => 'Edited while suspended',
+        ])->assertOk()->assertJsonPath('data.moderation_status', 'APPROVED');
+
+        $this->actingAs($owner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/publish", [
+            'expected_content_revision' => 2,
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseHas('listings', [
+            'property_id' => $propertyId,
+            'title' => 'Edited while suspended',
+            'moderation_status' => 'APPROVED',
+            'publication_status' => 'PUBLISHED',
+            'admin_suspended_by' => $admin->id,
+            'suspension_reason' => 'Test suspension',
+        ]);
+        $this->assertSame(0, Listing::query()->publiclyVisible()->count());
+    }
+
+    public function test_owner_edits_after_approval_preserve_approval_and_audit_history(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createCompleteProperty($owner->id);
+        $coverId = $this->createMedia($owner->id, $propertyId);
+        $created = $this->actingAs($owner)->postJson(
+            "/api/v1/owner/properties/{$propertyId}/listing",
+            $this->listingPayload($coverId),
+        )->assertCreated();
+        $listingId = $created->json('data.id');
+
+        $this->actingAs($owner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/submit", [
+            'expected_content_revision' => 1,
+        ])->assertOk();
+
+        $admin = User::factory()->create();
+        DB::table('users')->where('id', $admin->id)->update(['is_admin' => true]);
+        $admin->refresh();
+        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/approve")
+            ->assertOk()->assertJsonPath('data.approved_content_revision', 1);
+
+        $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
+            'expected_content_revision' => 1,
+            'title' => 'Updated approved listing',
+        ])->assertOk()
+            ->assertJsonPath('data.title', 'Updated approved listing')
+            ->assertJsonPath('data.moderation_status', 'APPROVED')
+            ->assertJsonPath('data.approved_content_revision', 1)
+            ->assertJsonPath('data.property_content_revision', 2);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'listing',
+            'entity_id' => $listingId,
+            'action' => 'listing.updated',
+        ]);
+
+        $this->actingAs($owner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/publish", [
+            'expected_content_revision' => 2,
+        ])->assertOk()->assertJsonPath('data.publication_status', 'PUBLISHED');
+
+        $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}", [
+            'expected_content_revision' => 2,
+            'city' => 'Hue',
+        ])->assertOk()->assertJsonPath('data.content_revision', 3);
+
+        $this->assertDatabaseHas('listings', [
+            'id' => $listingId,
+            'moderation_status' => 'APPROVED',
+            'publication_status' => 'PUBLISHED',
+            'approved_content_revision' => 1,
+        ]);
+        $this->assertSame(1, Listing::query()->publiclyVisible()->count());
     }
 
     public function test_owner_can_open_a_listing_by_its_id_and_share_a_property_photo_with_a_unit(): void
