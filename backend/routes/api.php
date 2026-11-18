@@ -37,6 +37,7 @@ require base_path('routes/api/v1/tenant.php');
 require base_path('routes/api/v1/reports.php');
 
 // Owner endpoints
+require base_path('routes/api/v1/owner/summary.php');
 require base_path('routes/api/v1/owner/properties.php');
 require base_path('routes/api/v1/owner/listings.php');
 require base_path('routes/api/v1/owner/amenities.php');
