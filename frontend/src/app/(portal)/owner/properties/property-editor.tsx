@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { OwnerPhoto } from "@/components/owner/owner-photo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -1267,12 +1268,10 @@ function PropertyPhotos({
                   >
                     <div className="relative aspect-[4/3] bg-slate-100">
                       {item.preview_url ? (
-                        <Image
+                        <OwnerPhoto
                           src={item.preview_url}
                           alt={item.caption || "Ảnh dùng chung"}
-                          fill
-                          unoptimized
-                          sizes="25vw"
+                          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                           className="object-cover"
                         />
                       ) : (
@@ -1345,12 +1344,10 @@ function PropertyPhotos({
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
                     {item.preview_url ? (
-                      <Image
+                      <OwnerPhoto
                         src={item.preview_url}
                         alt={item.caption || `Ảnh ${index + 1}`}
-                        fill
-                        unoptimized
-                        sizes="33vw"
+                        sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover"
                       />
                     ) : null}

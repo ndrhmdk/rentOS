@@ -19,6 +19,7 @@ import {
   type OwnerPropertyDetail,
   type OwnerPropertyMedia,
 } from "@/lib/auth-api";
+import { OwnerPhoto } from "@/components/owner/owner-photo";
 
 const buttonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-4 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-60";
@@ -284,12 +285,10 @@ export function UnitPhotoManager({
               >
                 <div className="relative aspect-[4/3] bg-slate-100">
                   {photo.preview_url ? (
-                    <Image
+                    <OwnerPhoto
                       src={photo.preview_url}
                       alt={photo.caption || "Ảnh căn"}
-                      fill
-                      unoptimized
-                      sizes="30vw"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="object-cover"
                     />
                   ) : (
@@ -370,12 +369,10 @@ export function UnitPhotoManager({
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
                     {item.preview_url ? (
-                      <Image
+                      <OwnerPhoto
                         src={item.preview_url}
                         alt={item.caption || "Ảnh dùng chung"}
-                        fill
-                        unoptimized
-                        sizes="25vw"
+                        sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover"
                       />
                     ) : (
