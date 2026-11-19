@@ -4,12 +4,59 @@ import type { FieldErrors } from "./localize";
 const apiUrl = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 ).replace(/\/$/, "");
+
 type ApiDocument = {
   message?: string;
+  error_code?: string;
+  reference?: string;
   errors?: FieldErrors;
   data?: unknown;
   meta?: unknown;
 };
+
+const errorCodeMessages: Record<string, string> = {
+  storage_failed: "Không thể tải ảnh lên. Vui lòng thử lại.",
+  service_unavailable: "Dịch vụ tạm thời không phản hồi. Vui lòng thử lại.",
+  server_error: "Đã có lỗi. Vui lòng thử lại.",
+};
+
+export function messageForErrorCode(
+  errorCode: string | null | undefined,
+  reference: string | null | undefined,
+): string {
+  const base =
+    errorCodeMessages[errorCode ?? ""] ?? errorCodeMessages.server_error;
+  if (!reference) {
+    return base;
+  }
+  if (base.includes(reference)) {
+    return base;
+  }
+  return `${base} Mã tham chiếu: ${reference}`;
+}
+
+export class ApiError extends Error {
+  status: number;
+  errors: FieldErrors;
+  errorCode: string | null;
+  reference: string | null;
+
+  constructor(
+    status: number,
+    message: string,
+    errors: FieldErrors = {},
+    errorCode: string | null = null,
+    reference: string | null = null,
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.errors = errors;
+    this.errorCode = errorCode;
+    this.reference = reference;
+  }
+}
+
 async function executeFetch(
   path: string,
   method: string,
@@ -24,6 +71,7 @@ async function executeFetch(
     cache: "no-store",
   });
 }
+
 async function requestDocument(
   path: string,
   init: RequestInit = {},
@@ -35,10 +83,13 @@ async function requestDocument(
     init.body &&
     !(init.body instanceof FormData) &&
     !headers.has("Content-Type")
-  )
+  ) {
     headers.set("Content-Type", "application/json");
+  }
   const isWriteMethod = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
-  if (isWriteMethod) headers.set("X-XSRF-TOKEN", await ensureCsrfToken());
+  if (isWriteMethod) {
+    headers.set("X-XSRF-TOKEN", await ensureCsrfToken());
+  }
   let response = await executeFetch(path, method, headers, init);
   if (response.status === 419 && isWriteMethod) {
     await initializeCsrf();
@@ -48,9 +99,20 @@ async function requestDocument(
       response = await executeFetch(path, method, headers, init);
     }
   }
-  if (response.status === 204) return undefined;
+  if (response.status === 204) {
+    return undefined;
+  }
   const payload = (await response.json().catch(() => ({}))) as ApiDocument;
   if (!response.ok) {
+    const referenceHeader = response.headers.get("X-Request-Id");
+    const reference =
+      (typeof payload.reference === "string" && payload.reference) ||
+      (typeof referenceHeader === "string" && referenceHeader) ||
+      null;
+    const errorCode =
+      typeof payload.error_code === "string" && payload.error_code !== ""
+        ? payload.error_code
+        : null;
     const fallback =
       response.status === 401
         ? "Thông tin đăng nhập không đúng hoặc phiên đã hết hạn."
@@ -59,27 +121,21 @@ async function requestDocument(
           : response.status === 429
             ? "Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại."
             : "Có lỗi xảy ra. Vui lòng kiểm tra thông tin và thử lại.";
+    const message =
+      response.status >= 500
+        ? messageForErrorCode(errorCode, reference)
+        : localizeApiMessage(payload.message ?? fallback, response.status);
     throw new ApiError(
       response.status,
-      localizeApiMessage(payload.message ?? fallback, response.status),
+      message,
       localizeFieldErrors(payload.errors ?? {}),
+      response.status >= 500 ? errorCode : null,
+      response.status >= 500 ? reference : null,
     );
   }
   return payload;
 }
 
-
-export class ApiError extends Error {
-  status: number;
-  errors: FieldErrors;
-
-  constructor(status: number, message: string, errors: FieldErrors = {}) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.errors = errors;
-  }
-}
 export function csrfToken(): string | null {
   if (typeof document === "undefined") return null;
 
@@ -96,6 +152,7 @@ export function csrfToken(): string | null {
     return cookie.slice("XSRF-TOKEN=".length);
   }
 }
+
 export async function initializeCsrf(): Promise<void> {
   const response = await fetch(`${apiUrl}/sanctum/csrf-cookie`, {
     credentials: "include",
