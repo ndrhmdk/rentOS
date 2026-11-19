@@ -3,8 +3,9 @@ name: CD
 on:
   push:
     branches:
+      - develop
       - main
-
+  
 jobs:
   publish:
     name: Publish images
