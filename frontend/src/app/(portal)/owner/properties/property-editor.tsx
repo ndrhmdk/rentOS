@@ -811,7 +811,7 @@ export function PropertyEditor({
   );
 }
 
-function PropertyPhotos({
+export function PropertyPhotos({
   property,
   media,
   busy,
@@ -848,6 +848,10 @@ function PropertyPhotos({
   const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [listingFlags, setListingFlags] = useState<Record<string, boolean>>({});
+  const [pendingGalleryOrders, setPendingGalleryOrders] = useState<
+    Record<string, string[]>
+  >({});
+  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
 
   // Create blob URLs from pending files (computed during render, not in effect)
   const pendingUrls = useMemo(() => {
@@ -879,6 +883,8 @@ function PropertyPhotos({
   function listed(item: OwnerPropertyMedia) {
     return listingFlags[item.id] ?? item.is_selected_for_listing;
   }
+  const galleryKey =
+    scope === "property" ? "property" : `unit:${activeUnitId}`;
   const shared = useMemo(
     () =>
       media
@@ -898,12 +904,22 @@ function PropertyPhotos({
       ]),
     ),
   );
-  const visible =
+  const serverVisible =
     scope === "property"
       ? shared
       : media
           .filter((item) => item.unit_id === activeUnitId)
           .sort((a, b) => a.sort_order - b.sort_order);
+  const pendingOrder = pendingGalleryOrders[galleryKey];
+  const visible = pendingOrder
+    ? [...serverVisible].sort((left, right) => {
+        const leftIndex = pendingOrder.indexOf(left.id);
+        const rightIndex = pendingOrder.indexOf(right.id);
+        if (leftIndex < 0) return rightIndex < 0 ? 0 : 1;
+        if (rightIndex < 0) return -1;
+        return leftIndex - rightIndex;
+      })
+    : serverVisible;
   const selected = new Set(selectedByUnit[activeUnitId] ?? []);
   const saved = shared
     .filter((item) => (item.assigned_unit_ids ?? []).includes(activeUnitId))
@@ -997,6 +1013,7 @@ function PropertyPhotos({
       await onReload();
       toast.success("Đã lưu lựa chọn ảnh dùng chung.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) return;
       onError(caught);
       toast.error("Không thể lưu lựa chọn. Vui lòng thử lại.");
     } finally {
@@ -1006,6 +1023,10 @@ function PropertyPhotos({
 
   async function saveVisibleSelection(items: OwnerPropertyMedia[]) {
     setBusy(true);
+    setPendingGalleryOrders((current) => ({
+      ...current,
+      [galleryKey]: items.map((item) => item.id),
+    }));
     try {
       const payload = {
         expected_content_revision: property.content_revision,
@@ -1019,8 +1040,19 @@ function PropertyPhotos({
       if (scope === "property") await updateOwnerGallery(property.id, payload);
       else await updateOwnerUnitGallery(property.id, activeUnitId, payload);
       await onReload();
+      setPendingGalleryOrders((current) => {
+        const next = { ...current };
+        delete next[galleryKey];
+        return next;
+      });
+      setListingFlags((current) => {
+        const next = { ...current };
+        for (const item of items) delete next[item.id];
+        return next;
+      });
       toast.success("Thứ tự và lựa chọn hiển thị đã được lưu.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) return;
       onError(caught);
       toast.error("Không thể lưu thay đổi. Vui lòng thử lại.");
     } finally {
@@ -1028,11 +1060,37 @@ function PropertyPhotos({
     }
   }
 
-  async function remove(photo: OwnerPropertyMedia) {
+  async function recoverGalleryConflict(caught: unknown): Promise<boolean> {
+    if (!(caught instanceof ApiError) || caught.status !== 409) return false;
+
+    try {
+      await onReload();
+    } catch (reloadError) {
+      onError(reloadError);
+      toast.error("Không thể tải thư viện ảnh mới nhất. Vui lòng thử lại.", {
+        duration: 6000,
+      });
+      return true;
+    }
+
+    const message =
+      "Thư viện ảnh đã được cập nhật ở nơi khác. Dữ liệu mới đã tải; lựa chọn của bạn vẫn được giữ. Vui lòng kiểm tra rồi lưu lại.";
+    onError(new ApiError(409, message));
+    toast.error(message, { duration: 6000 });
+
+    return true;
+  }
+
+  async function remove(
+    photo: OwnerPropertyMedia,
+    confirmed = false,
+  ): Promise<void> {
     if (
+      !confirmed &&
       !window.confirm("Gỡ ảnh khỏi thư viện? Tệp được lưu giữ trong lịch sử.")
-    )
+    ) {
       return;
+    }
     setBusy(true);
     try {
       await removeOwnerMedia(
@@ -1042,8 +1100,13 @@ function PropertyPhotos({
         photo.revision,
       );
       await onReload();
+      setPendingRemovalId(null);
       toast.success("Ảnh đã được gỡ khỏi thư viện.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) {
+        setPendingRemovalId(photo.id);
+        return;
+      }
       onError(caught);
       toast.error("Không thể gỡ ảnh. Vui lòng thử lại.");
     } finally {
@@ -1398,6 +1461,7 @@ function PropertyPhotos({
                           ];
                           void saveVisibleSelection(next);
                         }}
+                        aria-label={`Đưa ${item.caption || `ảnh ${index + 1}`} lên`}
                         className="size-8 rounded-lg border"
                       >
                         ↑
@@ -1413,6 +1477,7 @@ function PropertyPhotos({
                           ];
                           void saveVisibleSelection(next);
                         }}
+                        aria-label={`Đưa ${item.caption || `ảnh ${index + 1}`} xuống`}
                         className="size-8 rounded-lg border"
                       >
                         ↓
@@ -1421,11 +1486,22 @@ function PropertyPhotos({
                         type="button"
                         disabled={busy}
                         onClick={() => void remove(item)}
+                        aria-label={`Gỡ ${item.caption || `ảnh ${index + 1}`}`}
                         className="size-8 rounded-lg text-rose-700"
                       >
                         ×
                       </button>
                     </div>
+                    {pendingRemovalId === item.id && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void remove(item, true)}
+                        className="font-semibold text-[#285584] underline"
+                      >
+                        Thử gỡ lại {item.caption || "ảnh này"}
+                      </button>
+                    )}
                   </div>
                 </li>
               ))}
