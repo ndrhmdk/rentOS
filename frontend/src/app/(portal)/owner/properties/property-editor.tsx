@@ -347,6 +347,20 @@ export function PropertyEditor({
     }
   }
 
+  async function reloadAfterRevisionConflict(): Promise<void> {
+    try {
+      await loadProperty();
+      setFieldErrors({});
+      setError(
+        "Thông tin bất động sản đã thay đổi. Bản nháp của bạn vẫn được giữ nguyên; hãy kiểm tra lại rồi lưu lần nữa.",
+      );
+    } catch {
+      setError(
+        "Thông tin bất động sản đã thay đổi nhưng chưa thể tải phiên bản mới. Bản nháp của bạn vẫn được giữ nguyên; vui lòng thử tải lại.",
+      );
+    }
+  }
+
   function openTab(next: WorkspaceTab) {
     router.push(
       next === "overview"
@@ -408,7 +422,11 @@ export function PropertyEditor({
       setProperty(updated);
       setNotice("Thông tin bất động sản đã được lưu.");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
     } finally {
       setBusy(false);
     }
@@ -427,7 +445,11 @@ export function PropertyEditor({
       await archiveOwnerProperty(property.id, property.content_revision);
       router.push("/owner/properties");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
       setBusy(false);
     }
   }
@@ -440,7 +462,11 @@ export function PropertyEditor({
       await loadProperty();
       setNotice("Phòng đã được lưu trữ.");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
     } finally {
       setBusy(false);
     }
@@ -625,7 +651,6 @@ export function PropertyEditor({
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <AmenityFields
-              key={`shared-${property.content_revision}`}
               catalog={catalog}
               scope={
                 property.rental_arrangement === "WHOLE_SPACE"

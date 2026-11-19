@@ -283,8 +283,6 @@ function AddUnitsPageContent() {
       toast.success(`Đã thêm ${rooms.length} phòng mới.`);
       router.push(`/owner/properties/${propertyId}?tab=units`);
     } catch (error) {
-      console.error("Error creating units:", error);
-
       // Parse and display backend validation errors
       if (error instanceof ApiError && error.status === 422) {
         const validationErrors = parseValidationErrors(error);
@@ -295,6 +293,20 @@ function AddUnitsPageContent() {
         } else {
           toast.error(
             error.message || "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
+          );
+        }
+      } else if (error instanceof ApiError && error.status === 409) {
+        try {
+          const latestProperty = await getOwnerProperty(property.id);
+          setProperty(latestProperty);
+          toast.error(
+            "Thông tin bất động sản đã thay đổi. Kế hoạch phòng và bản nháp của bạn vẫn được giữ nguyên; hãy kiểm tra rồi thử lại.",
+            { duration: 6000 },
+          );
+        } catch {
+          toast.error(
+            "Không thể tải phiên bản bất động sản mới. Bản nháp phòng vẫn được giữ nguyên; vui lòng thử lại.",
+            { duration: 6000 },
           );
         }
       } else if (error instanceof ApiError) {
