@@ -2,15 +2,16 @@
 
 namespace Tests\Feature\Monitoring;
 
+use App\Jobs\SendOpsDiscordAlert;
 use App\Mail\OpsAlertMail;
 use App\Models\User;
 use App\Monitoring\ErrorCode;
 use App\Monitoring\OpsAlerter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -24,18 +25,16 @@ class OpsAlerterTest extends TestCase
         parent::setUp();
 
         config([
-            'monitoring.dedupe_seconds' => 900,
+            'monitoring.dedupe_seconds' => 600,
             'monitoring.discord_webhook' => 'https://discord.example.test/webhook',
             'monitoring.ops_alert_email' => '',
         ]);
 
         Cache::flush();
-        Http::fake([
-            'discord.example.test/*' => Http::response(['ok' => true], 204),
-        ]);
+        Queue::fake();
     }
 
-    public function test_critical_alert_emails_admin_and_posts_discord_once(): void
+    public function test_critical_alert_posts_discord_without_email(): void
     {
         Mail::fake();
 
@@ -59,21 +58,12 @@ class OpsAlerterTest extends TestCase
             'route' => 'POST listings/{listing}/photos',
         ]);
 
-        Mail::assertSent(OpsAlertMail::class, 1);
-        Mail::assertSent(OpsAlertMail::class, function (OpsAlertMail $mail): bool {
-            return $mail->hasTo('admin@example.test')
-                && ! $mail->hasTo('tenant@example.test')
-                && $mail->errorCode === ErrorCode::STORAGE_FAILED
-                && str_contains($mail->bodyText, 'ref-1');
-        });
-        Http::assertSentCount(1);
-        Http::assertSent(function ($request): bool {
-            $body = $request->data();
-
-            return $request->url() === 'https://discord.example.test/webhook'
-                && str_contains((string) ($body['content'] ?? ''), 'storage_failed')
-                && str_contains((string) ($body['content'] ?? ''), 'ref-1')
-                && ! str_contains((string) ($body['content'] ?? ''), 'password');
+        Mail::assertNothingSent();
+        Queue::assertPushed(SendOpsDiscordAlert::class, 1);
+        Queue::assertPushed(SendOpsDiscordAlert::class, function (SendOpsDiscordAlert $job): bool {
+            return str_contains($job->content, 'storage_failed')
+                && str_contains($job->content, 'ref-1')
+                && ! str_contains($job->content, 'password');
         });
     }
 
@@ -96,11 +86,11 @@ class OpsAlerterTest extends TestCase
             'route' => 'POST listings/{listing}/photos',
         ]);
 
-        Mail::assertSent(OpsAlertMail::class, 2);
-        Http::assertSentCount(2);
+        Mail::assertNothingSent();
+        Queue::assertPushed(SendOpsDiscordAlert::class, 2);
     }
 
-    public function test_slow_query_does_not_post_discord(): void
+    public function test_slow_query_escalation_queues_discord_without_email(): void
     {
         Mail::fake();
 
@@ -109,14 +99,39 @@ class OpsAlerterTest extends TestCase
             'is_admin' => true,
         ]);
 
-        app(OpsAlerter::class)->report('slow_query', ErrorCode::SERVER_ERROR, 'Slow query 800ms', [
+        app(OpsAlerter::class)->report('slow_query', 'slow_query', 'Slow query repeated 3 times', [
             'reference' => 'ref-slow',
             'fingerprint' => 'abc',
-            'duration_ms' => 800,
+            'duration_ms' => 1200,
+        ]);
+
+        Mail::assertNothingSent();
+        Queue::assertPushed(SendOpsDiscordAlert::class, 1);
+    }
+
+    public function test_slow_query_critical_emails_admin_and_queues_discord(): void
+    {
+        Mail::fake();
+
+        User::factory()->create([
+            'email' => 'admin@example.test',
+            'is_admin' => true,
+        ]);
+
+        app(OpsAlerter::class)->report('slow_query_critical', 'slow_query', 'Critical slow query 5200ms', [
+            'reference' => 'ref-crit',
+            'fingerprint' => 'fp-1',
+            'duration_ms' => 5200,
+            'sql' => 'select * from listings where id = ?',
         ]);
 
         Mail::assertSent(OpsAlertMail::class, 1);
-        Http::assertNothingSent();
+        Mail::assertSent(OpsAlertMail::class, function (OpsAlertMail $mail): bool {
+            return $mail->hasTo('admin@example.test')
+                && $mail->kind === 'slow_query_critical'
+                && str_contains($mail->bodyText, 'ref-crit');
+        });
+        Queue::assertPushed(SendOpsDiscordAlert::class, 1);
     }
 
     public function test_mail_failure_writes_fallback_log_without_throwing(): void
@@ -132,8 +147,9 @@ class OpsAlerterTest extends TestCase
         $pending->shouldReceive('send')->once()->andThrow(new RuntimeException('resend down'));
         Mail::shouldReceive('to')->once()->with('admin@example.test')->andReturn($pending);
 
-        app(OpsAlerter::class)->report('critical', ErrorCode::SERVER_ERROR, 'Application failure', [
+        app(OpsAlerter::class)->report('slow_query_critical', 'slow_query', 'Critical slow query', [
             'reference' => 'ref-fallback',
+            'fingerprint' => 'fp-mail',
             'route' => 'GET api/v1/boom',
         ]);
 
@@ -152,13 +168,16 @@ class OpsAlerterTest extends TestCase
         Mail::fake();
         config(['monitoring.ops_alert_email' => 'backup-admin@example.test']);
 
-        app(OpsAlerter::class)->report('critical', ErrorCode::SERVER_ERROR, 'Application failure', [
+        app(OpsAlerter::class)->report('db_time', 'high_db_time', 'High DB time', [
             'reference' => 'ref-backup',
             'route' => 'GET api/v1/boom',
+            'query_count' => 12,
+            'total_ms' => 2400,
         ]);
 
         Mail::assertSent(OpsAlertMail::class, function (OpsAlertMail $mail): bool {
-            return $mail->hasTo('backup-admin@example.test');
+            return $mail->hasTo('backup-admin@example.test')
+                && $mail->kind === 'db_time';
         });
     }
 
@@ -171,8 +190,9 @@ class OpsAlerterTest extends TestCase
             'is_admin' => true,
         ]);
 
-        app(OpsAlerter::class)->report('critical', ErrorCode::SERVER_ERROR, 'Application failure', [
+        app(OpsAlerter::class)->report('slow_query_critical', 'slow_query', 'Critical slow query', [
             'reference' => 'ref-safe',
+            'fingerprint' => 'fp-safe',
             'route' => 'GET api/v1/boom',
             'password' => 'hunter2',
             'Authorization' => 'Bearer secret',

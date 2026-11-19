@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Monitoring\ErrorCode;
 use App\Monitoring\OpsAlerter;
+use App\Monitoring\QueryStats;
 use App\Monitoring\ReferenceId;
 use App\Monitoring\SlowQueryMonitor;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -24,6 +25,7 @@ class MonitoringServiceProvider extends ServiceProvider
     {
         $this->app->singleton(OpsAlerter::class);
         $this->app->singleton(SlowQueryMonitor::class);
+        $this->app->scoped(QueryStats::class, fn () => new QueryStats);
     }
 
     public function boot(): void
