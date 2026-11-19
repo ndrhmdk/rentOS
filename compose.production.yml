@@ -86,7 +86,7 @@ services:
       - php
       - artisan
       - queue:work
-      - --sleep=3
+      - --sleep=10
       - --tries=3
     environment: *laravel-env
     volumes:
