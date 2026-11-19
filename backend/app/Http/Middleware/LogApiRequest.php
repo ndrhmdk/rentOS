@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Monitoring\ReferenceId;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class LogApiRequest
@@ -13,15 +13,13 @@ class LogApiRequest
     public function handle(Request $request, Closure $next): Response
     {
         $startedAt = hrtime(true);
+        $reference = ReferenceId::resolve($request);
+
         $response = $next($request);
+        $response->headers->set(ReferenceId::HEADER, $reference);
 
         if ($request->is('api/v1/health') || $request->is('up')) {
             return $response;
-        }
-
-        $requestId = $request->headers->get('X-Request-Id');
-        if (! is_string($requestId) || $requestId === '') {
-            $requestId = (string) Str::uuid();
         }
 
         $user = $request->user();
@@ -31,7 +29,8 @@ class LogApiRequest
             'path' => '/'.$request->path(),
             'status' => $response->getStatusCode(),
             'duration_ms' => round((hrtime(true) - $startedAt) / 1_000_000, 2),
-            'request_id' => $requestId,
+            'request_id' => $reference,
+            'reference' => $reference,
             'user_id' => $user?->getAuthIdentifier(),
         ]);
 

@@ -16,6 +16,12 @@ x-laravel-env: &laravel-env
   LOG_STACK: ${LOG_STACK:-stderr}
   LOG_LEVEL: ${LOG_LEVEL:-error}
   TELESCOPE_ENABLED: ${TELESCOPE_ENABLED:-false}
+  MONITORING_SLOW_QUERIES: ${MONITORING_SLOW_QUERIES:-true}
+  SLOW_QUERY_MS: ${SLOW_QUERY_MS:-500}
+  SLOW_REQUEST_DB_MS: ${SLOW_REQUEST_DB_MS:-2000}
+  OPS_ALERT_EMAIL: ${OPS_ALERT_EMAIL:-}
+  OPS_ALERT_DEDUPE_SECONDS: ${OPS_ALERT_DEDUPE_SECONDS:-900}
+  DISCORD_ALERT_WEBHOOK: ${DISCORD_ALERT_WEBHOOK:-}
   DB_CONNECTION: ${DB_CONNECTION:-pgsql}
   DB_HOST: ${DB_HOST:?DB_HOST is required}
   DB_PORT: ${DB_PORT:-5432}
@@ -54,15 +60,7 @@ services:
       - --force
     environment: *laravel-env
 
-  frontend:
-    image: ghcr.io/${IMAGE_OWNER:-ndrhmdk}/rentos-frontend:${IMAGE_TAG:-production}
-    pull_policy: always
-    restart: unless-stopped
-    expose:
-      - "3000"
-    environment:
-      NODE_ENV: production
-      PORT: "3000"
+  # Frontend is hosted on Vercel. This stack runs API, worker, and migrate only.
 
   api:
     image: ghcr.io/${IMAGE_OWNER:-ndrhmdk}/rentos-backend:${IMAGE_TAG:-production}
