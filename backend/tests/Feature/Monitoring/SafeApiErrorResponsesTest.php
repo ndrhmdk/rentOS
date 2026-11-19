@@ -1,0 +1,81 @@
+<?php
+
+namespace Tests\Feature\Monitoring;
+
+use App\Monitoring\ErrorCode;
+use App\Monitoring\ReferenceId;
+use Illuminate\Support\Facades\Route;
+use League\Flysystem\UnableToWriteFile;
+use RuntimeException;
+use Tests\TestCase;
+
+class SafeApiErrorResponsesTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Route::middleware('api')->prefix('api')->group(function (): void {
+            Route::get('/v1/__monitoring/boom', function (): never {
+                throw new RuntimeException('secret password=hunter2 token=abc');
+            });
+
+            Route::get('/v1/__monitoring/storage', function (): never {
+                throw UnableToWriteFile::atLocation('photos/a.jpg', 'storage timeout');
+            });
+
+            Route::post('/v1/__monitoring/validate', function (): never {
+                validator([], ['email' => 'required|email'])->validate();
+            });
+        });
+    }
+
+    public function test_api_500_returns_safe_body_with_reference_header(): void
+    {
+        $response = $this->getJson('/api/v1/__monitoring/boom');
+
+        $response->assertStatus(500)
+            ->assertJsonPath('error_code', ErrorCode::SERVER_ERROR)
+            ->assertJsonMissingPath('exception')
+            ->assertJsonMissing(['message' => 'secret password=hunter2 token=abc']);
+
+        $reference = $response->json('reference');
+        $this->assertIsString($reference);
+        $this->assertNotSame('', $reference);
+        $this->assertStringContainsString($reference, (string) $response->json('message'));
+        $this->assertSame($reference, $response->headers->get(ReferenceId::HEADER));
+        $this->assertStringContainsString('Đã có lỗi', (string) $response->json('message'));
+    }
+
+    public function test_storage_failure_uses_storage_failed_code(): void
+    {
+        $response = $this->getJson('/api/v1/__monitoring/storage');
+
+        $response->assertStatus(500)
+            ->assertJsonPath('error_code', ErrorCode::STORAGE_FAILED);
+
+        $this->assertStringContainsString('Không thể tải ảnh lên', (string) $response->json('message'));
+    }
+
+    public function test_validation_failure_stays_422_without_error_code(): void
+    {
+        $response = $this->postJson('/api/v1/__monitoring/validate', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['email'])
+            ->assertJsonMissingPath('error_code')
+            ->assertJsonMissingPath('reference');
+    }
+
+    public function test_incoming_request_id_is_preserved(): void
+    {
+        $reference = '11111111-2222-3333-4444-555555555555';
+
+        $response = $this->withHeader(ReferenceId::HEADER, $reference)
+            ->getJson('/api/v1/__monitoring/boom');
+
+        $response->assertStatus(500)
+            ->assertJsonPath('reference', $reference);
+        $this->assertSame($reference, $response->headers->get(ReferenceId::HEADER));
+    }
+}
