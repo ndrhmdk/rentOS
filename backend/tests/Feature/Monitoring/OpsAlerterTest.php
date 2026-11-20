@@ -9,10 +9,12 @@ use App\Monitoring\ErrorCode;
 use App\Monitoring\OpsAlerter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
+use ReflectionMethod;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -132,6 +134,56 @@ class OpsAlerterTest extends TestCase
                 && str_contains($mail->bodyText, 'ref-crit');
         });
         Queue::assertPushed(SendOpsDiscordAlert::class, 1);
+    }
+
+    public function test_discord_sync_fallback_posts_webhook(): void
+    {
+        Http::fake([
+            'discord.example.test/*' => Http::response(['ok' => true], 204),
+        ]);
+
+        $alerter = app(OpsAlerter::class);
+        $method = new ReflectionMethod(OpsAlerter::class, 'deliverDiscordSynchronously');
+
+        $method->invoke($alerter, 'rentOS critical `server_error` route=x reference=ref-sync', [
+            'kind' => 'critical',
+            'error_code' => ErrorCode::SERVER_ERROR,
+            'reference' => 'ref-sync',
+        ]);
+
+        Http::assertSent(function ($request): bool {
+            $body = $request->data();
+
+            return $request->url() === 'https://discord.example.test/webhook'
+                && str_contains((string) ($body['content'] ?? ''), 'ref-sync');
+        });
+    }
+
+    public function test_discord_sync_fallback_logs_when_http_fails(): void
+    {
+        Http::fake([
+            'discord.example.test/*' => Http::response('down', 500),
+        ]);
+        Log::spy();
+
+        $alerter = app(OpsAlerter::class);
+        $method = new ReflectionMethod(OpsAlerter::class, 'deliverDiscordSynchronously');
+
+        $method->invoke($alerter, 'rentOS critical `server_error` route=x reference=ref-fail', [
+            'kind' => 'critical',
+            'error_code' => ErrorCode::SERVER_ERROR,
+            'reference' => 'ref-fail',
+        ]);
+
+        Log::shouldHaveReceived('critical')
+            ->withArgs(function (string $message, array $context): bool {
+                return $message === 'ops.alert.fallback'
+                    && ($context['channel'] ?? null) === 'discord'
+                    && ($context['reason'] ?? null) === 'discord_enqueue_and_sync_failed'
+                    && ($context['reference'] ?? null) === 'ref-fail';
+            })
+            ->atLeast()
+            ->once();
     }
 
     public function test_mail_failure_writes_fallback_log_without_throwing(): void

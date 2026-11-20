@@ -9,7 +9,7 @@ export default function GlobalErrorPage({
   error,
   reset,
 }: GlobalErrorPageProps) {
-  const reference = error.digest?.trim() || null;
+  void error;
 
   return (
     <html lang="vi">
@@ -21,7 +21,7 @@ export default function GlobalErrorPage({
           alignItems: "center",
           justifyContent: "center",
           padding: "32px 16px",
-          background: "black",
+          background: "#f1f6f8",
           color: "#102337",
           fontFamily:
             'Inter, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
@@ -45,48 +45,70 @@ export default function GlobalErrorPage({
               fontSize: 28,
               lineHeight: 1.25,
               fontWeight: 700,
+              color: "#102337",
             }}
           >
             Đã có lỗi. Vui lòng thử lại!
           </h1>
-          {reference ? (
-            <p
-              style={{
-                margin: "16px 0 0",
-                padding: "8px 12px",
-                borderRadius: 8,
-                border: "1px solid #dce5ef",
-                background: "#ffffff",
-                fontFamily: "ui-monospace, Menlo, monospace",
-                fontSize: 12,
-                color: "#52636c",
-                wordBreak: "break-all",
-              }}
-            >
-              Mã tham chiếu: {reference}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => reset()}
+          <p
             style={{
-              marginTop: 28,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 44,
-              padding: "0 24px",
-              border: 0,
-              borderRadius: 999,
-              background: "#3368A0",
-              color: "#ffffff",
+              margin: "12px 0 0",
               fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
+              lineHeight: 1.5,
+              color: "#52636c",
             }}
           >
-            Thử lại
-          </button>
+            Ứng dụng gặp sự cố tạm thời. Hãy thử lại hoặc về trang chủ.
+          </p>
+          <div
+            style={{
+              marginTop: 28,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => reset()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 44,
+                padding: "0 24px",
+                border: 0,
+                borderRadius: 999,
+                background: "#3368A0",
+                color: "#ffffff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Thử lại
+            </button>
+            <a
+              href="/"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 44,
+                padding: "0 24px",
+                borderRadius: 999,
+                border: "1px solid #dce5ef",
+                background: "#ffffff",
+                color: "#102337",
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Về trang chủ
+            </a>
+          </div>
         </main>
       </body>
     </html>

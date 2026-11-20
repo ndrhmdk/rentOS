@@ -163,8 +163,11 @@ final class SlowQueryMonitor
             return true;
         }
 
-        return str_contains($normalized, 'telescope_entries')
-            || str_contains($normalized, 'schema_migrations');
+        // Infrastructure noise: Telescope, migrations, and queue worker job polling.
+        return (bool) preg_match(
+            '/\b(telescope_entries|schema_migrations|jobs|job_batches|failed_jobs)\b/',
+            $normalized,
+        );
     }
 
     private function truncateSql(string $sql): string

@@ -6,6 +6,7 @@ use App\Jobs\SendOpsDiscordAlert;
 use App\Mail\OpsAlertMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -194,11 +195,41 @@ final class OpsAlerter
             (string) ($context['reference'] ?? 'unknown'),
         );
 
-        SendOpsDiscordAlert::dispatch($content, [
+        $meta = [
             'kind' => $kind,
             'error_code' => $errorCode,
             'reference' => $context['reference'] ?? null,
-        ]);
+        ];
+
+        try {
+            SendOpsDiscordAlert::dispatch($content, $meta);
+        } catch (Throwable) {
+            // Database/queue outage must not swallow the alert — deliver sync, then log.
+            $this->deliverDiscordSynchronously($content, $meta);
+        }
+    }
+
+    /**
+     * @param  array{kind?: string, error_code?: string, reference?: string|null}  $meta
+     */
+    private function deliverDiscordSynchronously(string $content, array $meta): void
+    {
+        $webhook = (string) config('monitoring.discord_webhook', '');
+        if ($webhook === '') {
+            return;
+        }
+
+        try {
+            Http::timeout(5)->post($webhook, ['content' => $content])->throw();
+        } catch (Throwable) {
+            Log::critical('ops.alert.fallback', [
+                'channel' => 'discord',
+                'kind' => $meta['kind'] ?? null,
+                'error_code' => $meta['error_code'] ?? null,
+                'reference' => $meta['reference'] ?? null,
+                'reason' => 'discord_enqueue_and_sync_failed',
+            ]);
+        }
     }
 
     /**

@@ -54,5 +54,5 @@ Visibility limits:
 - `SendOpsDiscordAlert` exhaustion → fallback log only (no alert loop)
 - Critical slow query (≥5000 ms) → Discord + email
 - Cumulative callback fires with QueryStats; 5th breach → Discord + email
-- Telescope disabled in production; `viewTelescope` gate is admin-only if enabled
+- Telescope disabled in production; `viewTelescope` requires ACTIVE verified admin; responses/SQL bindings are redacted when enabled locally
 - Netdata: capture host charts (CPU/memory/disk/network) and one controlled threshold notification from `infrastructure/netdata/` (manual evidence for RNT-12)

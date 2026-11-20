@@ -2,7 +2,7 @@
 # Copy relevant sections into /etc/netdata/netdata.conf after install.
 # Do not enable machine learning or long retention on this host.
 
-[global]
+[web]
     # Bind the dashboard to localhost. Do not publish port 19999 publicly.
     bind to = 127.0.0.1
 

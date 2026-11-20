@@ -8,7 +8,7 @@ type ErrorPageProps = {
 };
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
-  const reference = error.digest?.trim() || null;
+  void error;
 
   // Full-viewport overlay so the layout header/footer (especially the home
   // transparent nav over a light page) cannot show through or block clicks.
@@ -23,13 +23,8 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         </h1>
         <p className="mt-3 text-sm leading-6 text-[#52636c]">
           Trang này gặp sự cố tạm thời. Bạn có thể thử tải lại hoặc quay về
-          trang chủ.
+          trang chủ. 
         </p>
-        {reference ? (
-          <p className="mt-4 break-all rounded-lg border border-[#dce5ef] bg-white px-3 py-2 font-mono text-xs text-[#52636c]">
-            Mã tham chiếu: {reference}
-          </p>
-        ) : null}
         <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <button
             type="button"

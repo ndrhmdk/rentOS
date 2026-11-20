@@ -129,6 +129,30 @@ class SlowQueryMonitorTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_queue_job_polling_queries_are_ignored(): void
+    {
+        $monitor = app(SlowQueryMonitor::class);
+
+        $monitor->handleQuery($this->queryEvent(
+            'select * from "jobs" where "queue" = ? and ("reserved_at" is null or "reserved_at" <= ?) order by "id" asc limit 1',
+            ['default', 1],
+            9000.0,
+        ));
+        $monitor->handleQuery($this->queryEvent(
+            'update "jobs" set "reserved_at" = ?, "attempts" = ? where "id" = ?',
+            [1, 1, 9],
+            9000.0,
+        ));
+        $monitor->handleQuery($this->queryEvent(
+            'insert into "failed_jobs" ("uuid", "connection", "queue", "payload") values (?, ?, ?, ?)',
+            ['a', 'database', 'default', '{}'],
+            9000.0,
+        ));
+
+        Mail::assertNothingSent();
+        Queue::assertNothingPushed();
+    }
+
     public function test_registered_cumulative_callback_fires_on_real_queries(): void
     {
         Log::spy();
