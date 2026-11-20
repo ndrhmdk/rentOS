@@ -220,7 +220,7 @@ class OwnerPropertiesTest extends TestCase
     {
         $owner = User::factory()->create();
 
-        foreach (range(1, 5) as $index) {
+        foreach (range(1, 25) as $index) {
             $propertyId = $this->createProperty($owner->id);
             DB::table('listings')->insert([
                 'id' => (string) Str::uuid(),
@@ -229,6 +229,20 @@ class OwnerPropertiesTest extends TestCase
                 'title' => "Demo listing {$index}",
                 'description' => 'A listing used to verify eager loading.',
             ]);
+
+            foreach (range(1, 2) as $unitNumber) {
+                DB::table('units')->insert([
+                    'id' => (string) Str::uuid(),
+                    'property_id' => $propertyId,
+                    'client_operation_id' => (string) Str::uuid(),
+                    'label' => "Room {$unitNumber}",
+                    'unit_kind' => 'ROOM',
+                    'bedrooms' => 1,
+                    'bathrooms' => 1,
+                    'bathroom_arrangement' => 'PRIVATE',
+                    'minimum_rental_months' => 3,
+                ]);
+            }
         }
 
         $ownerQueries = [];
@@ -241,16 +255,33 @@ class OwnerPropertiesTest extends TestCase
         $response = $this->actingAs($owner)->getJson('/api/v1/owner/properties');
 
         $response->assertOk()
-            ->assertJsonCount(5, 'data')
+            ->assertJsonCount(20, 'data')
+            ->assertJsonCount(2, 'data.0.units')
             ->assertJsonPath('meta.per_page', 20)
-            ->assertJsonPath('meta.total', 5);
+            ->assertJsonPath('meta.total', 25);
 
         $this->assertSame(4, count($ownerQueries), implode("\n", $ownerQueries));
-        $this->assertCount(5, collect($response->json('data'))->pluck('listing')->filter());
+        $this->assertCount(20, collect($response->json('data'))->pluck('listing')->filter());
         $this->assertSame(
             1,
             collect($ownerQueries)->filter(fn (string $sql): bool => str_contains($sql, '"listings"'))->count(),
         );
+        $this->assertSame(
+            1,
+            collect($ownerQueries)->filter(fn (string $sql): bool => str_contains($sql, '"units"'))->count(),
+        );
+
+        $ownerQueries = [];
+        $secondPage = $this->actingAs($owner)->getJson('/api/v1/owner/properties?page=2');
+
+        $secondPage->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonCount(2, 'data.0.units')
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonPath('meta.total', 25);
+
+        $this->assertSame(4, count($ownerQueries), implode("\n", $ownerQueries));
+        $this->assertCount(5, collect($secondPage->json('data'))->pluck('listing')->filter());
     }
 
     public function test_archived_properties_are_excluded(): void
