@@ -1,0 +1,10 @@
+# Example Netdata notification settings.
+# Copy to /etc/netdata/health_alarm_notify.conf on the VPS and replace placeholders.
+# Never commit real webhook URLs or SMTP passwords.
+
+SEND_EMAIL="YES"
+DEFAULT_RECIPIENT_EMAIL="admin@example.test"
+
+SEND_DISCORD="YES"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1572915648261259416/r1SG4MVhOjjDkVAM4FsfFRjhhhqRuah_y6VjtQWYw7Yt_lFUeMc3WXDlPFB42FZU_O6h"
+DEFAULT_RECIPIENT_DISCORD="sysadmin"
