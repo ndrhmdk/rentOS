@@ -129,6 +129,33 @@ class SlowQueryMonitorTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    public function test_registered_cumulative_callback_fires_on_real_queries(): void
+    {
+        Log::spy();
+
+        config([
+            'monitoring.slow_queries' => true,
+            'monitoring.slow_query_ms' => 999999,
+            'monitoring.slow_request_db_ms' => 0,
+            'monitoring.db_time_discord_count' => 99,
+        ]);
+
+        // Boot skipped registration while MONITORING_SLOW_QUERIES=false in phpunit.xml.
+        app(SlowQueryMonitor::class)->register();
+
+        \Illuminate\Support\Facades\DB::select('select 1');
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message, array $context): bool => $message === 'ops.db_time.warning'
+                && array_key_exists('query_count', $context)
+                && array_key_exists('top_patterns', $context)
+                && array_key_exists('total_ms', $context))
+            ->atLeast()
+            ->once();
+
+        Mail::assertNothingSent();
+    }
+
     public function test_cumulative_db_time_logs_every_breach_and_alerts_on_fifth(): void
     {
         Log::spy();

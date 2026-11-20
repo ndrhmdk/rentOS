@@ -3,13 +3,13 @@
 namespace Tests\Feature\Monitoring;
 
 use App\Jobs\SendOpsDiscordAlert;
-use App\Mail\OpsAlertMail;
 use App\Models\User;
 use Illuminate\Contracts\Queue\Job as QueueJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
@@ -20,8 +20,10 @@ class QueueFailureAlertTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_exhausted_job_queues_discord_without_email(): void
+    protected function setUp(): void
     {
+        parent::setUp();
+
         Mail::fake();
         Queue::fake();
         Cache::flush();
@@ -35,7 +37,10 @@ class QueueFailureAlertTest extends TestCase
             'monitoring.discord_webhook' => 'https://discord.example.test/webhook',
             'monitoring.dedupe_seconds' => 600,
         ]);
+    }
 
+    public function test_exhausted_job_queues_discord_without_email(): void
+    {
         $job = Mockery::mock(QueueJob::class);
         $job->shouldReceive('resolveName')->andReturn('App\\Jobs\\DeliverNotification');
 
@@ -52,5 +57,31 @@ class QueueFailureAlertTest extends TestCase
         });
 
         $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_exhausted_discord_alert_job_does_not_requeue_alert(): void
+    {
+        Log::spy();
+
+        $job = Mockery::mock(QueueJob::class);
+        $job->shouldReceive('resolveName')->andReturn(SendOpsDiscordAlert::class);
+
+        Event::dispatch(new JobFailed(
+            'database',
+            $job,
+            new RuntimeException('webhook down'),
+        ));
+
+        Mail::assertNothingSent();
+        Queue::assertNothingPushed();
+
+        Log::shouldHaveReceived('critical')
+            ->withArgs(function (string $message, array $context): bool {
+                return $message === 'ops.alert.fallback'
+                    && ($context['reason'] ?? null) === 'discord_alert_job_exhausted'
+                    && ($context['channel'] ?? null) === 'discord';
+            })
+            ->atLeast()
+            ->once();
     }
 }

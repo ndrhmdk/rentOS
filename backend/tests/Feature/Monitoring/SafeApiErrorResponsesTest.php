@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\Monitoring;
 
+use App\Jobs\SendOpsDiscordAlert;
 use App\Monitoring\ErrorCode;
 use App\Monitoring\ReferenceId;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use League\Flysystem\UnableToWriteFile;
 use RuntimeException;
@@ -14,6 +18,14 @@ class SafeApiErrorResponsesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Cache::flush();
+        Mail::fake();
+        Queue::fake();
+        config([
+            'monitoring.discord_webhook' => 'https://discord.example.test/webhook',
+            'monitoring.dedupe_seconds' => 600,
+        ]);
 
         Route::middleware('api')->prefix('api')->group(function (): void {
             Route::get('/v1/__monitoring/boom', function (): never {
@@ -78,4 +90,21 @@ class SafeApiErrorResponsesTest extends TestCase
             ->assertJsonPath('reference', $reference);
         $this->assertSame($reference, $response->headers->get(ReferenceId::HEADER));
     }
+
+    public function test_api_500_queues_discord_alert_with_matching_reference(): void
+    {
+        $response = $this->getJson('/api/v1/__monitoring/boom');
+
+        $response->assertStatus(500);
+        $reference = $response->json('reference');
+        $this->assertIsString($reference);
+
+        Mail::assertNothingSent();
+        Queue::assertPushed(SendOpsDiscordAlert::class, function (SendOpsDiscordAlert $job) use ($reference): bool {
+            return str_contains($job->content, 'critical')
+                && str_contains($job->content, (string) $reference)
+                && ($job->meta['reference'] ?? null) === $reference;
+        });
+    }
 }
+

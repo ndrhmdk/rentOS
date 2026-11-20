@@ -48,10 +48,11 @@ Visibility limits:
 
 ## Evidence checklist
 
-- PHPUnit monitoring tests
-- Frontend error-code / error-boundary tests
-- App critical → Discord, no email
+- PHPUnit monitoring tests (`tests/Feature/Monitoring`, `tests/Unit/Monitoring`)
+- Frontend error-boundary / API error-code tests
+- App critical → Discord job queued, no email (`SafeApiErrorResponsesTest`, `QueueFailureAlertTest`)
+- `SendOpsDiscordAlert` exhaustion → fallback log only (no alert loop)
 - Critical slow query (≥5000 ms) → Discord + email
-- Cumulative 5th breach → Discord + email with query summary
-- API error screen whose `error_code` and reference match the log
-- Netdata charts (CPU, memory, disk, network) and one restored threshold notification
+- Cumulative callback fires with QueryStats; 5th breach → Discord + email
+- Telescope disabled in production; `viewTelescope` gate is admin-only if enabled
+- Netdata: capture host charts (CPU/memory/disk/network) and one controlled threshold notification from `infrastructure/netdata/` (manual evidence for RNT-12)

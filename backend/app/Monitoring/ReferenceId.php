@@ -30,19 +30,34 @@ final class ReferenceId
         return $reference;
     }
 
+    /**
+     * Assign a fresh correlation id for a queue job (never reuse an HTTP request's id).
+     */
+    public static function assignForJob(): string
+    {
+        $reference = (string) Str::uuid();
+        Log::shareContext(['reference' => $reference]);
+
+        return $reference;
+    }
+
+    /**
+     * Drop shared log correlation so the next job/request cannot inherit it.
+     */
+    public static function clear(): void
+    {
+        Log::flushSharedContext();
+    }
+
     public static function current(?Request $request = null): ?string
     {
         $request ??= request();
 
-        if (! $request instanceof Request) {
-            $shared = Log::sharedContext();
-
-            return is_string($shared['reference'] ?? null) ? $shared['reference'] : null;
-        }
-
-        $attribute = $request->attributes->get(self::REQUEST_ATTRIBUTE);
-        if (is_string($attribute) && $attribute !== '') {
-            return $attribute;
+        if ($request instanceof Request) {
+            $attribute = $request->attributes->get(self::REQUEST_ATTRIBUTE);
+            if (is_string($attribute) && $attribute !== '') {
+                return $attribute;
+            }
         }
 
         $shared = Log::sharedContext();

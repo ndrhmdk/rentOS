@@ -90,10 +90,10 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function (User $user) {
-            return in_array($user->email, [
-                //
-            ]);
+        Gate::define('viewTelescope', function (User $user): bool {
+            // Non-local Telescope (if ever enabled) is admin-only.
+            // Production keeps TELESCOPE_ENABLED=false by default.
+            return (bool) $user->is_admin;
         });
     }
 }
