@@ -11,6 +11,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -167,7 +168,7 @@ class SlowQueryMonitorTest extends TestCase
         // Boot skipped registration while MONITORING_SLOW_QUERIES=false in phpunit.xml.
         app(SlowQueryMonitor::class)->register();
 
-        \Illuminate\Support\Facades\DB::select('select 1');
+        DB::select('select 1');
 
         Log::shouldHaveReceived('warning')
             ->withArgs(fn (string $message, array $context): bool => $message === 'ops.db_time.warning'

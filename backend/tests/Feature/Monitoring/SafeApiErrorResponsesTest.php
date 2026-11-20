@@ -107,4 +107,3 @@ class SafeApiErrorResponsesTest extends TestCase
         });
     }
 }
-

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 type GlobalErrorPageProps = {
   error: Error & { digest?: string };
   reset: () => void;
@@ -89,7 +91,7 @@ export default function GlobalErrorPage({
             >
               Thử lại
             </button>
-            <a
+            <Link
               href="/"
               style={{
                 display: "inline-flex",
@@ -107,7 +109,7 @@ export default function GlobalErrorPage({
               }}
             >
               Về trang chủ
-            </a>
+            </Link>
           </div>
         </main>
       </body>
