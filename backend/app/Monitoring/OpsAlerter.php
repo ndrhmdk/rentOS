@@ -62,7 +62,7 @@ final class OpsAlerter
         $fingerprint = $this->fingerprint($kind, $errorCode, $safeContext);
         $cacheKey = 'ops-alert:'.$kind.':'.$fingerprint;
 
-        if (! Cache::add($cacheKey, true, (int) config('monitoring.dedupe_seconds', 600))) {
+        if (! $this->claimAlertSlot($cacheKey, $kind, $errorCode, $safeContext)) {
             Log::info('ops.alert.deduped', [
                 'kind' => $kind,
                 'error_code' => $errorCode,
@@ -85,6 +85,29 @@ final class OpsAlerter
 
         if (in_array($kind, self::DISCORD_KINDS, true)) {
             $this->queueDiscord($kind, $errorCode, $summary, $safeContext);
+        }
+    }
+
+    /**
+     * Reserve the dedupe window for this alert. A cache outage must never mask the
+     * original failure, so an unavailable store lets the alert through undeduped.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function claimAlertSlot(string $cacheKey, string $kind, string $errorCode, array $context): bool
+    {
+        try {
+            return Cache::add($cacheKey, true, (int) config('monitoring.dedupe_seconds', 600));
+        } catch (Throwable) {
+            Log::critical('ops.alert.fallback', [
+                'channel' => 'cache',
+                'kind' => $kind,
+                'error_code' => $errorCode,
+                'reference' => $context['reference'] ?? null,
+                'reason' => 'dedupe_cache_unavailable',
+            ]);
+
+            return true;
         }
     }
 

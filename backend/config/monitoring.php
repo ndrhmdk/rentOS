@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'slow_queries' => (bool) env('MONITORING_SLOW_QUERIES', true),
+    'slow_queries' => (bool) env('MONITORING_SLOW_QUERIES', false),
 
     'slow_query_ms' => (float) env('SLOW_QUERY_MS', 1000),
 

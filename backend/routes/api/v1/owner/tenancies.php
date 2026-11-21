@@ -4,9 +4,10 @@ use App\Http\Controllers\Api\V1\OwnerTenancyLifecycleController;
 use App\Http\Controllers\Api\V1\OwnerTenancyProposalsController;
 use App\Http\Controllers\Api\V1\OwnerTenancyRenewalRequestsController;
 use App\Http\Controllers\Api\V1\TenancyTimelineController;
+use App\Http\Middleware\DenyPersonalAccessToken;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'throttle:api'])
+Route::middleware(['auth:sanctum', 'throttle:api', DenyPersonalAccessToken::class])
     ->prefix('v1')
     ->name('api.v1.owner.')
     ->group(function (): void {

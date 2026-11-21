@@ -20,7 +20,7 @@ final class ReferenceId
         }
 
         $header = $request->headers->get(self::HEADER);
-        $reference = is_string($header) && $header !== ''
+        $reference = is_string($header) && Str::isUuid($header)
             ? $header
             : (string) Str::uuid();
 

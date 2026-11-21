@@ -7,8 +7,10 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\Support\EnforcingCsrfMiddleware;
+use Tests\Support\PublicListingFixture;
 use Tests\TestCase;
 
 class PersonalAccessTokensTest extends TestCase
@@ -185,5 +187,23 @@ class PersonalAccessTokensTest extends TestCase
 
         $this->withToken($token)->getJson('/api/v1/me')->assertUnauthorized();
         $this->withToken($token)->getJson('/api/v1/favourite-properties')->assertUnauthorized();
+    }
+
+    public function test_personal_token_cannot_read_owner_tenancy_timeline(): void
+    {
+        $listing = PublicListingFixture::published();
+        $unitId = $listing->unitIds[0];
+        PublicListingFixture::blockUnit($unitId, now()->addDays(30)->toDateString(), now()->addDays(120)->toDateString());
+        $tenancyId = DB::table('tenancies')->where('unit_id', $unitId)->value('id');
+
+        $token = $listing->owner->createToken(
+            'rental request reader',
+            ['account:read', 'rental-requests:read'],
+            now()->addDay(),
+        )->plainTextToken;
+
+        $this->withToken($token)
+            ->getJson('/api/v1/owner/tenancies/'.$tenancyId)
+            ->assertForbidden();
     }
 }

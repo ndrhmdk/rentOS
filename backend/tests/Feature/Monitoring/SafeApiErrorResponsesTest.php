@@ -5,10 +5,13 @@ namespace Tests\Feature\Monitoring;
 use App\Jobs\SendOpsDiscordAlert;
 use App\Monitoring\ErrorCode;
 use App\Monitoring\ReferenceId;
+use Illuminate\Cache\ArrayStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use League\Flysystem\UnableToWriteFile;
 use RuntimeException;
 use Tests\TestCase;
@@ -37,7 +40,9 @@ class SafeApiErrorResponsesTest extends TestCase
             });
 
             Route::post('/v1/__monitoring/validate', function (): never {
-                validator([], ['email' => 'required|email'])->validate();
+                throw ValidationException::withMessages([
+                    'email' => ['The email field is required.'],
+                ]);
             });
         });
     }
@@ -89,6 +94,46 @@ class SafeApiErrorResponsesTest extends TestCase
         $response->assertStatus(500)
             ->assertJsonPath('reference', $reference);
         $this->assertSame($reference, $response->headers->get(ReferenceId::HEADER));
+    }
+
+    public function test_invalid_or_oversized_request_id_is_replaced(): void
+    {
+        foreach (["not-a-uuid\nforged=1", str_repeat('a', 10_000)] as $header) {
+            $response = $this->withHeader(ReferenceId::HEADER, $header)
+                ->getJson('/api/v1/__monitoring/boom');
+
+            $reference = $response->assertStatus(500)->json('reference');
+
+            $this->assertTrue(Str::isUuid($reference));
+            $this->assertNotSame($header, $reference);
+            $this->assertSame($reference, $response->headers->get(ReferenceId::HEADER));
+        }
+    }
+
+    public function test_dedupe_cache_outage_keeps_safe_500_and_still_alerts(): void
+    {
+        Cache::extend('failing', fn () => Cache::repository(new class extends ArrayStore
+        {
+            public function add($key, $value, $seconds): bool
+            {
+                throw new RuntimeException('cache store unavailable');
+            }
+        }));
+        config(['cache.stores.failing' => ['driver' => 'failing'], 'cache.default' => 'failing']);
+        Cache::forgetDriver('failing');
+
+        $response = $this->getJson('/api/v1/__monitoring/boom');
+
+        $response->assertStatus(500)
+            ->assertJsonPath('error_code', ErrorCode::SERVER_ERROR)
+            ->assertJsonMissing(['message' => 'cache store unavailable']);
+
+        $reference = $response->json('reference');
+        $this->assertTrue(Str::isUuid($reference));
+        Queue::assertPushed(
+            SendOpsDiscordAlert::class,
+            fn (SendOpsDiscordAlert $job): bool => ($job->meta['reference'] ?? null) === $reference,
+        );
     }
 
     public function test_api_500_queues_discord_alert_with_matching_reference(): void
