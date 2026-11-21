@@ -3,12 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ApiError,
-  getOwnerProperties,
-  type OwnerListing,
-  type OwnerProperty,
-} from "@/lib/auth-api";
+import { ApiError } from "@/lib/http/client";
+import type { OwnerListing, OwnerProperty } from "@/lib/owner/types";
+import { getOwnerProperties } from "@/lib/owner/api";
 
 function statusLabel(listing: OwnerListing): string {
   if (listing.admin_suspended_at) return "Tạm ẩn bởi quản trị viên";

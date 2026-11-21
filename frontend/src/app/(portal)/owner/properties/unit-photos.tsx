@@ -9,17 +9,16 @@ import {
   type FormEvent,
 } from "react";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/http/client";
+import { OwnerPhoto } from "@/components/owner/owner-photo";
+import type { OwnerPropertyDetail, OwnerPropertyMedia } from "@/lib/owner/types";
 import {
-  ApiError,
   getOwnerProperty,
   getOwnerPropertyMedia,
   removeOwnerMedia,
   saveOwnerUnitSharedMedia,
   uploadOwnerMedia,
-  type OwnerPropertyDetail,
-  type OwnerPropertyMedia,
-} from "@/lib/auth-api";
-import { OwnerPhoto } from "@/components/owner/owner-photo";
+} from "@/lib/owner/api";
 
 const buttonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-4 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-60";

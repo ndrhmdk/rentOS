@@ -1,12 +1,12 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/http/client";
 import {
-  ApiError,
   createOwnerUnitBatch,
   getOwnerProperty,
-  type OwnerPropertyDetail,
-} from "@/lib/auth-api";
+} from "@/lib/owner/api";
+import type { OwnerPropertyDetail } from "@/lib/owner/types";
 import AddUnitsPage from "./page";
 
 const push = vi.fn();
@@ -17,12 +17,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
-vi.mock("@/lib/auth-api", () => ({
+vi.mock("@/lib/http/client", () => ({
   ApiError: class ApiError extends Error {
     constructor(public status: number, message: string) {
       super(message);
     }
   },
+}));
+vi.mock("@/lib/owner/api", () => ({
   createOwnerUnitBatch: vi.fn(),
   getOwnerProperty: vi.fn(),
 }));

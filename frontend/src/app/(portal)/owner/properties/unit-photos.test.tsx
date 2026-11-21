@@ -1,14 +1,13 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/http/client";
 import {
-  ApiError,
   getOwnerProperty,
   getOwnerPropertyMedia,
   uploadOwnerMedia,
-  type OwnerPropertyDetail,
-  type OwnerPropertyMedia,
-} from "@/lib/auth-api";
+} from "@/lib/owner/api";
+import type { OwnerPropertyDetail, OwnerPropertyMedia } from "@/lib/owner/types";
 import { UnitPhotoManager } from "./unit-photos";
 
 vi.mock("next/image", () => ({
@@ -21,7 +20,7 @@ vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-vi.mock("@/lib/auth-api", () => ({
+vi.mock("@/lib/http/client", () => ({
   ApiError: class ApiError extends Error {
     constructor(
       public status: number,
@@ -30,6 +29,9 @@ vi.mock("@/lib/auth-api", () => ({
       super(message);
     }
   },
+}));
+
+vi.mock("@/lib/owner/api", () => ({
   getOwnerProperty: vi.fn(),
   getOwnerPropertyMedia: vi.fn(),
   removeOwnerMedia: vi.fn(),

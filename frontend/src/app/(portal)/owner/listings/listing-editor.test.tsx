@@ -7,17 +7,16 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/http/client";
 import {
-  ApiError,
   getAmenityCatalog,
   getOwnerListing,
   getOwnerListingById,
   getOwnerProperty,
   getOwnerPropertyMedia,
   updateOwnerListing,
-  type OwnerListing,
-  type OwnerPropertyDetail,
-} from "@/lib/auth-api";
+} from "@/lib/owner/api";
+import type { OwnerListing, OwnerPropertyDetail } from "@/lib/owner/types";
 import { ListingEditor } from "./listing-editor";
 
 const replace = vi.fn();
@@ -27,7 +26,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/components/listings/listing-detail", () => ({
   ListingDetailView: () => <div />,
 }));
-vi.mock("@/lib/auth-api", () => ({
+vi.mock("@/lib/http/client", () => ({
   ApiError: class ApiError extends Error {
     constructor(
       public status: number,
@@ -37,6 +36,8 @@ vi.mock("@/lib/auth-api", () => ({
       super(message);
     }
   },
+}));
+vi.mock("@/lib/owner/api", () => ({
   archiveOwnerListing: vi.fn(),
   createOwnerListing: vi.fn(),
   getAmenityCatalog: vi.fn(),

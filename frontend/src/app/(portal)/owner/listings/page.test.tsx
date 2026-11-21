@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getOwnerProperties } from "@/lib/auth-api";
+import { getOwnerProperties } from "@/lib/owner/api";
 import OwnerListingsPage from "./page";
 
 const replace = vi.fn();
@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
-vi.mock("@/lib/auth-api", () => ({
+vi.mock("@/lib/http/client", () => ({
   ApiError: class ApiError extends Error {
     constructor(
       public status: number,
@@ -19,6 +19,9 @@ vi.mock("@/lib/auth-api", () => ({
       super(message);
     }
   },
+}));
+
+vi.mock("@/lib/owner/api", () => ({
   getOwnerProperties: vi.fn(),
 }));
 
