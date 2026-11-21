@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnforcePersonalAccessTokenScope;
 use App\Http\Middleware\LogApiRequest;
 use App\Monitoring\ErrorCode;
 use App\Monitoring\OpsAlerter;
 use App\Monitoring\ReferenceId;
 use App\Providers\MonitoringServiceProvider;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,7 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
-        $middleware->appendToGroup('api', LogApiRequest::class);
+        $middleware->appendToGroup('api', [LogApiRequest::class, EnforcePersonalAccessTokenScope::class]);
+        $middleware->appendToPriorityList(AuthenticatesRequests::class, EnforcePersonalAccessTokenScope::class);
         $middleware->statefulApi();
         $middleware->redirectGuestsTo(fn () => rtrim(config('fortify.home'), '/').'/login');
     })

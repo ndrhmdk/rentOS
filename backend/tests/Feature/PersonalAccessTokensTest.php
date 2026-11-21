@@ -8,6 +8,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\Support\EnforcingCsrfMiddleware;
 use Tests\Support\PublicListingFixture;
@@ -205,5 +207,36 @@ class PersonalAccessTokensTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/v1/owner/tenancies/'.$tenancyId)
             ->assertForbidden();
+    }
+
+    public function test_personal_token_is_denied_on_every_authenticated_route_outside_the_allow_list(): void
+    {
+        $allowed = config('personal_access_tokens.routes');
+        $routes = collect(Route::getRoutes()->getRoutes())
+            ->filter(fn ($route): bool => str_starts_with((string) $route->getName(), 'api.')
+                && in_array('auth:sanctum', $route->gatherMiddleware(), true));
+
+        $this->assertEqualsCanonicalizing(
+            array_keys($allowed),
+            $routes->map->getName()->intersect(array_keys($allowed))->values()->all(),
+            'Every allow-listed route name must exist.',
+        );
+
+        $user = User::factory()->create(['is_admin' => true]);
+        $token = $user->createToken('everything', array_values(array_unique($allowed)), now()->addDay())->plainTextToken;
+
+        $routes->reject(fn ($route): bool => array_key_exists($route->getName(), $allowed))
+            ->each(function ($route) use ($token): void {
+                $uri = preg_replace_callback(
+                    '/\{(\w+)\??\}/',
+                    fn (array $match): string => ($route->wheres[$match[1]] ?? null) === '[0-9]+' ? '1' : (string) Str::uuid(),
+                    $route->uri(),
+                );
+                $method = collect($route->methods())->first(fn (string $verb): bool => $verb !== 'HEAD');
+
+                $status = $this->withToken($token)->json($method, '/'.$uri)->getStatusCode();
+
+                $this->assertSame(403, $status, "{$method} /{$uri} ({$route->getName()}) must reject personal access tokens.");
+            });
     }
 }
