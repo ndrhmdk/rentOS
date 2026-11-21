@@ -3,10 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { NotificationIcon } from "@/config/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useNotificationUnread } from "@/lib/notification-inbox";
+
+function subscribeToHydration() {
+  return () => {};
+}
 
 function NavLink({
   href,
@@ -30,7 +34,10 @@ function NavLink({
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user, status, signOut } = useAuth();
+  const { user, status: authStatus, signOut } = useAuth();
+  // Keep the first client render identical to the server, even if auth is cached.
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  const status = hydrated ? authStatus : "loading";
   const unread = useNotificationUnread(user?.id);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
@@ -70,7 +77,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`z-50 flex h-[75px] min-h-[75px] items-center justify-between gap-3 px-4 text-[#E4E9F0] transition-colors sm:gap-6 sm:px-6 lg:px-10 ${onHome ? "fixed inset-x-0 top-0" : "sticky top-0"} ${transparent ? "border-b border-transparent bg-transparent shadow-none" : "border-b border-white/10 bg-[#091216] shadow-sm"}`}
+      className={`z-50 flex items-center justify-between gap-3 px-4 text-[#E4E9F0] transition-colors sm:gap-6 sm:px-6 lg:px-10 ${onHome ? "fixed inset-x-0 top-0 h-16 min-h-16 sm:h-[75px] sm:min-h-[75px]" : "sticky top-0 h-[75px] min-h-[75px]"} ${transparent ? "border-b border-transparent bg-transparent shadow-none" : "border-b border-white/10 bg-[#091216] shadow-sm"}`}
     >
       <Link
         href="/"
@@ -83,11 +90,11 @@ export function SiteHeader() {
           width={120}
           height={30}
           priority
-          className="w-[110px] sm:w-[120px] h-auto object-contain"
+          className={`${onHome ? "w-24" : "w-[110px]"} h-auto object-contain sm:w-[120px]`}
         />
       </Link>
       <nav
-        className="flex items-center gap-4 sm:gap-6 lg:gap-8 overflow-x-auto py-1"
+        className={`${onHome ? "hidden xl:flex" : "flex"} items-center gap-4 overflow-x-auto py-1 sm:gap-6 lg:gap-8`}
         aria-label="Điều hướng chính"
       >
         <NavLink href="/listings" active={pathname.startsWith("/listings")}>
@@ -119,7 +126,7 @@ export function SiteHeader() {
           Cổng chủ nhà
         </NavLink>
       </nav>
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+      <div className={`${onHome ? "ml-auto xl:ml-0" : ""} flex shrink-0 items-center gap-3 sm:gap-4`}>
         {/* Language Indicator */}
         <div className="hidden sm:flex items-center gap-1.5 text-white text-sm font-semibold select-none px-2 py-1">
           <svg
@@ -150,7 +157,7 @@ export function SiteHeader() {
               Đăng nhập
             </Link>
             <Link
-              className="text-sm font-semibold text-[#091216] bg-white hover:bg-slate-100 transition-all px-4 sm:px-5 py-2 rounded-full min-h-[40px] inline-flex items-center gap-1 shadow-sm whitespace-nowrap"
+              className={`${onHome ? "hidden sm:inline-flex" : "inline-flex"} min-h-[40px] items-center gap-1 whitespace-nowrap rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#091216] shadow-sm transition-all hover:bg-slate-100 sm:px-5`}
               href="/register"
             >
               <span>Đăng ký</span>
@@ -262,6 +269,56 @@ export function SiteHeader() {
           </div>
         )}
       </div>
+      {onHome && (
+        <details
+          className="group shrink-0 xl:hidden"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector("summary")?.focus();
+            }
+          }}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              event.currentTarget.open = false;
+            }
+          }}
+        >
+          <summary aria-label="Menu điều hướng" className="flex size-11 cursor-pointer list-none items-center justify-center rounded-xl border border-white/30 bg-[#091216]/40 text-white [&::-webkit-details-marker]:hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="size-6 group-open:hidden" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="hidden size-6 group-open:block" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+          </summary>
+          <nav
+            aria-label="Điều hướng trên điện thoại"
+            className="fixed inset-x-4 top-[72px] grid max-h-[calc(100dvh-6rem)] gap-1 overflow-y-auto rounded-2xl border border-white/15 bg-[#091216] p-3 shadow-xl sm:top-[83px]"
+          >
+            {[
+              { href: "/listings", label: "Tìm nhà cho bạn" },
+              { href: "/guide", label: "Hướng dẫn" },
+              { href: "/#cau-hoi", label: "FAQ" },
+              { href: "/tenant", label: "Cổng cư dân" },
+              { href: "/owner", label: "Cổng chủ nhà" },
+              ...(status === "guest" ? [{ href: "/register", label: "Đăng ký tài khoản" }] : []),
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex min-h-11 items-center rounded-lg px-3 text-base font-medium text-white hover:bg-white/10 focus-visible:bg-white/10"
+                onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  if (item.href === "/#cau-hoi") {
+                    const section = document.getElementById("cau-hoi");
+                    if (!section) return;
+                    event.preventDefault();
+                    window.scrollTo({ top: section.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+                    window.history.replaceState(null, "", "/#cau-hoi");
+                  }
+                }}
+              >{item.label}</Link>
+            ))}
+          </nav>
+        </details>
+      )}
     </header>
   );
 }

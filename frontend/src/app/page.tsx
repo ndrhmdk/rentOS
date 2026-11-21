@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ListingCardView } from "@/features/discovery/listing-card";
+import { HomeListingCard } from "@/features/discovery/home-listing-card";
 import { ListingSearchForm } from "@/features/discovery/listing-search-form";
 import {
   fetchListings,
@@ -126,7 +126,7 @@ export default function Home() {
 
   return (
     <div className="bg-[#f0f4f7]">
-      <section className="relative min-h-[720px] overflow-hidden bg-[#091216] text-white">
+      <section className="relative overflow-hidden bg-[#091216] text-white lg:min-h-[720px]">
         <Image
           src="/images/discovery/hero.png"
           alt=""
@@ -137,42 +137,42 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,18,22,0.33)_0%,rgba(9,18,22,0)_32%,rgba(9,18,22,0.13)_57%,rgba(9,18,22,0.79)_80%,rgb(9,18,22)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.05)_55%,rgba(0,0,0,0.15)_100%)]" />
-        <div className="relative mx-auto grid min-h-[720px] max-w-[1280px] items-center gap-12 px-6 py-24 lg:grid-cols-[1fr_470px] lg:px-10">
+        <div className="relative mx-auto grid max-w-[1280px] items-center gap-7 px-4 pb-20 pt-24 sm:gap-10 sm:px-6 sm:pb-24 sm:pt-28 lg:min-h-[720px] lg:grid-cols-[1fr_470px] lg:gap-12 lg:px-10 lg:py-24">
           <div className="max-w-[520px]">
-            <p className="flex items-center gap-3 text-xs font-semibold tracking-[1.44px] text-[#8fbcd0]">
+            <p className="flex items-center gap-2 text-[10px] font-semibold tracking-[1px] text-[#8fbcd0] sm:gap-3 sm:text-xs sm:tracking-[1.44px]">
               <span className="h-0.5 w-7 bg-[#8fbcd0]" />
               THUÊ DÀI HẠN. TRỌN AN YÊN.
             </p>
-            <h1 className="mt-4 text-5xl font-extrabold leading-[1.15] tracking-[-2px] sm:text-[56px] sm:leading-[64px]">
+            <h1 className="mt-3 text-[32px] font-extrabold leading-[1.15] tracking-[-1px] min-[375px]:text-[38px] sm:mt-4 sm:text-[56px] sm:leading-[64px] sm:tracking-[-2px] lg:text-[44px] lg:leading-[52px] xl:text-[56px] xl:leading-[64px]">
               Nơi để ở.
               <br />
               Chốn để thuộc về.
             </h1>
-            <p className="mt-6 max-w-[460px] text-2xl leading-8 tracking-[-0.5px]">
+            <p className="mt-4 max-w-[460px] text-base leading-6 tracking-[-0.25px] min-[375px]:text-lg sm:mt-6 sm:text-2xl sm:leading-8 sm:tracking-[-0.5px]">
               Nhà chọn lọc, hợp đồng rõ ràng.
               <br />
               Mở chương mới cùng RentOS.
             </p>
             <Link
               href="/listings"
-              className="mt-8 inline-flex h-[60px] w-full max-w-[460px] items-center justify-between rounded-md bg-white px-6 text-xl font-semibold text-black"
+              className="mt-5 inline-flex min-h-12 w-full max-w-[460px] items-center justify-between rounded-md bg-white px-5 text-base font-semibold text-black sm:mt-8 sm:h-[60px] sm:px-6 sm:text-xl"
             >
               Tìm nhà ngay!
               <span aria-hidden="true">↗</span>
             </Link>
           </div>
-          <ListingSearchForm />
+          <ListingSearchForm locations={listings.flatMap((listing) => [listing.property.ward, listing.property.city].filter((name): name is string => Boolean(name)))} />
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto -mt-16 w-full max-w-[1100px] px-4">
+      <section className="relative z-10 mx-auto -mt-8 w-full max-w-[1100px] px-4 sm:-mt-16">
         <div className="rounded-t-[25px] bg-white px-6 py-8 shadow-sm sm:px-12 lg:px-14">
           <p className="flex items-center gap-2 text-xs font-semibold tracking-[1.44px] text-[#66a3bf]">
             <span className="h-0.5 w-[30px] bg-[#66a3bf]" />
             Vì sao chọn chúng tôi
           </p>
           <div className="mt-5 grid gap-4 lg:grid-cols-[300px_1fr] lg:items-start">
-            <h2 className="text-[30px] font-semibold leading-[35px] tracking-[-1.2px] text-black">
+            <h2 className="text-2xl font-semibold leading-tight tracking-[-1px] text-black sm:text-[30px] sm:leading-[35px] sm:tracking-[-1.2px]">
               Tìm nhà dễ dàng. Sống an tâm.
             </h2>
             <p className="max-w-[490px] text-sm font-light leading-8 tracking-[-0.56px] text-[#181818]">
@@ -180,7 +180,7 @@ export default function Home() {
               minh bạch và đáng tin cậy.
             </p>
           </div>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6 sm:mt-8 sm:gap-6 lg:grid-cols-4">
             {reasons.map((reason) => (
               <div key={reason.title} className="text-center">
                 <span className="mx-auto flex size-[25px] items-center justify-center rounded-[3px] bg-[rgba(143,188,208,0.45)]">
@@ -202,7 +202,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="bg-[url('/images/home/why-us.png')] rounded-b-[25px] bg-no-repeat bg-cover bg-center grid gap-6 bg-[#091216] px-6 py-8 text-white sm:grid-cols-3 sm:px-12">
+        <div className="grid grid-cols-2 gap-5 rounded-b-[25px] bg-[#091216] bg-[url('/images/home/why-us.png')] bg-cover bg-center bg-no-repeat px-6 py-6 text-white sm:grid-cols-3 sm:gap-6 sm:px-12 sm:py-8 [&>div:first-child]:col-span-2 sm:[&>div:first-child]:col-span-1">
           <Stat
             value="Nhà tốt. Người thật."
             label="Tin đăng được kiểm duyệt trước khi công khai"
@@ -212,42 +212,45 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1280px] gap-6 px-6 py-20 lg:px-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#3368a0]">
-              Bắt đầu xem nhà ngay
-            </p>
-            <h2 className="mt-2 text-4xl font-bold tracking-[-0.72px] text-[#3368a0]">
-              Hãy tìm ngôi nhà dành cho chính bạn.
-            </h2>
-            <p className="mt-2 text-sm text-[#5b6676]">Bài đăng mới nhất</p>
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1280px] gap-5 px-4 py-12 sm:gap-6 sm:px-6 sm:py-20 lg:px-10">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#3368a0]">
+                Bắt đầu xem nhà ngay
+              </p>
+              <h2 className="mt-2 text-2xl font-bold tracking-[-0.5px] text-[#3368a0] sm:text-4xl sm:tracking-[-0.72px]">
+                Hãy tìm ngôi nhà dành cho chính bạn.
+              </h2>
+              <p className="mt-3 text-sm text-[#7c858c]">Từ ban mai sân vườn đến nhịp sống phố thị. Tổ ấm thực tế cho cuộc sống thường nhật.</p>
+            </div>
+            <Link
+              href="/listings"
+              className="inline-flex min-h-11 items-center gap-5 rounded-md border border-[#b9c9dc] bg-white px-5 text-sm font-semibold text-[#254e7a]"
+            >
+              Xem tất cả
+              <span aria-hidden="true">↗</span>
+            </Link>
           </div>
-          <Link
-            href="/listings"
-            className="inline-flex min-h-11 items-center rounded-[15px] border border-[#b9c9dc] bg-white px-5 text-[15px] font-semibold text-[#254e7a]"
-          >
-            Xem tất cả
-          </Link>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {listings.map((listing) => (
-            <ListingCardView
-              key={listing.id}
-              listing={listing}
-              href={`/listings/${listing.id}`}
-            />
-          ))}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+            {listings.map((listing) => (
+              <HomeListingCard
+                key={listing.id}
+                listing={listing}
+              />
+            ))}
+          </div>
+          <p className="text-xs leading-5 text-[#7c858c]">Khám phá các căn tiêu biểu. Tình trạng trống và giá thuê hằng tháng luôn được xác thực trước khi bạn nộp hồ sơ.</p>
         </div>
       </section>
 
-      <section className="bg-[#091216] px-6 py-20 text-white">
+      <section className="bg-[#091216] px-4 py-12 text-white sm:px-6 sm:py-20">
         <div className="mx-auto grid max-w-[1200px] gap-7">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#8fbcd0]">
               Trọn vẹn nơi bạn chọn
             </p>
-            <h2 className="mt-2 text-4xl font-bold tracking-[-0.72px]">
+            <h2 className="mt-2 text-2xl font-bold tracking-[-0.5px] sm:text-4xl sm:tracking-[-0.72px]">
               Đúng khu phố bạn thích. Đúng chất sống bạn yêu.
             </h2>
           </div>
@@ -256,7 +259,7 @@ export default function Home() {
               <Link
                 key={area.name}
                 href={`/listings?location=${encodeURIComponent(area.query)}`}
-                className="relative block h-[340px] overflow-hidden rounded-2xl"
+                className="relative block h-[240px] overflow-hidden rounded-2xl sm:h-[340px]"
               >
                 <Image
                   src={area.image}
@@ -280,12 +283,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1200px] gap-8 px-6 py-20">
+      <section className="mx-auto grid max-w-[1200px] gap-7 px-4 py-12 sm:gap-8 sm:px-6 sm:py-20">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#3368a0]">
             Từ tìm kiếm đến an cư
           </p>
-          <h2 className="mt-2 text-4xl font-bold tracking-[-0.72px] text-[#091216]">
+          <h2 className="mt-2 text-2xl font-bold tracking-[-0.5px] text-[#091216] sm:text-4xl sm:tracking-[-0.72px]">
             Bắt đầu hành trình mới chỉ với 3 bước.
           </h2>
         </div>
@@ -307,11 +310,11 @@ export default function Home() {
       </section>
 
       <section className="grid bg-[#3368a0] text-white lg:grid-cols-2">
-        <div className="flex flex-col justify-center gap-4 px-6 py-16 lg:px-24">
+        <div className="flex flex-col justify-center gap-4 px-4 py-10 sm:px-6 sm:py-16 lg:px-24">
           <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#dce9f7]">
             Dành cho chủ nhà
           </p>
-          <h2 className="max-w-lg text-4xl font-bold leading-[44px] tracking-[-0.72px]">
+          <h2 className="max-w-lg text-2xl font-bold leading-tight tracking-[-0.5px] sm:text-4xl sm:leading-[44px] sm:tracking-[-0.72px]">
             Có phòng hoặc căn hộ cho thuê dài hạn?
           </h2>
           <p className="max-w-md text-base leading-6 text-[#e4edf7]">
@@ -325,7 +328,7 @@ export default function Home() {
             Đăng tài sản cho thuê
           </Link>
         </div>
-        <div className="relative h-[380px] lg:h-[460px]">
+        <div className="relative h-[240px] sm:h-[380px] lg:h-[460px]">
           <Image
             src="/images/discovery/owner-cta.png"
             alt=""
@@ -336,20 +339,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#091216] px-6 py-24 text-white">
+      <section className="bg-[#091216] px-4 py-12 text-white sm:px-6 sm:py-24">
         <div className="mx-auto grid max-w-[1200px] gap-8">
           <p className="text-xs font-semibold tracking-[1.44px] text-[#8fbcd0]">
             NHỮNG NGƯỜI ĐÃ TÌM ĐƯỢC NƠI AN CƯ
           </p>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="max-w-3xl text-4xl font-bold tracking-[-1px]">
+            <h2 className="max-w-3xl text-2xl font-bold tracking-[-0.5px] sm:text-4xl sm:tracking-[-1px]">
               Nơi ở tốt. Câu chuyện đẹp hơn.
             </h2>
             <p className="text-right text-xl font-semibold text-[#8fbcd0]">
               ★★★★★ 4.8 / 5
             </p>
           </div>
-          <blockquote className="max-w-xl rounded-[10px] bg-[#101f26] p-7 text-lg leading-relaxed">
+          <blockquote className="max-w-xl rounded-[10px] bg-[#101f26] p-5 text-base leading-relaxed sm:p-7 sm:text-lg">
             “Lần đầu tiên, căn nhà thực sự giống hệt như những gì được đăng tải.
             Chúng tôi biết rõ toàn bộ chi phí trước khi đăng ký và luôn có người
             hỗ trợ khi cần.”
@@ -362,13 +365,13 @@ export default function Home() {
 
       <section
         id="cau-hoi"
-        className="mx-auto grid max-w-[1200px] scroll-mt-24 gap-10 px-6 py-20 lg:grid-cols-[0.7fr_1.3fr]"
+        className="mx-auto grid max-w-[1200px] scroll-mt-24 gap-6 px-4 py-12 sm:gap-10 sm:px-6 sm:py-20 lg:grid-cols-[0.7fr_1.3fr]"
       >
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.96px] text-[#3368a0]">
             Một chút rõ ràng
           </p>
-          <h2 className="mt-2 text-4xl font-bold tracking-[-0.72px] text-[#091216]">
+          <h2 className="mt-2 text-2xl font-bold tracking-[-0.5px] text-[#091216] sm:text-4xl sm:tracking-[-0.72px]">
             Trước khi bạn chuyển đến.
           </h2>
           <p className="mt-4 text-sm text-[#454e5c]">
@@ -382,7 +385,7 @@ export default function Home() {
               className="border-b border-[#e1e7ed] py-4"
               open={item.question.startsWith("Thời hạn")}
             >
-              <summary className="cursor-pointer text-base font-semibold text-[#091216]">
+              <summary className="min-h-11 cursor-pointer py-2 text-base font-semibold text-[#091216]">
                 {item.question}
               </summary>
               <p className="pt-3 text-sm leading-5 text-[#454e5c]">
