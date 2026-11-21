@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { ApiError } from "@/lib/auth-api";
+import { ApiError } from "@/lib/http/client";
 import { useAuth } from "@/lib/auth-context";
 import { getTenantSummary, type TenantSummary } from "@/lib/tenant-summary-api";
 import TenantPortalPage from "./page";

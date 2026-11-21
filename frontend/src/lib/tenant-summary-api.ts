@@ -1,4 +1,4 @@
-import { request } from "@/lib/auth-api";
+import { request } from "@/lib/http/client";
 import type { RentalRequestStatus } from "@/lib/rental-requests-api";
 
 type SummaryLink = { id: string; title: string; href: string };

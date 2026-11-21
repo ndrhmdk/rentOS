@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { describeDuration, dong } from "@/components/listings/listing-format";
 import { ListingIcon } from "@/components/listings/listing-icon";
-import { ApiError } from "@/lib/auth-api";
+import { ApiError } from "@/lib/http/client";
 import { useAuth } from "@/lib/auth-context";
 import { dateFormat, dateRange, statuses, timestamp } from "@/lib/rental-request-format";
 import { getTenantSummary, type TenantProposal, type TenantSummary, type TenantUpcomingTenancy } from "@/lib/tenant-summary-api";

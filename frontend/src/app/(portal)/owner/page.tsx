@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AdminIcon } from "@/components/admin/admin-icons";
 import { ListingIcon } from "@/components/listings/listing-icon";
-import { ApiError } from "@/lib/auth-api";
+import { ApiError } from "@/lib/http/client";
 import { useAuth } from "@/lib/auth-context";
 import { getOwnerPropertyPreview, getOwnerSummary, type OwnerPropertyPreview, type OwnerSummary } from "@/lib/owner-summary-api";
 import { dateRange, statuses, timestamp } from "@/lib/rental-request-format";
