@@ -1347,6 +1347,41 @@ class PropertyWriteService
         $operationId = $attributes['client_operation_id'];
         $unitId = $attributes['unit_id'] ?? null;
         $caption = $attributes['caption'] ?? null;
+
+        /** @var array{media: PropertyMedia, replayed: bool, content_revision: int}|null $replay */
+        $replay = DB::transaction(function () use ($owner, $property, $operationId, $unitId, $caption, $sha256): ?array {
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
+            $owner = $this->lockActiveOwner($owner);
+            Gate::authorize('update', $property);
+
+            $existing = PropertyMedia::query()
+                ->where('uploaded_by', $owner->id)
+                ->where('client_operation_id', $operationId)
+                ->first();
+
+            if ($existing === null) {
+                return null;
+            }
+
+            abort_unless(
+                $existing->property_id === $property->id
+                    && $existing->unit_id === $unitId
+                    && $existing->caption === $caption
+                    && $existing->sha256 === $sha256,
+                409,
+            );
+
+            return [
+                'media' => $existing,
+                'replayed' => true,
+                'content_revision' => $property->content_revision,
+            ];
+        });
+
+        if ($replay !== null) {
+            return $replay;
+        }
+
         $mediaId = (string) Str::uuid();
         $storagePath = "properties/{$property->id}/media/{$mediaId}.{$extensions[$mimeType]}";
 

@@ -5,6 +5,7 @@ namespace App\Actions\Reports;
 use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
+use App\Models\Property;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,18 @@ class SuspendListingAction
     public function execute(Listing $listing, User $admin, string $reason): Listing
     {
         return DB::transaction(function () use ($listing, $admin, $reason) {
+            $propertyId = $listing->property_id;
+            $ownerId = Property::query()->whereKey($propertyId)->value('owner_id');
+
+            if ($ownerId === null) {
+                throw new HttpResponseException(
+                    response()->json(['message' => 'Không tìm thấy tin đăng.'], 404)
+                );
+            }
+
+            User::query()->whereKey($ownerId)->lockForUpdate()->firstOrFail();
+            Property::query()->whereKey($propertyId)->lockForUpdate()->firstOrFail();
+
             /** @var Listing|null $lockedListing */
             $lockedListing = Listing::query()
                 ->where('id', $listing->id)

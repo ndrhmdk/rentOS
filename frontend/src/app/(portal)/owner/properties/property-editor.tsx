@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { OwnerPhoto } from "@/components/owner/owner-photo";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -24,6 +25,7 @@ const secondaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60";
 
 type WorkspaceTab = "overview" | "units" | "photos";
+type PendingPhoto = { file: File; operationId: string };
 
 function fieldValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "").trim();
@@ -329,6 +331,20 @@ export function PropertyEditor({
     }
   }
 
+  async function reloadAfterRevisionConflict(): Promise<void> {
+    try {
+      await loadProperty();
+      setFieldErrors({});
+      setError(
+        "Thông tin bất động sản đã thay đổi. Bản nháp của bạn vẫn được giữ nguyên; hãy kiểm tra lại rồi lưu lần nữa.",
+      );
+    } catch {
+      setError(
+        "Thông tin bất động sản đã thay đổi nhưng chưa thể tải phiên bản mới. Bản nháp của bạn vẫn được giữ nguyên; vui lòng thử tải lại.",
+      );
+    }
+  }
+
   function openTab(next: WorkspaceTab) {
     router.push(
       next === "overview"
@@ -390,7 +406,11 @@ export function PropertyEditor({
       setProperty(updated);
       setNotice("Thông tin bất động sản đã được lưu.");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
     } finally {
       setBusy(false);
     }
@@ -409,7 +429,11 @@ export function PropertyEditor({
       await archiveOwnerProperty(property.id, property.content_revision);
       router.push("/owner/properties");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
       setBusy(false);
     }
   }
@@ -422,7 +446,11 @@ export function PropertyEditor({
       await loadProperty();
       setNotice("Phòng đã được lưu trữ.");
     } catch (caught) {
-      reportError(caught);
+      if (caught instanceof ApiError && caught.status === 409) {
+        await reloadAfterRevisionConflict();
+      } else {
+        reportError(caught);
+      }
     } finally {
       setBusy(false);
     }
@@ -607,7 +635,6 @@ export function PropertyEditor({
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <AmenityFields
-              key={`shared-${property.content_revision}`}
               catalog={catalog}
               scope={
                 property.rental_arrangement === "WHOLE_SPACE"
@@ -793,7 +820,7 @@ export function PropertyEditor({
   );
 }
 
-function PropertyPhotos({
+export function PropertyPhotos({
   property,
   media,
   busy,
@@ -827,13 +854,17 @@ function PropertyPhotos({
       ? initialUnitId
       : (units[0]?.id ?? ""),
   );
-  const [pending, setPending] = useState<File[]>([]);
+  const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [listingFlags, setListingFlags] = useState<Record<string, boolean>>({});
+  const [pendingGalleryOrders, setPendingGalleryOrders] = useState<
+    Record<string, string[]>
+  >({});
+  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
 
   // Create blob URLs from pending files (computed during render, not in effect)
   const pendingUrls = useMemo(() => {
-    return pending.map((file) => URL.createObjectURL(file));
+    return pending.map(({ file }) => URL.createObjectURL(file));
   }, [pending]);
 
   // Update URL parameters when scope or activeUnitId changes
@@ -861,6 +892,8 @@ function PropertyPhotos({
   function listed(item: OwnerPropertyMedia) {
     return listingFlags[item.id] ?? item.is_selected_for_listing;
   }
+  const galleryKey =
+    scope === "property" ? "property" : `unit:${activeUnitId}`;
   const shared = useMemo(
     () =>
       media
@@ -880,12 +913,22 @@ function PropertyPhotos({
       ]),
     ),
   );
-  const visible =
+  const serverVisible =
     scope === "property"
       ? shared
       : media
           .filter((item) => item.unit_id === activeUnitId)
           .sort((a, b) => a.sort_order - b.sort_order);
+  const pendingOrder = pendingGalleryOrders[galleryKey];
+  const visible = pendingOrder
+    ? [...serverVisible].sort((left, right) => {
+        const leftIndex = pendingOrder.indexOf(left.id);
+        const rightIndex = pendingOrder.indexOf(right.id);
+        if (leftIndex < 0) return rightIndex < 0 ? 0 : 1;
+        if (rightIndex < 0) return -1;
+        return leftIndex - rightIndex;
+      })
+    : serverVisible;
   const selected = new Set(selectedByUnit[activeUnitId] ?? []);
   const saved = shared
     .filter((item) => (item.assigned_unit_ids ?? []).includes(activeUnitId))
@@ -907,11 +950,13 @@ function PropertyPhotos({
       for (const file of images) {
         const alreadyQueued = next.some(
           (item) =>
-            item.name === file.name &&
-            item.size === file.size &&
-            item.lastModified === file.lastModified,
+            item.file.name === file.name &&
+            item.file.size === file.size &&
+            item.file.lastModified === file.lastModified,
         );
-        if (!alreadyQueued) next.push(file);
+        if (!alreadyQueued) {
+          next.push({ file, operationId: crypto.randomUUID() });
+        }
       }
       return next;
     });
@@ -922,7 +967,7 @@ function PropertyPhotos({
     if (pending.length === 0) return;
     if (
       pending.some(
-        (file) =>
+        ({ file }) =>
           !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) ||
           file.size > 8 * 1024 * 1024,
       ) ||
@@ -934,21 +979,32 @@ function PropertyPhotos({
       return;
     }
     setBusy(true);
+    let completedUploads = false;
     try {
       let current = property;
-      for (const file of pending) {
+      for (const photo of pending) {
         const uploaded = await uploadOwnerMedia(current.id, {
-          file,
-          client_operation_id: crypto.randomUUID(),
+          file: photo.file,
+          client_operation_id: photo.operationId,
           expected_content_revision: current.content_revision,
           unit_id: scope === "unit" ? activeUnitId : undefined,
         });
         current = { ...current, content_revision: uploaded.content_revision };
+        completedUploads = true;
+        setPending((queued) =>
+          queued.filter((item) => item.operationId !== photo.operationId),
+        );
       }
-      setPending([]);
       await onReload();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
+      if (completedUploads) {
+        try {
+          await onReload();
+        } catch (reloadError) {
+          onError(reloadError);
+        }
+      }
       onError(caught);
       toast.error("Không thể tải ảnh lên. Vui lòng thử lại.");
     } finally {
@@ -966,6 +1022,7 @@ function PropertyPhotos({
       await onReload();
       toast.success("Đã lưu lựa chọn ảnh dùng chung.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) return;
       onError(caught);
       toast.error("Không thể lưu lựa chọn. Vui lòng thử lại.");
     } finally {
@@ -975,6 +1032,10 @@ function PropertyPhotos({
 
   async function saveVisibleSelection(items: OwnerPropertyMedia[]) {
     setBusy(true);
+    setPendingGalleryOrders((current) => ({
+      ...current,
+      [galleryKey]: items.map((item) => item.id),
+    }));
     try {
       const payload = {
         expected_content_revision: property.content_revision,
@@ -988,8 +1049,19 @@ function PropertyPhotos({
       if (scope === "property") await updateOwnerGallery(property.id, payload);
       else await updateOwnerUnitGallery(property.id, activeUnitId, payload);
       await onReload();
+      setPendingGalleryOrders((current) => {
+        const next = { ...current };
+        delete next[galleryKey];
+        return next;
+      });
+      setListingFlags((current) => {
+        const next = { ...current };
+        for (const item of items) delete next[item.id];
+        return next;
+      });
       toast.success("Thứ tự và lựa chọn hiển thị đã được lưu.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) return;
       onError(caught);
       toast.error("Không thể lưu thay đổi. Vui lòng thử lại.");
     } finally {
@@ -997,11 +1069,37 @@ function PropertyPhotos({
     }
   }
 
-  async function remove(photo: OwnerPropertyMedia) {
+  async function recoverGalleryConflict(caught: unknown): Promise<boolean> {
+    if (!(caught instanceof ApiError) || caught.status !== 409) return false;
+
+    try {
+      await onReload();
+    } catch (reloadError) {
+      onError(reloadError);
+      toast.error("Không thể tải thư viện ảnh mới nhất. Vui lòng thử lại.", {
+        duration: 6000,
+      });
+      return true;
+    }
+
+    const message =
+      "Thư viện ảnh đã được cập nhật ở nơi khác. Dữ liệu mới đã tải; lựa chọn của bạn vẫn được giữ. Vui lòng kiểm tra rồi lưu lại.";
+    onError(new ApiError(409, message));
+    toast.error(message, { duration: 6000 });
+
+    return true;
+  }
+
+  async function remove(
+    photo: OwnerPropertyMedia,
+    confirmed = false,
+  ): Promise<void> {
     if (
+      !confirmed &&
       !window.confirm("Gỡ ảnh khỏi thư viện? Tệp được lưu giữ trong lịch sử.")
-    )
+    ) {
       return;
+    }
     setBusy(true);
     try {
       await removeOwnerMedia(
@@ -1011,8 +1109,13 @@ function PropertyPhotos({
         photo.revision,
       );
       await onReload();
+      setPendingRemovalId(null);
       toast.success("Ảnh đã được gỡ khỏi thư viện.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) {
+        setPendingRemovalId(photo.id);
+        return;
+      }
       onError(caught);
       toast.error("Không thể gỡ ảnh. Vui lòng thử lại.");
     } finally {
@@ -1147,9 +1250,9 @@ function PropertyPhotos({
               </div>
               <div className="max-h-96 overflow-y-auto">
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {pending.map((file, index) => (
+                  {pending.map(({ file, operationId }, index) => (
                     <li
-                      key={`${file.name}-${file.size}-${index}`}
+                      key={operationId}
                       className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                     >
                       <div className="relative aspect-[4/3] bg-slate-100">
@@ -1167,7 +1270,9 @@ function PropertyPhotos({
                           type="button"
                           onClick={() =>
                             setPending((current) =>
-                              current.filter((_, i) => i !== index),
+                              current.filter(
+                                (item) => item.operationId !== operationId,
+                              ),
                             )
                           }
                           disabled={busy}
@@ -1251,12 +1356,10 @@ function PropertyPhotos({
                   >
                     <div className="relative aspect-[4/3] bg-slate-100">
                       {item.preview_url ? (
-                        <Image
+                        <OwnerPhoto
                           src={item.preview_url}
                           alt={item.caption || "Ảnh dùng chung"}
-                          fill
-                          unoptimized
-                          sizes="25vw"
+                          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                           className="object-cover"
                         />
                       ) : (
@@ -1329,12 +1432,10 @@ function PropertyPhotos({
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
                     {item.preview_url ? (
-                      <Image
+                      <OwnerPhoto
                         src={item.preview_url}
                         alt={item.caption || `Ảnh ${index + 1}`}
-                        fill
-                        unoptimized
-                        sizes="33vw"
+                        sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover"
                       />
                     ) : null}
@@ -1369,6 +1470,7 @@ function PropertyPhotos({
                           ];
                           void saveVisibleSelection(next);
                         }}
+                        aria-label={`Đưa ${item.caption || `ảnh ${index + 1}`} lên`}
                         className="size-8 rounded-lg border"
                       >
                         ↑
@@ -1384,6 +1486,7 @@ function PropertyPhotos({
                           ];
                           void saveVisibleSelection(next);
                         }}
+                        aria-label={`Đưa ${item.caption || `ảnh ${index + 1}`} xuống`}
                         className="size-8 rounded-lg border"
                       >
                         ↓
@@ -1392,11 +1495,22 @@ function PropertyPhotos({
                         type="button"
                         disabled={busy}
                         onClick={() => void remove(item)}
+                        aria-label={`Gỡ ${item.caption || `ảnh ${index + 1}`}`}
                         className="size-8 rounded-lg text-rose-700"
                       >
                         ×
                       </button>
                     </div>
+                    {pendingRemovalId === item.id && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void remove(item, true)}
+                        className="font-semibold text-[#285584] underline"
+                      >
+                        Thử gỡ lại {item.caption || "ảnh này"}
+                      </button>
+                    )}
                   </div>
                 </li>
               ))}
