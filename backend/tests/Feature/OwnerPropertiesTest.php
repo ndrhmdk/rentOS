@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Property;
 use App\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -248,7 +249,10 @@ class OwnerPropertiesTest extends TestCase
         $ownerQueries = [];
         DB::listen(function (QueryExecuted $query) use (&$ownerQueries): void {
             if (preg_match('/\\b(from|join)\s+"?(properties|units|listings)"?/i', $query->sql) === 1) {
-                $ownerQueries[] = $query->sql;
+                $ownerQueries[] = [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                ];
             }
         });
 
@@ -260,16 +264,47 @@ class OwnerPropertiesTest extends TestCase
             ->assertJsonPath('meta.per_page', 20)
             ->assertJsonPath('meta.total', 25);
 
-        $this->assertSame(4, count($ownerQueries), implode("\n", $ownerQueries));
+        $this->assertSame(4, count($ownerQueries));
+        $currentPageQueryCount = count($ownerQueries);
         $this->assertCount(20, collect($response->json('data'))->pluck('listing')->filter());
         $this->assertSame(
             1,
-            collect($ownerQueries)->filter(fn (string $sql): bool => str_contains($sql, '"listings"'))->count(),
+            collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"listings"'))->count(),
         );
         $this->assertSame(
             1,
-            collect($ownerQueries)->filter(fn (string $sql): bool => str_contains($sql, '"units"'))->count(),
+            collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"units"'))->count(),
         );
+
+        $ownerQueries = [];
+        $legacyPropertyPage = Property::query()
+            ->where('owner_id', $owner->id)
+            ->whereNull('archived_at')
+            ->orderByDesc('created_at')
+            ->with('units')
+            ->paginate(20);
+        $legacyBaseQueryCount = count($ownerQueries);
+        $this->assertCount(20, $legacyPropertyPage->items());
+        $this->assertSame(3, $legacyBaseQueryCount);
+
+        $ownerQueries = [];
+        foreach (collect($response->json('data'))->pluck('id') as $propertyId) {
+            $this->actingAs($owner)
+                ->getJson("/api/v1/owner/properties/{$propertyId}")
+                ->assertOk();
+            $this->actingAs($owner)
+                ->getJson("/api/v1/owner/properties/{$propertyId}/listing")
+                ->assertOk();
+        }
+        $legacyPerPropertyQueryCount = count($ownerQueries);
+
+        $this->assertSame(100, $legacyPerPropertyQueryCount);
+        $this->assertSame(
+            103,
+            $legacyBaseQueryCount + $legacyPerPropertyQueryCount,
+            'The previous listing page pattern required the property list plus detail and listing requests per row.',
+        );
+        $this->assertSame(4, $currentPageQueryCount);
 
         $ownerQueries = [];
         $secondPage = $this->actingAs($owner)->getJson('/api/v1/owner/properties?page=2');
@@ -280,7 +315,7 @@ class OwnerPropertiesTest extends TestCase
             ->assertJsonPath('meta.current_page', 2)
             ->assertJsonPath('meta.total', 25);
 
-        $this->assertSame(4, count($ownerQueries), implode("\n", $ownerQueries));
+        $this->assertSame(4, count($ownerQueries));
         $this->assertCount(5, collect($secondPage->json('data'))->pluck('listing')->filter());
     }
 
