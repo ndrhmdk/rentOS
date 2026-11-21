@@ -1,0 +1,23 @@
+# Example Netdata agent settings for a 2 GB rentOS VPS.
+# Copy relevant sections into /etc/netdata/netdata.conf after install.
+# Do not enable machine learning or long retention on this host.
+
+[web]
+    # Bind the dashboard to localhost. Do not publish port 19999 publicly.
+    bind to = 127.0.0.1
+
+[ml]
+    enabled = no
+
+[db]
+    # Keep retention short so the monitor does not fill the disk it watches.
+    mode = dbengine
+    storage tiers = 1
+    dbengine tier 0 retention size = 256MiB
+    dbengine tier 0 retention time = 1d
+
+[health]
+    enabled = yes
+    # Silence stock alarms so only rentos.conf rules notify operators.
+    # After install, disable shipped RAM/CPU alarms near 80% via edit-config
+    # health.d/ram.conf and health.d/cpu.conf (set `to: silent`).

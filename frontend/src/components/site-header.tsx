@@ -133,7 +133,10 @@ export function SiteHeader() {
           Cổng chủ nhà
         </NavLink>
       </nav>
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+      <div
+        className="flex items-center gap-3 sm:gap-4 shrink-0"
+        suppressHydrationWarning
+      >
         {/* Language Indicator */}
         <div className="hidden sm:flex items-center gap-1.5 text-white text-sm font-semibold select-none px-2 py-1">
           <svg

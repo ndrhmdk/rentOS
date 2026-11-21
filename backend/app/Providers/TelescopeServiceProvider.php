@@ -16,13 +16,18 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     public function register(): void
     {
-        // Telescope::night();
+        Telescope::night();
 
         $this->hideSensitiveRequestDetails();
 
         $isLocal = $this->app->environment('local');
 
         Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {
+            // Never persist auth/session SQL — QueryWatcher interpolates bindings into SQL.
+            if ($entry->type === EntryType::QUERY && $this->isSensitiveQuery($entry)) {
+                return false;
+            }
+
             if (! $isLocal) {
                 if ($entry->type === EntryType::MAIL) {
                     return false;
@@ -31,13 +36,6 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 if ($entry->type === EntryType::REQUEST && preg_match(
                     '#^/(login|logout|register|email/|user/|api/v1/me(?:\?|$))#',
                     (string) ($entry->content['uri'] ?? ''),
-                ) === 1) {
-                    return false;
-                }
-
-                if ($entry->type === EntryType::QUERY && preg_match(
-                    '/\b(users|sessions|personal_access_tokens|password_reset_tokens)\b/i',
-                    (string) ($entry->content['sql'] ?? ''),
                 ) === 1) {
                     return false;
                 }
@@ -51,16 +49,31 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             }
 
             return $isLocal ||
-                   $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
+                $entry->isReportableException() ||
+                $entry->isFailedRequest() ||
+                $entry->isFailedJob() ||
+                $entry->isScheduledTask() ||
+                $entry->hasMonitoredTag();
+        });
+
+        // Strip interpolated string literals from recorded SQL so bindings cannot leak.
+        Telescope::afterRecording(function ($telescope, IncomingEntry $entry): void {
+            if ($entry->type !== EntryType::QUERY) {
+                return;
+            }
+
+            $sql = (string) ($entry->content['sql'] ?? '');
+            $entry->content['bindings'] = [];
+            $entry->content['sql'] = preg_replace(
+                "/'(?:[^'\\\\]|\\\\.)*'/",
+                "'?'",
+                $sql,
+            ) ?? $sql;
         });
     }
 
     /**
-     * Prevent sensitive request details from being logged by Telescope.
+     * Prevent sensitive request/response details from being logged by Telescope.
      */
     protected function hideSensitiveRequestDetails(): void
     {
@@ -72,6 +85,10 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             'email',
             'signature',
             'token',
+            'plainTextToken',
+            'remember_token',
+            'two_factor_secret',
+            'two_factor_recovery_codes',
         ]);
 
         Telescope::hideRequestHeaders([
@@ -81,19 +98,41 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             'x-csrf-token',
             'x-xsrf-token',
         ]);
+
+        Telescope::hideResponseParameters([
+            'token',
+            'plainTextToken',
+            'access_token',
+            'password',
+            'password_confirmation',
+            'current_password',
+            'remember_token',
+            'two_factor_secret',
+            'two_factor_recovery_codes',
+            'email',
+            'signature',
+        ]);
     }
 
     /**
      * Register the Telescope gate.
      *
-     * This gate determines who can access Telescope in non-local environments.
+     * Aligns with EnsureAdminSession: admin + ACTIVE + verified email.
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function (User $user) {
-            return in_array($user->email, [
-                //
-            ]);
+        Gate::define('viewTelescope', function (User $user): bool {
+            return $user->isAdmin()
+                && $user->account_status === 'ACTIVE'
+                && $user->hasVerifiedEmail();
         });
+    }
+
+    private function isSensitiveQuery(IncomingEntry $entry): bool
+    {
+        return preg_match(
+            '/\b(users|sessions|personal_access_tokens|password_reset_tokens)\b/i',
+            (string) ($entry->content['sql'] ?? ''),
+        ) === 1;
     }
 }
