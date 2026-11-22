@@ -102,6 +102,8 @@ const faqs = [
       "Xác nhận trên rentOS ghi nhận bạn đã xem và đồng ý phiên bản hợp đồng. Đó không thay cho chữ ký công chứng.",
   },
 ];
+// e.g. in a page.tsx used by a real route
+
 
 export default function Home() {
   const [listings, setListings] = useState<ListingCard[]>([]);

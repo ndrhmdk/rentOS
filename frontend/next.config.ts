@@ -45,8 +45,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
-    // The shared rentOS design tokens live one directory above the Next.js app.
-    root: path.resolve(__dirname, ".."),
+    // Tokens are inlined in src/app/globals.css so the app stays self-contained.
+    root: path.resolve(__dirname),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
