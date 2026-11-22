@@ -957,6 +957,43 @@ class OwnerPropertiesTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_upload_replay_for_archived_media_returns_gone(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $operationId = (string) Str::uuid();
+        $photo = UploadedFile::fake()->image('living-room.jpg');
+        $this->fakeSupabaseStorage();
+
+        $payload = [
+            'client_operation_id' => $operationId,
+            'expected_content_revision' => 1,
+            'caption' => 'Living room',
+            'photo' => $photo,
+        ];
+        $upload = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertCreated();
+
+        $mediaId = $upload->json('data.media.id');
+        $this->actingAs($owner)->deleteJson(
+            "/api/v1/owner/properties/{$propertyId}/media/{$mediaId}",
+            ['expected_content_revision' => 2, 'revision' => 1],
+        )->assertOk();
+
+        $retry = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        );
+
+        $retry->assertStatus(410)
+            ->assertJsonPath('message', 'Ảnh này đã được gỡ khỏi thư viện. Hãy tải lại ảnh để tạo lượt tải mới.');
+        $this->assertSoftDeleted('property_media', ['id' => $mediaId]);
+        $this->assertDatabaseCount('property_media', 1);
+        Http::assertSentCount(1);
+    }
+
     public function test_photo_upload_can_retry_after_a_storage_failure_without_creating_partial_media(): void
     {
         $owner = User::factory()->create();

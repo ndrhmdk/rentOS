@@ -19,6 +19,7 @@ export function OwnerPhoto({
       sizes={sizes}
       loading="lazy"
       quality={75}
+      unoptimized
       className={className}
     />
   );

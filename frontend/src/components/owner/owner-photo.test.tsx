@@ -20,7 +20,7 @@ vi.mock("next/image", () => ({
 describe("OwnerPhoto", () => {
   afterEach(cleanup);
 
-  it("uses the responsive optimizer and defers loading saved photos", () => {
+  it("loads signed private photos directly and defers loading saved photos", () => {
     render(
       <div className="relative">
         <OwnerPhoto
@@ -35,6 +35,7 @@ describe("OwnerPhoto", () => {
     expect(image.getAttribute("data-loading")).toBe("lazy");
     expect(image.getAttribute("data-quality")).toBe("75");
     expect(image.getAttribute("data-sizes")).toContain("25vw");
-    expect(image.getAttribute("data-unoptimized")).toBe("false");
+    expect(image.getAttribute("data-unoptimized")).toBe("true");
+    expect(image.getAttribute("data-src")).toContain("token=secret");
   });
 });

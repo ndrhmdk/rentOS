@@ -80,7 +80,14 @@ class AdminListingReviewsConcurrencyTest extends TestCase
      */
     private function runConcurrentReviewRequests(array $requests): array
     {
-        $this->assertTrue(function_exists('pcntl_fork'), 'The PostgreSQL concurrency tests require pcntl in the isolated PHP test runtime.');
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            || ! function_exists('pcntl_fork')
+            || ! function_exists('stream_socket_pair')
+        ) {
+            $this->markTestSkipped('Concurrent PostgreSQL review tests require pcntl and Unix socket pairs.');
+        }
+
         $this->assertSame(0, DB::transactionLevel(), 'Concurrent workers need committed fixtures, not an inherited outer test transaction.');
         DB::purge('pgsql');
         $sockets = [];

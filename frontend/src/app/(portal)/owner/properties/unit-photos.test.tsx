@@ -98,7 +98,7 @@ describe("UnitPhotoManager upload recovery", () => {
     vi.mocked(getOwnerPropertyMedia).mockResolvedValue([]);
     vi.mocked(uploadOwnerMedia)
       .mockResolvedValueOnce({ media: uploadedMedia("media-1"), content_revision: 2 })
-      .mockRejectedValueOnce(new ApiError(502, "Storage tạm thời không khả dụng."))
+      .mockRejectedValueOnce(new ApiError(409, "Stale revision"))
       .mockResolvedValueOnce({ media: uploadedMedia("media-2"), content_revision: 3 });
   });
 
@@ -119,6 +119,7 @@ describe("UnitPhotoManager upload recovery", () => {
     await user.click(screen.getByRole("button", { name: "Tải 2 ảnh" }));
 
     await screen.findByRole("alert");
+    expect(getOwnerProperty).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("img", { name: "first.jpg" })).toBeNull();
     expect(screen.getByRole("img", { name: "second.jpg" })).toBeTruthy();
 
@@ -129,6 +130,7 @@ describe("UnitPhotoManager upload recovery", () => {
     await user.click(screen.getByRole("button", { name: "Tải 1 ảnh" }));
 
     await waitFor(() => expect(uploadOwnerMedia).toHaveBeenCalledTimes(3));
+    expect(getOwnerProperty).toHaveBeenCalledTimes(3);
     expect(screen.queryByRole("img", { name: "second.jpg" })).toBeNull();
     expect(uploadCalls[2][1].client_operation_id).toBe(failedOperationId);
     expect(uploadCalls.map(([, input]) => input.expected_content_revision)).toEqual([

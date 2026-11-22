@@ -73,8 +73,54 @@ class OwnerListingSuspensionConcurrencyTest extends TestCase
         ]);
     }
 
+    public function test_concurrent_owner_property_update_and_admin_suspension_complete_without_lock_inversion(): void
+    {
+        if (! function_exists('pcntl_fork') || ! function_exists('stream_socket_pair')) {
+            $this->markTestSkipped('Concurrent listing writes require pcntl and Unix socket pairs.');
+        }
+
+        $published = PublicListingFixture::published();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $results = $this->runConcurrentRequests([
+            [
+                'actor' => $published->owner,
+                'method' => 'PATCH',
+                'path' => "/api/v1/owner/properties/{$published->propertyId}",
+                'payload' => [
+                    'name' => 'Tên nhà đã cập nhật đồng thời',
+                    'expected_content_revision' => 1,
+                ],
+            ],
+            [
+                'actor' => $admin,
+                'path' => "/api/v1/admin/listings/{$published->listingId}/suspend",
+                'payload' => ['reason' => 'Đang kiểm tra xử lý đồng thời'],
+            ],
+        ]);
+
+        $ownerResult = collect($results)->firstWhere('actor_id', $published->owner->id);
+        $adminResult = collect($results)->firstWhere('actor_id', $admin->id);
+
+        $this->assertNotNull($ownerResult);
+        $this->assertSame(200, $ownerResult['status'], $ownerResult['error'] ?? null);
+        $this->assertNotNull($adminResult);
+        $this->assertSame(200, $adminResult['status'], $adminResult['error'] ?? null);
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $published->propertyId,
+            'name' => 'Tên nhà đã cập nhật đồng thời',
+        ]);
+        $this->assertDatabaseHas('listings', [
+            'id' => $published->listingId,
+            'admin_suspended_by' => $admin->id,
+            'suspension_reason' => 'Đang kiểm tra xử lý đồng thời',
+        ]);
+        $this->assertSame(0, Listing::query()->publiclyVisible()->count());
+    }
+
     /**
-     * @param  array<int, array{actor: User, path: string, payload: array<string, mixed>}>  $requests
+     * @param  array<int, array{actor: User, path: string, payload: array<string, mixed>, method?: string}>  $requests
      * @return array<int, array{status: int, actor_id: string, error?: string}>
      */
     private function runConcurrentRequests(array $requests): array
@@ -108,10 +154,10 @@ class OwnerListingSuspensionConcurrencyTest extends TestCase
 
                 try {
                     $this->app['auth']->forgetGuards();
-                    $response = $this->actingAs($request['actor'], 'web')->postJson(
-                        $request['path'],
-                        $request['payload'],
-                    );
+                    $test = $this->actingAs($request['actor'], 'web');
+                    $response = strtoupper($request['method'] ?? 'POST') === 'PATCH'
+                        ? $test->patchJson($request['path'], $request['payload'])
+                        : $test->postJson($request['path'], $request['payload']);
                     $result = ['status' => $response->getStatusCode(), 'actor_id' => $request['actor']->id];
                 } catch (\Throwable $failure) {
                     $result = [

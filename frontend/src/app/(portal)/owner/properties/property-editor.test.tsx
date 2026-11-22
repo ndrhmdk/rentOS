@@ -6,6 +6,7 @@ import {
   getAmenityCatalog,
   getOwnerProperty,
   getOwnerPropertyMedia,
+  uploadOwnerMedia,
   updateOwnerProperty,
 } from "@/lib/owner/api";
 import type { OwnerPropertyDetail } from "@/lib/owner/types";
@@ -84,6 +85,10 @@ function property(revision: number): OwnerPropertyDetail {
 describe("PropertyEditor stale revision recovery", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:photo"),
+      revokeObjectURL: vi.fn(),
+    });
     vi.mocked(getOwnerProperty)
       .mockResolvedValueOnce(property(1))
       .mockResolvedValueOnce(property(2));
@@ -93,7 +98,10 @@ describe("PropertyEditor stale revision recovery", () => {
     ]);
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
   it("reloads the current revision without discarding property and amenity drafts", async () => {
     const user = userEvent.setup();
@@ -125,5 +133,114 @@ describe("PropertyEditor stale revision recovery", () => {
       expected_content_revision: 2,
       name: "Nhà đã chỉnh",
     });
+  });
+
+  it("refreshes amenities changed elsewhere while keeping the other draft fields", async () => {
+    const original = property(1);
+    original.shared_amenities = {
+      schema_version: 1,
+      standard: { wifi: { enabled: true } },
+      custom: [],
+    };
+    const latest = property(2);
+    latest.shared_amenities = {
+      schema_version: 1,
+      standard: { air_conditioning: { enabled: true } },
+      custom: [],
+    };
+    vi.mocked(getOwnerProperty)
+      .mockReset()
+      .mockResolvedValueOnce(original)
+      .mockResolvedValueOnce(latest);
+    vi.mocked(getAmenityCatalog).mockResolvedValue([
+      { key: "wifi", label: "Wi-Fi", scopes: ["shared", "unit"] },
+      {
+        key: "air_conditioning",
+        label: "Điều hòa",
+        scopes: ["shared", "unit"],
+      },
+    ]);
+    vi.mocked(updateOwnerProperty).mockRejectedValueOnce(
+      new ApiError(409, "Stale revision"),
+    );
+
+    const user = userEvent.setup();
+    render(<PropertyEditor propertyId="property-1" tab="overview" />);
+
+    const name = await screen.findByLabelText("Tên bất động sản");
+    await user.clear(name);
+    await user.type(name, "Bản nháp vẫn giữ");
+    await user.click(screen.getByRole("checkbox", { name: /Wi-Fi/ }));
+    await user.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Tiện nghi đã được cập nhật ở nơi khác",
+    );
+    expect((name as HTMLInputElement).value).toBe("Bản nháp vẫn giữ");
+    expect(
+      (screen.getByRole("checkbox", { name: /Wi-Fi/ }) as HTMLInputElement)
+        .checked,
+    ).toBe(false);
+    expect(
+      (
+        screen.getByRole("checkbox", { name: /Điều hòa/ }) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
+
+  it("uploads each queued photo to the scope selected when it was added", async () => {
+    const separateProperty = property(1);
+    separateProperty.rental_arrangement = "SEPARATE_UNITS";
+    separateProperty.units = [
+      {
+        id: "unit-1",
+        property_id: separateProperty.id,
+        label: "Phòng A",
+        unit_kind: "STUDIO",
+        description: null,
+        floor: null,
+        area_m2: 25,
+        bedrooms: 1,
+        bathrooms: 1,
+        bathroom_arrangement: "PRIVATE",
+        amenities: { schema_version: 1, standard: {}, custom: [] },
+        advertised_monthly_rent: 3000000,
+        deposit: 3000000,
+        minimum_rental_months: 1,
+        max_occupants: 2,
+        operational_status: "READY",
+        is_marketed: true,
+        policy_overrides: {},
+        archived_at: null,
+      },
+    ];
+    vi.mocked(getOwnerProperty).mockReset().mockResolvedValue(separateProperty);
+    vi.mocked(getOwnerPropertyMedia).mockResolvedValue([]);
+    vi.mocked(uploadOwnerMedia)
+      .mockResolvedValueOnce({ content_revision: 2 } as never)
+      .mockResolvedValueOnce({ content_revision: 3 } as never);
+
+    const user = userEvent.setup();
+    render(<PropertyEditor propertyId="property-1" tab="photos" />);
+
+    const sharedPhoto = new File(["shared"], "shared.jpg", {
+      type: "image/jpeg",
+    });
+    await user.upload(
+      await screen.findByLabelText("Tải ảnh dùng chung lên"),
+      sharedPhoto,
+    );
+    expect(screen.getByText("Ảnh dùng chung")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Ảnh căn/phòng" }));
+    await user.selectOptions(screen.getByLabelText("Chọn căn/phòng"), "unit-1");
+    const unitPhoto = new File(["unit"], "unit.jpg", { type: "image/jpeg" });
+    await user.upload(await screen.findByLabelText("Chọn ảnh"), unitPhoto);
+
+    await user.click(screen.getByRole("button", { name: "Tải 2 ảnh" }));
+
+    await waitFor(() => expect(uploadOwnerMedia).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(uploadOwnerMedia).mock.calls[0][1].unit_id).toBeUndefined();
+    expect(vi.mocked(uploadOwnerMedia).mock.calls[1][1].unit_id).toBe("unit-1");
   });
 });

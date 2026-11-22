@@ -183,7 +183,20 @@ export function UnitPhotoManager({
       await load();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
-      if (completedUploads) {
+      if (caught instanceof ApiError && caught.status === 409) {
+        try {
+          await load();
+          setError(
+            "Thư viện ảnh đã được cập nhật ở nơi khác. Dữ liệu mới đã tải; ảnh chưa tải vẫn được giữ để bạn thử lại.",
+          );
+        } catch (reloadError) {
+          setError(
+            reloadError instanceof ApiError
+              ? reloadError.message
+              : "Không thể tải thư viện ảnh mới nhất. Ảnh chưa tải vẫn được giữ để bạn thử lại.",
+          );
+        }
+      } else if (completedUploads) {
         try {
           await load();
         } catch {

@@ -25,7 +25,7 @@ const secondaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60";
 
 type WorkspaceTab = "overview" | "units" | "photos";
-type PendingPhoto = { file: File; operationId: string };
+type PendingPhoto = { file: File; operationId: string; unitId: string | null };
 
 function fieldValue(form: FormData, name: string): string {
   return String(form.get(name) ?? "").trim();
@@ -47,6 +47,20 @@ function combinedAmenityValue(
       (item, index, all) => all.indexOf(item) === index,
     ),
   };
+}
+
+function propertyAmenitiesFingerprint(
+  property: OwnerPropertyDetail | null,
+): string {
+  if (!property) return "";
+  const value =
+    property.rental_arrangement === "WHOLE_SPACE"
+      ? combinedAmenityValue(
+          property.shared_amenities,
+          property.units.find((unit) => !unit.archived_at)?.amenities,
+        )
+      : property.shared_amenities;
+  return JSON.stringify(value);
 }
 
 function documentsFromCombinedForm(
@@ -333,10 +347,15 @@ export function PropertyEditor({
 
   async function reloadAfterRevisionConflict(): Promise<void> {
     try {
-      await loadProperty();
+      const previousAmenities = propertyAmenitiesFingerprint(property);
+      const latestProperty = await loadProperty();
+      const amenitiesChanged =
+        previousAmenities !== propertyAmenitiesFingerprint(latestProperty);
       setFieldErrors({});
       setError(
-        "Thông tin bất động sản đã thay đổi. Bản nháp của bạn vẫn được giữ nguyên; hãy kiểm tra lại rồi lưu lần nữa.",
+        amenitiesChanged
+          ? "Tiện nghi đã được cập nhật ở nơi khác và đã tải theo dữ liệu mới nhất. Các bản nháp khác vẫn được giữ; hãy kiểm tra lại rồi lưu lần nữa."
+          : "Thông tin bất động sản đã thay đổi. Bản nháp của bạn vẫn được giữ nguyên; hãy kiểm tra lại rồi lưu lần nữa.",
       );
     } catch {
       setError(
@@ -458,6 +477,14 @@ export function PropertyEditor({
 
   const units = property?.units.filter((unit) => !unit.archived_at) ?? [];
   const policy = property?.policies;
+  const amenityValue = property
+    ? property.rental_arrangement === "WHOLE_SPACE"
+      ? combinedAmenityValue(
+          property.shared_amenities,
+          property.units.find((unit) => !unit.archived_at)?.amenities,
+        )
+      : property.shared_amenities
+    : undefined;
   const separate = property?.rental_arrangement === "SEPARATE_UNITS";
   const activeTab: WorkspaceTab =
     property?.rental_arrangement === "WHOLE_SPACE" && tab === "units"
@@ -635,6 +662,7 @@ export function PropertyEditor({
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <AmenityFields
+              key={JSON.stringify(amenityValue ?? null)}
               catalog={catalog}
               scope={
                 property.rental_arrangement === "WHOLE_SPACE"
@@ -646,15 +674,7 @@ export function PropertyEditor({
                   ? ["shared", "unit"]
                   : undefined
               }
-              value={
-                property.rental_arrangement === "WHOLE_SPACE"
-                  ? combinedAmenityValue(
-                      property.shared_amenities,
-                      property.units.find((unit) => !unit.archived_at)
-                        ?.amenities,
-                    )
-                  : property.shared_amenities
-              }
+              value={amenityValue}
             />
             <fieldset className="space-y-3">
               <legend className="text-sm font-semibold text-slate-800">
@@ -955,7 +975,11 @@ export function PropertyPhotos({
             item.file.lastModified === file.lastModified,
         );
         if (!alreadyQueued) {
-          next.push({ file, operationId: crypto.randomUUID() });
+          next.push({
+            file,
+            operationId: crypto.randomUUID(),
+            unitId: scope === "unit" ? activeUnitId : null,
+          });
         }
       }
       return next;
@@ -987,7 +1011,7 @@ export function PropertyPhotos({
           file: photo.file,
           client_operation_id: photo.operationId,
           expected_content_revision: current.content_revision,
-          unit_id: scope === "unit" ? activeUnitId : undefined,
+          unit_id: photo.unitId ?? undefined,
         });
         current = { ...current, content_revision: uploaded.content_revision };
         completedUploads = true;
@@ -998,6 +1022,7 @@ export function PropertyPhotos({
       await onReload();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
+      if (await recoverGalleryConflict(caught)) return;
       if (completedUploads) {
         try {
           await onReload();
@@ -1250,7 +1275,7 @@ export function PropertyPhotos({
               </div>
               <div className="max-h-96 overflow-y-auto">
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {pending.map(({ file, operationId }, index) => (
+                  {pending.map(({ file, operationId, unitId }, index) => (
                     <li
                       key={operationId}
                       className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
@@ -1285,6 +1310,11 @@ export function PropertyPhotos({
                       <div className="space-y-1 p-2">
                         <p className="truncate text-xs font-medium text-slate-900">
                           {file.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {unitId === null
+                            ? "Ảnh dùng chung"
+                            : `Ảnh căn ${units.find((unit) => unit.id === unitId)?.label ?? "đã chọn"}`}
                         </p>
                         <p className="text-xs text-slate-500">
                           {(file.size / 1024 / 1024).toFixed(2)} MB
