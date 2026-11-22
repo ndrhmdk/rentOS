@@ -10,13 +10,21 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/http/client";
-import { type OwnerPropertyDetail, type OwnerPropertyMedia } from "@/lib/owner/types";
-import { getOwnerProperty, getOwnerPropertyMedia, removeOwnerMedia, saveOwnerUnitSharedMedia, uploadOwnerMedia } from "@/lib/owner/api";
+import { OwnerPhoto } from "@/components/owner/owner-photo";
+import type { OwnerPropertyDetail, OwnerPropertyMedia } from "@/lib/owner/types";
+import {
+  getOwnerProperty,
+  getOwnerPropertyMedia,
+  removeOwnerMedia,
+  saveOwnerUnitSharedMedia,
+  uploadOwnerMedia,
+} from "@/lib/owner/api";
 
 const buttonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-4 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-60";
 const secondaryButtonClass =
   "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60";
+type PendingPhoto = { file: File; operationId: string };
 
 export function UnitPhotoManager({
   propertyId,
@@ -28,12 +36,12 @@ export function UnitPhotoManager({
   const [property, setProperty] = useState<OwnerPropertyDetail | null>(null);
   const [media, setMedia] = useState<OwnerPropertyMedia[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [pending, setPending] = useState<File[]>([]);
+  const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const pendingUrls = useMemo(
-    () => pending.map((file) => URL.createObjectURL(file)),
+    () => pending.map(({ file }) => URL.createObjectURL(file)),
     [pending],
   );
 
@@ -107,12 +115,38 @@ export function UnitPhotoManager({
     selectedIds.length !== savedIds.length ||
     selectedIds.some((id) => !savedIds.includes(id));
 
+  function addPendingFiles(files: File[]) {
+    const images = files.filter((file) =>
+      /^(image\/jpeg|image\/png|image\/webp)$/.test(file.type),
+    );
+
+    if (images.length < files.length) {
+      toast.error("Chỉ nhận ảnh JPG, PNG hoặc WEBP.");
+    }
+
+    setPending((current) => {
+      const next = [...current];
+      for (const file of images) {
+        const alreadyQueued = next.some(
+          (item) =>
+            item.file.name === file.name &&
+            item.file.size === file.size &&
+            item.file.lastModified === file.lastModified,
+        );
+        if (!alreadyQueued) {
+          next.push({ file, operationId: crypto.randomUUID() });
+        }
+      }
+      return next;
+    });
+  }
+
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!property || pending.length === 0) return;
     if (
       pending.some(
-        (file) =>
+        ({ file }) =>
           !/^(image\/jpeg|image\/png|image\/webp)$/.test(file.type) ||
           file.size > 8 * 1024 * 1024,
       ) ||
@@ -125,21 +159,50 @@ export function UnitPhotoManager({
     }
     setBusy(true);
     setError(null);
+    let completedUploads = false;
     try {
       let revision = property.content_revision;
-      for (const file of pending) {
+      for (const photo of pending) {
         const uploaded = await uploadOwnerMedia(property.id, {
-          file,
-          client_operation_id: crypto.randomUUID(),
+          file: photo.file,
+          client_operation_id: photo.operationId,
           expected_content_revision: revision,
           unit_id: unitId,
         });
         revision = uploaded.content_revision;
+        completedUploads = true;
+        setProperty((current) =>
+          current
+            ? { ...current, content_revision: uploaded.content_revision }
+            : current,
+        );
+        setPending((queued) =>
+          queued.filter((item) => item.operationId !== photo.operationId),
+        );
       }
-      setPending([]);
       await load();
       toast.success("Ảnh đã được tải lên.");
     } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 409) {
+        try {
+          await load();
+          setError(
+            "Thư viện ảnh đã được cập nhật ở nơi khác. Dữ liệu mới đã tải; ảnh chưa tải vẫn được giữ để bạn thử lại.",
+          );
+        } catch (reloadError) {
+          setError(
+            reloadError instanceof ApiError
+              ? reloadError.message
+              : "Không thể tải thư viện ảnh mới nhất. Ảnh chưa tải vẫn được giữ để bạn thử lại.",
+          );
+        }
+      } else if (completedUploads) {
+        try {
+          await load();
+        } catch {
+          // Keep the failed files queued; their operation IDs remain stable.
+        }
+      }
       setError(
         caught instanceof ApiError ? caught.message : "Không thể tải ảnh lên.",
       );
@@ -228,7 +291,7 @@ export function UnitPhotoManager({
                   className="sr-only"
                   disabled={busy}
                   onChange={(event) => {
-                    setPending(Array.from(event.currentTarget.files ?? []));
+                    addPendingFiles(Array.from(event.currentTarget.files ?? []));
                     event.currentTarget.value = "";
                   }}
                 />
@@ -242,9 +305,9 @@ export function UnitPhotoManager({
           </div>
           {pending.length > 0 && (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {pending.map((file, index) => (
+              {pending.map(({ file, operationId }, index) => (
                 <li
-                  key={`${file.name}-${file.size}-${index}`}
+                  key={operationId}
                   className="overflow-hidden rounded-xl border border-slate-200"
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
@@ -277,12 +340,10 @@ export function UnitPhotoManager({
               >
                 <div className="relative aspect-[4/3] bg-slate-100">
                   {photo.preview_url ? (
-                    <Image
+                    <OwnerPhoto
                       src={photo.preview_url}
                       alt={photo.caption || "Ảnh căn"}
-                      fill
-                      unoptimized
-                      sizes="30vw"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       className="object-cover"
                     />
                   ) : (
@@ -363,12 +424,10 @@ export function UnitPhotoManager({
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
                     {item.preview_url ? (
-                      <Image
+                      <OwnerPhoto
                         src={item.preview_url}
                         alt={item.caption || "Ảnh dùng chung"}
-                        fill
-                        unoptimized
-                        sizes="25vw"
+                        sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover"
                       />
                     ) : (

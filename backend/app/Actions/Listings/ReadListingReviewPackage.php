@@ -22,10 +22,11 @@ class ReadListingReviewPackage
         $propertyId = DB::table('listings')->where('id', $listingId)->value('property_id');
         abort_if($propertyId === null, 404);
         $property = DB::table('properties')->where('id', $propertyId)->lockForUpdate()->first();
-        $listing = DB::table('listings')->where('id', $listingId)->where('property_id', $propertyId)->lockForUpdate()->first();
-        abort_if($property === null || $listing === null || $property->archived_at !== null || $listing->archived_at !== null, 404);
+        abort_if($property === null || $property->archived_at !== null, 404);
 
         $allUnits = DB::table('units')->where('property_id', $propertyId)->orderBy('id')->lockForUpdate()->get();
+        $listing = DB::table('listings')->where('id', $listingId)->where('property_id', $propertyId)->lockForUpdate()->first();
+        abort_if($listing === null || $listing->archived_at !== null, 404);
         $allMedia = DB::table('property_media')->where('property_id', $propertyId)->orderBy('id')->lockForUpdate()->get();
         $units = $allUnits->filter(fn (object $unit): bool => $unit->is_marketed && $unit->archived_at === null)->values();
         $unitIds = $units->pluck('id')->all();

@@ -33,6 +33,8 @@ export function ListingPhotoGrid({ slides }: { slides: Slide[] }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 700px, 100vw"
+            loading="lazy"
+            quality={75}
             className="object-cover"
           />
         </button>
@@ -53,6 +55,8 @@ export function ListingPhotoGrid({ slides }: { slides: Slide[] }) {
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 280px, 45vw"
+                  loading="lazy"
+                  quality={75}
                   className="object-cover"
                 />
               </button>
@@ -123,6 +127,8 @@ function PhotoDialog({
                 width={1200}
                 height={800}
                 sizes="(min-width: 768px) 768px, 100vw"
+                loading="lazy"
+                quality={75}
                 className="h-auto w-full rounded-xl object-cover"
               />
               <figcaption className="text-sm text-[#454e5c]">

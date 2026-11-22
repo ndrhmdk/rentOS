@@ -21,6 +21,7 @@ use Throwable;
 
 class PropertyWriteService
 {
+    /** Owner write lock order: User → Property → Unit → Listing → PropertyMedia. */
     public function __construct(private readonly GeocodingService $geocoding) {}
 
     /**
@@ -151,8 +152,8 @@ class PropertyWriteService
         $coordinates = $this->coordinatesForUpdate($property, $attributes);
 
         return DB::transaction(function () use ($owner, $property, $attributes, $coordinates): Property {
-            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             $owner = $this->lockActiveOwner($owner);
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $property);
 
             abort_unless($property->content_revision === (int) $attributes['expected_content_revision'], 409);
@@ -209,8 +210,8 @@ class PropertyWriteService
     public function archive(User $owner, Property $property, int $expectedContentRevision): Property
     {
         return DB::transaction(function () use ($owner, $property, $expectedContentRevision): Property {
-            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             $owner = $this->lockActiveOwner($owner);
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             Gate::authorize('archive', $property);
 
             if ($property->archived_at !== null) {
@@ -638,12 +639,12 @@ class PropertyWriteService
     public function createUnit(User $owner, Property $property, array $attributes): Unit
     {
         return DB::transaction(function () use ($owner, $property, $attributes): Unit {
+            $owner = $this->lockActiveOwner($owner);
             $property = Property::query()
                 ->whereKey($property->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $owner = $this->lockActiveOwner($owner);
             Gate::authorize('update', $property);
 
             abort_if($property->archived_at !== null, 409);
@@ -701,6 +702,7 @@ class PropertyWriteService
     public function updateUnit(User $owner, Property $property, Unit $unit, array $attributes): Unit
     {
         return DB::transaction(function () use ($owner, $property, $unit, $attributes): Unit {
+            $owner = $this->lockActiveOwner($owner);
             $property = Property::query()
                 ->whereKey($property->id)
                 ->lockForUpdate()
@@ -712,7 +714,6 @@ class PropertyWriteService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $owner = $this->lockActiveOwner($owner);
             Gate::authorize('update', $property);
 
             abort_if($property->archived_at !== null || $unit->archived_at !== null, 409);
@@ -815,6 +816,7 @@ class PropertyWriteService
     public function archiveUnit(User $owner, Property $property, Unit $unit, int $expectedContentRevision): Unit
     {
         return DB::transaction(function () use ($owner, $property, $unit, $expectedContentRevision): Unit {
+            $owner = $this->lockActiveOwner($owner);
             $property = Property::query()
                 ->whereKey($property->id)
                 ->lockForUpdate()
@@ -826,7 +828,6 @@ class PropertyWriteService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $owner = $this->lockActiveOwner($owner);
             Gate::authorize('update', $property);
 
             abort_unless($property->rental_arrangement === 'SEPARATE_UNITS', 422);
@@ -900,12 +901,12 @@ class PropertyWriteService
         );
 
         return DB::transaction(function () use ($owner, $property, $attributes, $batchOperationId, $requestHash, $rows): array {
+            $owner = $this->lockActiveOwner($owner);
             $property = Property::query()
                 ->whereKey($property->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $owner = $this->lockActiveOwner($owner);
             Gate::authorize('update', $property);
 
             abort_if($property->archived_at !== null, 409);
@@ -1083,12 +1084,12 @@ class PropertyWriteService
     public function updateGallery(User $owner, Property $property, array $attributes, ?Unit $unit = null): array
     {
         return DB::transaction(function () use ($owner, $property, $attributes, $unit): array {
+            $owner = $this->lockActiveOwner($owner);
             $property = Property::query()
                 ->whereKey($property->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $owner = $this->lockActiveOwner($owner);
             Gate::authorize('update', $property);
 
             if ($unit !== null) {
@@ -1224,8 +1225,8 @@ class PropertyWriteService
     public function archiveMedia(User $owner, Property $property, PropertyMedia $media, array $attributes): PropertyMedia
     {
         return DB::transaction(function () use ($owner, $property, $media, $attributes): PropertyMedia {
-            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             $owner = $this->lockActiveOwner($owner);
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $property);
             abort_if($property->archived_at !== null, 409);
             abort_unless($property->content_revision === (int) $attributes['expected_content_revision'], 409);
@@ -1347,6 +1348,44 @@ class PropertyWriteService
         $operationId = $attributes['client_operation_id'];
         $unitId = $attributes['unit_id'] ?? null;
         $caption = $attributes['caption'] ?? null;
+
+        /** @var array{media: PropertyMedia, replayed: bool, content_revision: int}|null $replay */
+        $replay = DB::transaction(function () use ($owner, $property, $operationId, $unitId, $caption, $sha256): ?array {
+            $owner = $this->lockActiveOwner($owner);
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
+            Gate::authorize('update', $property);
+
+            $existing = PropertyMedia::query()
+                ->where('uploaded_by', $owner->id)
+                ->where('client_operation_id', $operationId)
+                ->first();
+
+            if ($existing === null) {
+                return null;
+            }
+
+            abort_if($existing->deleted_at !== null || $existing->purged_at !== null, 410,
+                'Ảnh này đã được gỡ khỏi thư viện. Hãy tải lại ảnh để tạo lượt tải mới.');
+
+            abort_unless(
+                $existing->property_id === $property->id
+                    && $existing->unit_id === $unitId
+                    && $existing->caption === $caption
+                    && $existing->sha256 === $sha256,
+                409,
+            );
+
+            return [
+                'media' => $existing,
+                'replayed' => true,
+                'content_revision' => $property->content_revision,
+            ];
+        });
+
+        if ($replay !== null) {
+            return $replay;
+        }
+
         $mediaId = (string) Str::uuid();
         $storagePath = "properties/{$property->id}/media/{$mediaId}.{$extensions[$mimeType]}";
 
@@ -1424,12 +1463,12 @@ class PropertyWriteService
                 $sizeBytes,
                 $mimeType,
             ): array {
+                $owner = $this->lockActiveOwner($owner);
                 $property = Property::query()
                     ->whereKey($property->id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $owner = $this->lockActiveOwner($owner);
                 Gate::authorize('update', $property);
 
                 $existing = PropertyMedia::query()
@@ -1438,6 +1477,9 @@ class PropertyWriteService
                     ->first();
 
                 if ($existing !== null) {
+                    abort_if($existing->deleted_at !== null || $existing->purged_at !== null, 410,
+                        'Ảnh này đã được gỡ khỏi thư viện. Hãy tải lại ảnh để tạo lượt tải mới.');
+
                     abort_unless(
                         $existing->property_id === $property->id
                             && $existing->unit_id === $unitId
@@ -1553,8 +1595,8 @@ class PropertyWriteService
     public function syncUnitSharedMedia(User $owner, Property $property, Unit $unit, array $attributes): array
     {
         return DB::transaction(function () use ($owner, $property, $unit, $attributes): array {
-            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             $owner = $this->lockActiveOwner($owner);
+            $property = Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
             Gate::authorize('update', $property);
             abort_if($property->archived_at !== null, 409);
             abort_unless($property->content_revision === (int) $attributes['expected_content_revision'], 409);

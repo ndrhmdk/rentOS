@@ -7,6 +7,8 @@ export type OwnerProperty = {
   rental_arrangement: string;
   city: string | null;
   policies?: unknown;
+  units?: OwnerUnit[];
+  listing?: OwnerListing | null;
   archived_at: string | null;
   created_at: string;
   updated_at: string;

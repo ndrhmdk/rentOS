@@ -302,9 +302,22 @@ export function ListingEditor({
       }
     } catch (caught) {
       if (caught instanceof ApiError) {
-        setError(caught.message);
         setFieldErrors(caught.errors);
-        if (caught.status === 409) await reload(property.id);
+        if (caught.status === 409) {
+          try {
+            await reload(property.id);
+            setFieldErrors({});
+            setError(
+              "Thông tin bất động sản đã thay đổi. Tiêu đề và nội dung bạn nhập vẫn được giữ nguyên; hãy kiểm tra rồi lưu lại.",
+            );
+          } catch {
+            setError(
+              "Thông tin bất động sản đã thay đổi nhưng chưa thể tải phiên bản mới. Bản nháp của bạn vẫn được giữ nguyên; vui lòng thử tải lại.",
+            );
+          }
+        } else {
+          setError(caught.message);
+        }
       } else {
         setError("Không thể lưu tin đăng. Vui lòng thử lại.");
       }

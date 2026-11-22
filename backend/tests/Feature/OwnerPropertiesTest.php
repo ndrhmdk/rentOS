@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Property;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -213,6 +215,108 @@ class OwnerPropertiesTest extends TestCase
         $returnedIds = collect($response->json('data'))->pluck('id')->all();
         $this->assertContains($prop1, $returnedIds);
         $this->assertContains($prop2, $returnedIds);
+    }
+
+    public function test_owner_property_list_includes_current_listings_with_a_fixed_query_count(): void
+    {
+        $owner = User::factory()->create();
+
+        foreach (range(1, 25) as $index) {
+            $propertyId = $this->createProperty($owner->id);
+            DB::table('listings')->insert([
+                'id' => (string) Str::uuid(),
+                'property_id' => $propertyId,
+                'client_operation_id' => (string) Str::uuid(),
+                'title' => "Demo listing {$index}",
+                'description' => 'A listing used to verify eager loading.',
+            ]);
+
+            foreach (range(1, 2) as $unitNumber) {
+                DB::table('units')->insert([
+                    'id' => (string) Str::uuid(),
+                    'property_id' => $propertyId,
+                    'client_operation_id' => (string) Str::uuid(),
+                    'label' => "Room {$unitNumber}",
+                    'unit_kind' => 'ROOM',
+                    'bedrooms' => 1,
+                    'bathrooms' => 1,
+                    'bathroom_arrangement' => 'PRIVATE',
+                    'minimum_rental_months' => 3,
+                ]);
+            }
+        }
+
+        $ownerQueries = [];
+        DB::listen(function (QueryExecuted $query) use (&$ownerQueries): void {
+            if (preg_match('/\\b(from|join)\s+"?(properties|units|listings)"?/i', $query->sql) === 1) {
+                $ownerQueries[] = [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                ];
+            }
+        });
+
+        $response = $this->actingAs($owner)->getJson('/api/v1/owner/properties');
+
+        $response->assertOk()
+            ->assertJsonCount(20, 'data')
+            ->assertJsonCount(2, 'data.0.units')
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.total', 25);
+
+        $this->assertSame(4, count($ownerQueries));
+        $currentPageQueryCount = count($ownerQueries);
+        $this->assertCount(20, collect($response->json('data'))->pluck('listing')->filter());
+        $this->assertSame(
+            1,
+            collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"listings"'))->count(),
+        );
+        $this->assertSame(
+            1,
+            collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"units"'))->count(),
+        );
+
+        $ownerQueries = [];
+        $legacyPropertyPage = Property::query()
+            ->where('owner_id', $owner->id)
+            ->whereNull('archived_at')
+            ->orderByDesc('created_at')
+            ->with('units')
+            ->paginate(20);
+        $legacyBaseQueryCount = count($ownerQueries);
+        $this->assertCount(20, $legacyPropertyPage->items());
+        $this->assertSame(3, $legacyBaseQueryCount);
+
+        $ownerQueries = [];
+        foreach (collect($response->json('data'))->pluck('id') as $propertyId) {
+            $this->actingAs($owner)
+                ->getJson("/api/v1/owner/properties/{$propertyId}")
+                ->assertOk();
+            $this->actingAs($owner)
+                ->getJson("/api/v1/owner/properties/{$propertyId}/listing")
+                ->assertOk();
+        }
+        $legacyPerPropertyQueryCount = count($ownerQueries);
+
+        $this->assertSame(100, $legacyPerPropertyQueryCount);
+        $this->assertSame(
+            103,
+            $legacyBaseQueryCount + $legacyPerPropertyQueryCount,
+            'The previous listing page pattern required the property list plus detail and listing requests per row.',
+        );
+        $this->assertSame(4, $currentPageQueryCount);
+
+        $ownerQueries = [];
+        $secondPage = $this->actingAs($owner)->getJson('/api/v1/owner/properties?page=2');
+
+        $secondPage->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonCount(2, 'data.0.units')
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonPath('meta.total', 25);
+
+        $this->assertSame(4, count($ownerQueries));
+        $this->assertCount(5, collect($secondPage->json('data'))->pluck('listing')->filter());
     }
 
     public function test_archived_properties_are_excluded(): void
@@ -837,6 +941,106 @@ class OwnerPropertiesTest extends TestCase
             ->assertJsonPath('data.media.id', $mediaId)
             ->assertJsonPath('data.content_revision', 2);
 
+        $this->assertDatabaseCount('property_media', 1);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 2,
+        ]);
+        Http::assertSentCount(1);
+
+        $payload['caption'] = 'A different photo caption';
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertConflict();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_upload_replay_for_archived_media_returns_gone(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $operationId = (string) Str::uuid();
+        $photo = UploadedFile::fake()->image('living-room.jpg');
+        $this->fakeSupabaseStorage();
+
+        $payload = [
+            'client_operation_id' => $operationId,
+            'expected_content_revision' => 1,
+            'caption' => 'Living room',
+            'photo' => $photo,
+        ];
+        $upload = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertCreated();
+
+        $mediaId = $upload->json('data.media.id');
+        $this->actingAs($owner)->deleteJson(
+            "/api/v1/owner/properties/{$propertyId}/media/{$mediaId}",
+            ['expected_content_revision' => 2, 'revision' => 1],
+        )->assertOk();
+
+        $retry = $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        );
+
+        $retry->assertStatus(410)
+            ->assertJsonPath('message', 'Ảnh này đã được gỡ khỏi thư viện. Hãy tải lại ảnh để tạo lượt tải mới.');
+        $this->assertSoftDeleted('property_media', ['id' => $mediaId]);
+        $this->assertDatabaseCount('property_media', 1);
+        Http::assertSentCount(1);
+    }
+
+    public function test_photo_upload_can_retry_after_a_storage_failure_without_creating_partial_media(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id);
+        $operationId = (string) Str::uuid();
+        $photo = UploadedFile::fake()->image('living-room.jpg');
+        $attempt = 0;
+
+        config([
+            'services.supabase.url' => 'http://127.0.0.1:54321',
+            'services.supabase.service_role_key' => 'test-service-role-key',
+            'services.supabase.storage.bucket' => 'property-media',
+        ]);
+
+        Http::fake(function () use (&$attempt) {
+            $attempt++;
+
+            return Http::response(
+                $attempt === 1 ? ['message' => 'Temporary storage failure'] : [],
+                $attempt === 1 ? 503 : 200,
+            );
+        });
+
+        $payload = [
+            'client_operation_id' => $operationId,
+            'expected_content_revision' => 1,
+            'caption' => 'Living room',
+            'photo' => $photo,
+        ];
+
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertStatus(502);
+
+        $this->assertDatabaseCount('property_media', 0);
+        $this->assertDatabaseHas('properties', [
+            'id' => $propertyId,
+            'content_revision' => 1,
+        ]);
+
+        $this->actingAs($owner)->post(
+            "/api/v1/owner/properties/{$propertyId}/media",
+            $payload,
+        )->assertCreated();
+
+        Http::assertSentCount(2);
         $this->assertDatabaseCount('property_media', 1);
         $this->assertDatabaseHas('properties', [
             'id' => $propertyId,

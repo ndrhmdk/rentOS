@@ -6,6 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
 use App\Models\ListingReport;
+use App\Models\Property;
 use App\Models\User;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
@@ -72,6 +73,18 @@ class ResolveListingReportAction
 
             // Atomic listing suspension if requested
             if ($suspendListing) {
+                $propertyId = Listing::query()
+                    ->whereKey($lockedReport->listing_id)
+                    ->value('property_id');
+                $property = $propertyId === null
+                    ? null
+                    : Property::query()->whereKey($propertyId)->first();
+
+                if ($property !== null) {
+                    User::query()->whereKey($property->owner_id)->lockForUpdate()->firstOrFail();
+                    Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
+                }
+
                 /** @var Listing|null $lockedListing */
                 $lockedListing = Listing::query()
                     ->where('id', $lockedReport->listing_id)
