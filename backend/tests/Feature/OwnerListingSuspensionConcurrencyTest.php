@@ -103,9 +103,9 @@ class OwnerListingSuspensionConcurrencyTest extends TestCase
         $adminResult = collect($results)->firstWhere('actor_id', $admin->id);
 
         $this->assertNotNull($ownerResult);
-        $this->assertSame(200, $ownerResult['status'], $ownerResult['error'] ?? null);
+        $this->assertSame(200, $ownerResult['status'], $ownerResult['error'] ?? 'Owner property update failed.');
         $this->assertNotNull($adminResult);
-        $this->assertSame(200, $adminResult['status'], $adminResult['error'] ?? null);
+        $this->assertSame(200, $adminResult['status'], $adminResult['error'] ?? 'Admin suspension failed.');
 
         $this->assertDatabaseHas('properties', [
             'id' => $published->propertyId,
