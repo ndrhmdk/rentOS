@@ -41,7 +41,7 @@ class ListingCacheService
             'bedrooms' => $criteria->bedrooms,
             'bathrooms' => $criteria->bathrooms,
             'occupants' => $criteria->occupants,
-            'amenities' => array_values($amenities),
+            'amenities' => $amenities,
             'pets' => $criteria->pets,
             'page' => $criteria->page,
             'per_page' => $criteria->perPage,
