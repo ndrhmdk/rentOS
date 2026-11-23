@@ -266,8 +266,6 @@ class ProposeTenancy
 
                 app(ListingCacheService::class)->invalidateUnit((string) $unit->id);
 
-                app(\App\Services\ListingCacheService::class)->invalidateUnit((string) $unit->id);
-
                 return $this->result($tenancyId, false);
             });
         } catch (QueryException $exception) {
