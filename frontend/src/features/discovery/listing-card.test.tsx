@@ -100,4 +100,22 @@ describe("listing card gallery", () => {
     expect(screen.queryByRole("button", { name: "Ảnh sau" })).toBeNull();
     expect(screen.queryByText("1/1")).toBeNull();
   });
+
+  it("shows the price, type, verified tag and place, linking to the listing", () => {
+    render(
+      <ListingCardView
+        listing={{ ...listing(["/photos/only.webp"]), rent_min: "8500000", rent_max: "9000000" }}
+        href="/listings/listing-1"
+      />,
+    );
+
+    expect(screen.getByText("Nhà")).toBeTruthy();
+    expect(screen.getByText("Đã xác thực")).toBeTruthy();
+    expect(screen.getByText("Phước Mỹ, Sơn Trà")).toBeTruthy();
+    expect(screen.getByText("từ 8,5 triệu – 9 triệu/tháng")).toBeTruthy();
+    for (const link of screen.getAllByRole("link", { name: /Studio full nội thất/ })) {
+      expect(link.getAttribute("href")).toBe("/listings/listing-1");
+    }
+    expect(screen.queryByText("Phòng ngủ")).toBeNull();
+  });
 });
