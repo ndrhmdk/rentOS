@@ -39,8 +39,8 @@ class RentalRequest extends Model
     protected function casts(): array
     {
         return [
-            'desired_move_in_date' => 'date',
-            'desired_end_date' => 'date',
+            'desired_move_in_date' => 'date:Y-m-d',
+            'desired_end_date' => 'date:Y-m-d',
             'availability_checked_at' => 'datetime',
             'closed_at' => 'datetime',
             'confirmation_expires_at' => 'datetime',

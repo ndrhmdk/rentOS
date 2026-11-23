@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/http/client";
 import { getCurrentUser, logout } from "@/lib/auth/api";
 import { type CurrentUser } from "@/lib/auth/types";
+import { resetReviewPreview } from "./admin-review-store";
 import { getQueryClient } from "./query-provider";
 
 export type AuthStatus = "loading" | "authenticated" | "guest";
@@ -21,6 +22,7 @@ function markCurrentUserGuest(): void {
   void client.cancelQueries();
   client.setQueryData<CurrentUser | null>(currentUserKey, null);
   client.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
+  resetReviewPreview();
 }
 
 interface AuthContextValue {

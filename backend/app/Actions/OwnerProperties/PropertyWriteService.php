@@ -7,6 +7,7 @@ use App\Models\PropertyMedia;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\GeocodingService;
+use App\Services\ListingCacheService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Client\ConnectionException;
@@ -22,7 +23,15 @@ use Throwable;
 class PropertyWriteService
 {
     /** Owner write lock order: User → Property → Unit → Listing → PropertyMedia. */
-    public function __construct(private readonly GeocodingService $geocoding) {}
+    public function __construct(
+        private readonly GeocodingService $geocoding,
+        private readonly ?ListingCacheService $cache = null,
+    ) {}
+
+    private function cache(): ListingCacheService
+    {
+        return $this->cache ?? app(ListingCacheService::class);
+    }
 
     /**
      * Create a property draft and, for WHOLE_SPACE, its initial unit atomically.
@@ -199,6 +208,7 @@ class PropertyWriteService
             );
 
             $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $property->load('units');
         }, 3);
@@ -264,6 +274,8 @@ class PropertyWriteService
                 ],
                 $publishedListingIds,
             ));
+
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $property->load('units');
         }, 3);
@@ -691,6 +703,7 @@ class PropertyWriteService
             );
 
             $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $unit;
         }, 3);
@@ -808,6 +821,7 @@ class PropertyWriteService
             );
 
             $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $unit;
         }, 3);
@@ -878,6 +892,7 @@ class PropertyWriteService
                 $invalidatedListingIds,
                 $correlationId
             );
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $unit;
         }, 3);
@@ -1071,6 +1086,8 @@ class PropertyWriteService
                 'created_at' => now(),
             ]);
 
+            $this->cache()->invalidateProperty((string) $property->id);
+
             return ['units' => $createdUnits, 'replayed' => false];
         }, 3);
     }
@@ -1210,6 +1227,8 @@ class PropertyWriteService
                 ->orderBy('id')
                 ->get();
 
+            $this->cache()->invalidateProperty((string) $property->id);
+
             return [
                 'media' => $media,
                 'content_revision' => $property->content_revision,
@@ -1287,6 +1306,7 @@ class PropertyWriteService
                 correlationId: $correlationId,
             );
             $this->auditInvalidatedListings($owner->id, $invalidatedListingIds, $correlationId);
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return $media;
         }, 3);
@@ -1570,6 +1590,8 @@ class PropertyWriteService
                     $correlationId,
                 );
 
+                $this->cache()->invalidateProperty((string) $property->id);
+
                 return [
                     'media' => $media,
                     'replayed' => false,
@@ -1653,6 +1675,8 @@ class PropertyWriteService
                 ],
                 correlationId: (string) Str::uuid(),
             );
+
+            $this->cache()->invalidateProperty((string) $property->id);
 
             return ['content_revision' => $property->content_revision];
         });

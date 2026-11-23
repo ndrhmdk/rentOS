@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Actions\RentalRequests\RejectAgedRentalRequestAction;
+use App\Http\Resources\OwnerRentalRequestResource;
+use App\Http\Resources\TenantRentalRequestResource;
 use App\Models\Listing;
 use App\Models\RentalRequest;
 use App\Models\Unit;
@@ -430,5 +432,28 @@ class RejectAgedRentalRequestsTest extends TestCase
 
         $this->assertNull($result);
         $this->assertSame('ACCEPTED', $request->fresh()->status);
+    }
+
+    /**
+     * B1: Verify RentalRequest resources serialize desired dates as "YYYY-MM-DD" date strings, not ISO timestamps.
+     */
+    public function test_rental_request_resources_serialize_dates_as_iso_date_strings_without_time(): void
+    {
+        $listing = PublicListingFixture::published();
+
+        $request = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'desired_move_in_date' => '2027-01-10',
+            'desired_end_date' => '2027-03-31',
+            'status' => 'PENDING',
+        ]);
+
+        $tenantResource = (new TenantRentalRequestResource($request))->resolve();
+        $this->assertSame('2027-01-10', $tenantResource['desired_move_in_date']);
+        $this->assertSame('2027-03-31', $tenantResource['desired_end_date']);
+
+        $ownerResource = (new OwnerRentalRequestResource($request))->resolve();
+        $this->assertSame('2027-01-10', $ownerResource['desired_move_in_date']);
+        $this->assertSame('2027-03-31', $ownerResource['desired_end_date']);
     }
 }

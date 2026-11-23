@@ -6,6 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -235,6 +236,8 @@ class ConfirmTenancyContract
                 'response_status' => 200,
                 'created_at' => $now,
             ]);
+
+            app(ListingCacheService::class)->invalidateUnit((string) $tenancy->unit_id);
 
             return $this->result($tenancyId, $contractId, false);
         }, 3);

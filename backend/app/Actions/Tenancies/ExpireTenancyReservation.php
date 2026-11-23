@@ -180,7 +180,7 @@ class ExpireTenancyReservation
                 resourceId: $tenancyId,
             );
 
-            app(ListingCacheService::class)->invalidateSearch();
+            app(ListingCacheService::class)->invalidateUnit((string) $context->unit_id);
 
             return true;
         });

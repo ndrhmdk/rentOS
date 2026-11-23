@@ -65,15 +65,7 @@ class RejectAgedRentalRequestAction
                 ->map(fn ($id) => (string) $id)
                 ->all();
 
-            $moveInDate = Carbon::parse($request->desired_move_in_date)->toDateString();
-            $endDate = Carbon::parse($request->desired_end_date)->toDateString();
-
-            $hasEligibleUnit = $this->availability->hasEligibleUnit(
-                $propertyId,
-                $moveInDate,
-                $endDate,
-                $dueTenancyIds,
-            );
+            $hasEligibleUnit = $this->hasEligibleUnitForRequest($propertyId, $request, $dueTenancyIds);
 
             return $hasEligibleUnit ? 'PENDING_KEPT' : 'REJECTED';
         }
@@ -130,14 +122,7 @@ class RejectAgedRentalRequestAction
             }
 
             // Check availability across all eligible units
-            $moveInDate = Carbon::parse($request->desired_move_in_date)->toDateString();
-            $endDate = Carbon::parse($request->desired_end_date)->toDateString();
-
-            $hasEligibleUnit = $this->availability->hasEligibleUnit(
-                $propertyId,
-                $moveInDate,
-                $endDate,
-            );
+            $hasEligibleUnit = $this->hasEligibleUnitForRequest($propertyId, $request);
 
             $request->availability_checked_at = now();
 
@@ -180,5 +165,21 @@ class RejectAgedRentalRequestAction
 
             return 'REJECTED';
         });
+    }
+
+    /**
+     * @param  array<int, string>  $ignoredTenancyIds
+     */
+    private function hasEligibleUnitForRequest(string $propertyId, RentalRequest $request, array $ignoredTenancyIds = []): bool
+    {
+        $moveInDate = Carbon::parse($request->desired_move_in_date)->toDateString();
+        $endDate = Carbon::parse($request->desired_end_date)->toDateString();
+
+        return $this->availability->hasEligibleUnit(
+            $propertyId,
+            $moveInDate,
+            $endDate,
+            $ignoredTenancyIds,
+        );
     }
 }

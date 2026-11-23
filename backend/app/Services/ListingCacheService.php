@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Domain\Discovery\ListingSearchCriteria;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ListingCacheService
 {
@@ -18,13 +19,11 @@ class ListingCacheService
 
     public function bumpSearchVersion(): int
     {
-        if (! Cache::has(self::SEARCH_VERSION_KEY)) {
-            Cache::forever(self::SEARCH_VERSION_KEY, 2);
-
-            return 2;
+        if (! Cache::add(self::SEARCH_VERSION_KEY, 2)) {
+            return (int) Cache::increment(self::SEARCH_VERSION_KEY);
         }
 
-        return (int) Cache::increment(self::SEARCH_VERSION_KEY);
+        return 2;
     }
 
     public function searchKey(ListingSearchCriteria $criteria): string
@@ -96,13 +95,53 @@ class ListingCacheService
 
     public function invalidateListing(string $listingId): void
     {
-        Cache::forget($this->detailKey($listingId));
-        $this->bumpSearchVersion();
+        DB::afterCommit(function () use ($listingId): void {
+            Cache::forget($this->detailKey($listingId));
+            $this->bumpSearchVersion();
+        });
+    }
+
+    public function invalidateProperty(string $propertyId): void
+    {
+        DB::afterCommit(function () use ($propertyId): void {
+            $listingIds = DB::table('listings')
+                ->where('property_id', $propertyId)
+                ->pluck('id');
+
+            foreach ($listingIds as $listingId) {
+                Cache::forget($this->detailKey((string) $listingId));
+            }
+
+            $this->bumpSearchVersion();
+        });
+    }
+
+    public function invalidateUnit(string $unitId): void
+    {
+        DB::afterCommit(function () use ($unitId): void {
+            $propertyId = DB::table('units')
+                ->where('id', $unitId)
+                ->value('property_id');
+
+            if ($propertyId !== null) {
+                $listingIds = DB::table('listings')
+                    ->where('property_id', (string) $propertyId)
+                    ->pluck('id');
+
+                foreach ($listingIds as $listingId) {
+                    Cache::forget($this->detailKey((string) $listingId));
+                }
+            }
+
+            $this->bumpSearchVersion();
+        });
     }
 
     public function invalidateSearch(): void
     {
-        $this->bumpSearchVersion();
+        DB::afterCommit(function (): void {
+            $this->bumpSearchVersion();
+        });
     }
 
     public function flushAll(): void

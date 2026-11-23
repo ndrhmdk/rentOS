@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\OwnerProperties\PropertyWriteService;
 use App\Actions\Reports\SuspendListingAction;
 use App\Models\Listing;
 use App\Models\Property;
@@ -344,5 +345,46 @@ class PublicListingCacheAndVisibilityTest extends TestCase
         $this->getJson('/api/v1/listings')
             ->assertOk()
             ->assertJsonPath('meta.total', 0);
+    }
+
+    /**
+     * B2/B3/B4: PropertyWriteService unit/property mutations invalidate cache after commit.
+     */
+    public function test_property_write_service_mutations_invalidate_listing_cache_and_serve_fresh_data(): void
+    {
+        $listing = PublicListingFixture::published();
+        $property = Property::query()->findOrFail($listing->propertyId);
+
+        // 1. Prime detail cache -> MISS, then HIT
+        $this->getJson('/api/v1/listings/'.$listing->listingId)->assertHeader('X-Cache', 'MISS');
+        $this->getJson('/api/v1/listings/'.$listing->listingId)->assertHeader('X-Cache', 'HIT');
+
+        // 2. Prime search cache -> MISS, then HIT
+        $this->getJson('/api/v1/listings')->assertHeader('X-Cache', 'MISS');
+        $this->getJson('/api/v1/listings')->assertHeader('X-Cache', 'HIT');
+
+        // 3. Mutate property via PropertyWriteService
+        $this->actingAs($listing->owner, 'web');
+        $writer = app(PropertyWriteService::class);
+        $writer->update($listing->owner, $property, [
+            'expected_content_revision' => $property->content_revision,
+            'title' => 'Tòa nhà mới sửa sang tuyệt đẹp',
+            'summary' => 'Mô tả tóm tắt mới nhất',
+            'description' => 'Mô tả chi tiết đã cập nhật qua PropertyWriteService',
+            'property_type' => $property->property_type,
+            'room_count' => $property->room_count,
+            'house_rules' => [],
+            'amenities' => ['wifi'],
+        ]);
+
+        // 4. Verify search cache is MISS with fresh version
+        $this->getJson('/api/v1/listings')
+            ->assertOk()
+            ->assertHeader('X-Cache', 'MISS');
+
+        // 5. Verify detail cache is MISS with fresh data
+        $this->getJson('/api/v1/listings/'.$listing->listingId)
+            ->assertOk()
+            ->assertHeader('X-Cache', 'MISS');
     }
 }

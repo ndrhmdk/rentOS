@@ -29,6 +29,7 @@ class RejectAgedRentalRequests extends Command
 
         $rejected = 0;
         $kept = 0;
+        $errors = 0;
 
         foreach ($query->lazyById(100) as $request) {
             try {
@@ -56,6 +57,7 @@ class RejectAgedRentalRequests extends Command
                     $this->line("Request {$request->id}: PENDING_KEPT (eligible unit available).");
                 }
             } catch (Throwable $e) {
+                $errors++;
                 Log::error("Failed to process aged rental request {$request->id}: {$e->getMessage()}", [
                     'request_id' => $request->id,
                     'exception' => $e,
@@ -65,6 +67,12 @@ class RejectAgedRentalRequests extends Command
         }
 
         $this->info("Completed aged rental requests sweep: {$rejected} rejected, {$kept} retained pending.");
+
+        if ($errors > 0) {
+            $this->error("Aged rental requests sweep completed with {$errors} error(s).");
+
+            return self::FAILURE;
+        }
 
         return self::SUCCESS;
     }
