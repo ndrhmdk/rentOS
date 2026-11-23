@@ -58,14 +58,20 @@ export function ListingSearchForm({ locations = [] }: { locations?: string[] }) 
         Khám phá nơi ở phù hợp với bạn.
       </p>
       <label className="mt-5 grid gap-2 text-sm sm:mt-8">
-        <span className="flex items-center gap-2"><span className="text-[#66a3bf]"><ListingIcon name="pin" size={18} /></span>Bạn muốn sống ở đâu?</span>
+        <span className="flex items-center gap-2">
+          <span className="flex size-5 shrink-0 items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/listings/pin.svg" alt="" width={14} height={18} />
+          </span>
+          Bạn muốn sống ở đâu?
+        </span>
         <span className="relative">
           <input
             aria-label="Địa điểm"
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             list="home-location-options"
-            className="min-h-11 w-full min-w-0 rounded-none border-b border-[#8fbcd0] bg-transparent pr-7 text-base outline-none focus:border-[#3368a0] focus:ring-1 focus:ring-[#3368a0] sm:text-sm"
+            className="min-h-11 w-full min-w-0 rounded-none border-b border-[#8fbcd0] bg-transparent pr-7 text-base outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#3368a0] focus:shadow-[0_1px_0_0_#3368a0] sm:text-sm"
             placeholder="Thành phố, phường hoặc đường"
             autoComplete="off"
           />
@@ -78,7 +84,7 @@ export function ListingSearchForm({ locations = [] }: { locations?: string[] }) 
       <label className="mt-5 grid gap-2 text-sm sm:mt-6">
         <span className="flex items-center gap-2"><span className="text-[#66a3bf]"><ListingIcon name="building" size={18} /></span>Mức giá hằng tháng</span>
         <span className="relative">
-          <select aria-label="Mức giá hằng tháng" value={rent} onChange={(event) => setRent(event.target.value)} className="min-h-11 w-full min-w-0 appearance-none rounded-none border-b border-[#8fbcd0] bg-transparent pr-7 text-base outline-none focus:border-[#3368a0] focus:ring-1 focus:ring-[#3368a0] sm:text-sm">
+          <select aria-label="Mức giá hằng tháng" value={rent} onChange={(event) => setRent(event.target.value)} className="min-h-11 w-full min-w-0 appearance-none rounded-none border-b border-[#8fbcd0] bg-transparent pr-7 text-base outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#3368a0] focus:shadow-[0_1px_0_0_#3368a0] sm:text-sm">
             {rentOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
           <span aria-hidden="true" className="pointer-events-none absolute right-2 top-3 text-[#66a3bf]">⌄</span>

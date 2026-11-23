@@ -32,7 +32,7 @@ function photoUrls(listing: ListingCard): string[] {
   return listing.cover_url ? [listing.cover_url] : [];
 }
 
-export function ListingCardView({ listing, href, savedPage = false }: { listing: ListingCard; href: string; savedPage?: boolean }) {
+export function ListingCardView({ listing, href }: { listing: ListingCard; href: string }) {
   const urls = photoUrls(listing);
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState<Record<string, true>>({});
@@ -54,14 +54,11 @@ export function ListingCardView({ listing, href, savedPage = false }: { listing:
   }
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-border-default bg-surface-card">
-      <div className={`relative bg-surface-brand-soft ${savedPage ? "aspect-video" : "aspect-4/3"}`}>
+    <article className="flex h-full min-w-0 flex-col overflow-hidden rounded-[15px] bg-[#f1faff]">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[15px] bg-[#dce9ef]">
         <Link href={href} className="relative block h-full">
           {current && !ready[current] ? (
-            <span
-              className="absolute inset-0 z-[1] flex items-center justify-center bg-[#d9dde3] px-6 text-center text-sm text-[#3d4654]"
-              aria-hidden="true"
-            >
+            <span className="absolute inset-0 z-[1] flex items-center justify-center bg-[#d9dde3] px-6 text-center text-sm text-[#3d4654]" aria-hidden="true">
               {listing.title}
             </span>
           ) : null}
@@ -111,18 +108,30 @@ export function ListingCardView({ listing, href, savedPage = false }: { listing:
           </>
         ) : null}
       </div>
-      <Link href={href} className="grid gap-1 p-4">
-        <p className="font-semibold text-heading">
+      <Link href={href} className="grid gap-2 px-[15px] py-4">
+        <p className="text-lg font-semibold text-[#3368a0]">
           {formatRent(listing.rent_min, listing.rent_max)}
         </p>
-        <p className="text-sm text-secondary">
-          {kindLabels[listing.property.property_type] ??
-            listing.property.property_type}
-          {" · "}Tối thiểu {listing.minimum_rental_months} tháng
+        <div className="flex flex-wrap gap-2.5 text-[13px]">
+          <span className="inline-flex h-[25px] items-center gap-1.5 rounded-[20px] bg-[#e0eaf2] pl-[7px] pr-2.5 text-[#3368a0]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/listings/home-line.svg" alt="" width={13} height={13} />
+            {kindLabels[listing.property.property_type] ?? listing.property.property_type}
+          </span>
+          <span className="inline-flex h-[25px] items-center gap-1.5 rounded-[20px] bg-[rgba(76,241,43,0.21)] pl-2 pr-2.5 text-[#535353]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/listings/verified.svg" alt="" width={13.4772} height={13.4772} />
+            Đã xác thực
+          </span>
+        </div>
+        <h3 className="line-clamp-2 text-base font-semibold text-black">{listing.title}</h3>
+        <p className="flex items-center gap-1.5 text-sm text-[#52636c]">
+          <span className="flex size-5 shrink-0 items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/listings/pin.svg" alt="" width={14} height={18} />
+          </span>
+          {place}
         </p>
-        <h3 className="text-base font-medium text-primary">{listing.title}</h3>
-        <p className="text-sm text-secondary">{place}</p>
-        {savedPage && <span className="mt-2 rounded-lg border border-border-default px-3 py-2.5 text-sm font-semibold text-link">→ Xem chi tiết căn hộ</span>}
       </Link>
     </article>
   );

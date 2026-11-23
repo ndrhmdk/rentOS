@@ -111,8 +111,8 @@ describe("listing detail", () => {
     const user = userEvent.setup();
     render(<ListingDetailView listing={listing} isSignedIn />);
 
-    const shared = screen.getByRole("region", { name: "Tiện ích chung" });
-    expect(shared.textContent).toContain("Giặt là chung");
+    const amenities = screen.getByRole("region", { name: "Tiện ích nổi bật" });
+    expect(within(amenities).getByText("Giặt là chung").parentElement?.textContent).toContain("Tòa nhà");
     expect(
       screen.getByText("Đã được giữ/đặt. Trống từ 02/05/2027"),
     ).toBeTruthy();

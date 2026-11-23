@@ -118,7 +118,7 @@ function SavedListings({ accountId, initialDate, revision, count }: { accountId:
       {data && data.items.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {data.items.map(({ property_id, listing }) => listing ? (
-            <ListingCardView key={property_id} listing={{ ...listing, property_id }} savedPage
+            <ListingCardView key={property_id} listing={{ ...listing, property_id }}
               href={"/listings/" + listing.id + (moveInDate ? "?move_in_date=" + encodeURIComponent(moveInDate) : "")} />
           ) : (
             <article key={property_id} className="overflow-hidden rounded-2xl border border-border-default bg-surface-card">

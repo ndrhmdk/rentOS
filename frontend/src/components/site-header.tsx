@@ -146,24 +146,6 @@ export function SiteHeader() {
         className={`${onHome ? "ml-auto xl:ml-0" : ""} flex shrink-0 items-center gap-3 sm:gap-4`}
         suppressHydrationWarning
       >
-        {/* Language Indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 text-white text-sm font-semibold select-none px-2 py-1">
-          <svg
-            className="w-4 h-4 text-white"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-            <path d="M2 12h20" />
-          </svg>
-          <span className="text-xs font-semibold">VN</span>
-        </div>
-
         {status === "loading" && (
           <div className="w-[100px] sm:w-[120px] h-[36px]" aria-hidden="true" />
         )}

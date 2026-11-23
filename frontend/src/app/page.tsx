@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { HomeListingCard } from "@/features/discovery/home-listing-card";
+import { ListingCardView } from "@/features/discovery/listing-card";
 import { ListingSearchForm } from "@/features/discovery/listing-search-form";
 import {
   fetchListings,
@@ -236,9 +236,10 @@ export default function Home() {
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {listings.map((listing) => (
-              <HomeListingCard
+              <ListingCardView
                 key={listing.id}
                 listing={listing}
+                href={`/listings/${listing.id}`}
               />
             ))}
           </div>

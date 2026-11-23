@@ -177,28 +177,22 @@ export function ListingDetailView({
               <h2 className="text-2xl font-bold text-[#091216]">
                 Tiện ích nổi bật
               </h2>
-              <section aria-label="Tiện ích chung">
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-                  {listing.property.shared_amenities.map((amenity) => (
-                    <AmenityCard
-                      key={amenity.key}
-                      amenity={amenity}
-                      scope="Tòa nhà"
-                    />
-                  ))}
-                </ul>
-              </section>
-              {unitAmenities.length > 0 ? (
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3">
-                  {unitAmenities.map((amenity) => (
-                    <AmenityCard
-                      key={amenity.key}
-                      amenity={amenity}
-                      scope="Trong căn"
-                    />
-                  ))}
-                </ul>
-              ) : null}
+              <ul className="flex flex-wrap gap-3">
+                {listing.property.shared_amenities.map((amenity) => (
+                  <AmenityCard
+                    key={`shared-${amenity.key}`}
+                    amenity={amenity}
+                    scope="Tòa nhà"
+                  />
+                ))}
+                {unitAmenities.map((amenity) => (
+                  <AmenityCard
+                    key={`unit-${amenity.key}`}
+                    amenity={amenity}
+                    scope="Trong căn"
+                  />
+                ))}
+              </ul>
               {extras.length > 0 ? (
                 <p className="text-sm text-[#454e5c]">
                   <span className="font-bold">Tiện ích bổ sung</span>
@@ -354,12 +348,14 @@ function AmenityCard({
   scope: string;
 }) {
   return (
-    <li className="grid min-w-0 gap-1 overflow-hidden rounded-xl bg-[#eaf1f7] p-4">
+    <li className="flex min-w-0 max-w-full items-center gap-3 rounded-xl bg-[#eaf1f7] py-2.5 pl-3.5 pr-5 text-[#3368a0]">
       <ListingIcon name={amenityIcon(amenity.key)} size={22} />
-      <p className="break-words font-bold text-[#091216]">{amenity.label_vi}</p>
-      <p className="text-[13px] text-[#5b6676]">
-        {amenity.details ? `${scope} · ${amenity.details}` : scope}
-      </p>
+      <span className="min-w-0">
+        <span className="block break-words font-bold text-[#091216]">{amenity.label_vi}</span>
+        <span className="block text-[13px] text-[#5b6676]">
+          {amenity.details ? `${scope} · ${amenity.details}` : scope}
+        </span>
+      </span>
     </li>
   );
 }
