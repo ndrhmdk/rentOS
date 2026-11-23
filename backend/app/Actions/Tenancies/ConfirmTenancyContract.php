@@ -239,6 +239,8 @@ class ConfirmTenancyContract
 
             app(ListingCacheService::class)->invalidateUnit((string) $tenancy->unit_id);
 
+            app(\App\Services\ListingCacheService::class)->invalidateUnit((string) $tenancy->unit_id);
+
             return $this->result($tenancyId, $contractId, false);
         }, 3);
     }
