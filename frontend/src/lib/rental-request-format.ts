@@ -27,3 +27,15 @@ export function timestamp(value: string) {
 export function dateRange(item: Pick<TenantRentalRequest, "desired_move_in_date" | "desired_end_date">) {
   return dateOnly(item.desired_move_in_date) + " – " + dateOnly(item.desired_end_date);
 }
+
+export function formatOutcomeReason(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  if (reason === "NO_AVAILABLE_UNIT") {
+    return "Tự động từ chối do không còn căn trống phù hợp sau 15 ngày";
+  }
+  return reason;
+}
+
+export function isAutoRejection(reason: string | null | undefined): boolean {
+  return reason === "NO_AVAILABLE_UNIT";
+}

@@ -18,10 +18,9 @@ const currentUserKey = ["current-user"] as const;
 
 function markCurrentUserGuest(): void {
   const client = getQueryClient();
-  void client.cancelQueries({ queryKey: currentUserKey });
+  void client.cancelQueries();
   client.setQueryData<CurrentUser | null>(currentUserKey, null);
-  client.removeQueries({ queryKey: ["notifications"] });
-  client.removeQueries({ queryKey: ["notifications-page"] });
+  client.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
 }
 
 interface AuthContextValue {
@@ -64,11 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const signOut = useCallback(async () => {
-    await queryClient.cancelQueries({ queryKey: currentUserKey });
+    await queryClient.cancelQueries();
     try {
       await logout();
-    } catch{
+    } catch {
     } finally {
+      queryClient.setQueryData<CurrentUser | null>(currentUserKey, null);
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
       markCurrentUserGuest();
     }
   }, [queryClient]);
