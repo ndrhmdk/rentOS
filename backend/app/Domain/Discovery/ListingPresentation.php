@@ -63,7 +63,8 @@ final class ListingPresentation
             ->keyBy(fn (Listing $listing): string => (string) $listing->id);
 
         $propertyIds = $listings->pluck('property_id')->map(fn (mixed $id): string => (string) $id)->all();
-        $units = $this->eligibleUnits($propertyIds, $criteria, $requireFree)->get()->groupBy(
+        $allUnits = $this->eligibleUnits($propertyIds, $criteria, $requireFree)->get();
+        $units = $allUnits->groupBy(
             fn (Unit $unit): string => (string) $unit->property_id,
         );
         $photos = PropertyMedia::query()
@@ -76,19 +77,35 @@ final class ListingPresentation
             ->get()
             ->groupBy(fn (PropertyMedia $item): string => (string) $item->property_id);
 
+        $allUnitIds = $allUnits->pluck('id')->all();
+        $allBlocks = $allUnitIds === [] ? collect() : DB::table('tenancies')
+            ->whereIn('unit_id', $allUnitIds)
+            ->whereIn('status', ['PENDING_CONFIRMATION', 'CONFIRMED', 'ACTIVE'])
+            ->whereNotNull('blocked_start_date')
+            ->whereNotNull('blocked_end_date')
+            ->get(['unit_id', 'blocked_start_date', 'blocked_end_date'])
+            ->groupBy(fn (object $row): string => (string) $row->unit_id);
+
         return collect($listingIds)
-            ->map(function (string $id) use ($listings, $units, $photos, $criteria): ?Listing {
+            ->map(function (string $id) use ($listings, $units, $photos, $allBlocks, $criteria): ?Listing {
                 $listing = $listings->get($id);
                 if ($listing === null) {
                     return null;
                 }
                 $listingUnits = $units->get((string) $listing->property_id, collect())->values();
-                $this->attachUnitPresentation($listingUnits, $listing->property, $criteria->moveInDate);
+                $propertyPhotos = $photos->get((string) $listing->property_id, collect());
+                $this->attachUnitPresentation(
+                    $listingUnits,
+                    $listing->property,
+                    $criteria->moveInDate,
+                    $allBlocks,
+                    $propertyPhotos,
+                );
                 $listing->setAttribute('search_summary', $this->summary(
                     $listingUnits,
                     $criteria->moveInDate,
                     $listing,
-                    $photos->get((string) $listing->property_id, collect()),
+                    $propertyPhotos,
                 ));
 
                 return $listing;
@@ -110,11 +127,18 @@ final class ListingPresentation
 
     /**
      * @param  Collection<int, Unit>  $units
+     * @param  Collection<string, Collection<int, object>>|null  $preloadedBlocks
+     * @param  Collection<int, PropertyMedia>|null  $preloadedMedia
      */
-    private function attachUnitPresentation(Collection $units, Property $property, ?string $moveInDate): void
-    {
+    private function attachUnitPresentation(
+        Collection $units,
+        Property $property,
+        ?string $moveInDate,
+        ?Collection $preloadedBlocks = null,
+        ?Collection $preloadedMedia = null,
+    ): void {
         $today = CarbonImmutable::today()->toDateString();
-        $blocks = DB::table('tenancies')
+        $blocks = $preloadedBlocks ?? DB::table('tenancies')
             ->whereIn('unit_id', $units->pluck('id'))
             ->whereIn('status', ['PENDING_CONFIRMATION', 'CONFIRMED', 'ACTIVE'])
             ->whereNotNull('blocked_start_date')
@@ -122,7 +146,7 @@ final class ListingPresentation
             ->get(['unit_id', 'blocked_start_date', 'blocked_end_date'])
             ->groupBy(fn (object $row): string => (string) $row->unit_id);
 
-        $selected = $this->selectedMedia((string) $property->id);
+        $selected = $preloadedMedia ?? $this->selectedMedia((string) $property->id);
         $media = $selected->groupBy(
             fn (PropertyMedia $item): string => (string) $item->unit_id,
         );

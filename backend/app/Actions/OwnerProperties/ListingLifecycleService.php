@@ -7,6 +7,7 @@ use App\Domain\Media\MarketedUnitPhotoQuery;
 use App\Models\Listing;
 use App\Models\Property;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -14,6 +15,15 @@ use Illuminate\Validation\ValidationException;
 
 class ListingLifecycleService
 {
+    public function __construct(
+        private readonly ?ListingCacheService $cache = null,
+    ) {}
+
+    private function cache(): ListingCacheService
+    {
+        return $this->cache ?? app(ListingCacheService::class);
+    }
+
     /** @return array{listing: Listing, replayed: bool} */
     public function create(User $owner, Property $property, array $data): array
     {
@@ -50,6 +60,7 @@ class ListingLifecycleService
             ]);
 
             $this->audit($owner->id, $listing, 'listing.created', null, $this->snapshot($listing));
+            $this->cache()->invalidateSearch();
 
             return ['listing' => $listing, 'replayed' => false];
         });
@@ -85,6 +96,7 @@ class ListingLifecycleService
             }
             $listing->save();
             $this->audit($owner->id, $listing, 'listing.updated', $before, $this->snapshot($listing));
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });
@@ -114,6 +126,7 @@ class ListingLifecycleService
             $listing->save();
             $this->audit($owner->id, $listing, 'listing.submitted', $before, $this->snapshot($listing));
             $this->notifyAdminsOfSubmission($owner, $listing);
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });
@@ -138,6 +151,7 @@ class ListingLifecycleService
             $listing->publication_status = 'PUBLISHED';
             $listing->save();
             $this->audit($owner->id, $listing, 'listing.published', $before, $this->snapshot($listing));
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });
@@ -157,6 +171,7 @@ class ListingLifecycleService
             $listing->publication_status = 'HIDDEN';
             $listing->save();
             $this->audit($owner->id, $listing, 'listing.hidden', $before, $this->snapshot($listing));
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });
@@ -180,6 +195,7 @@ class ListingLifecycleService
             }
             $listing->save();
             $this->audit($owner->id, $listing, 'listing.archived', $before, $this->snapshot($listing));
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });
@@ -204,6 +220,7 @@ class ListingLifecycleService
             }
             $listing->save();
             $this->audit($admin->id, $listing, $approve ? 'listing.approved' : 'listing.rejected', $before, $this->snapshot($listing));
+            $this->cache()->invalidateListing((string) $listing->id);
 
             return $listing->refresh();
         });

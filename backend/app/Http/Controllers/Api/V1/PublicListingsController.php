@@ -12,17 +12,41 @@ use App\Http\Requests\Api\V1\PublicListingShowRequest;
 use App\Http\Resources\PublicListingCardResource;
 use App\Http\Resources\PublicListingDetailResource;
 use App\Models\Listing;
+use App\Services\ListingCacheService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class PublicListingsController extends Controller
 {
-    public function index(PublicListingIndexRequest $request, ListingPresentation $presentation): JsonResponse
-    {
+    public function index(
+        PublicListingIndexRequest $request,
+        ListingPresentation $presentation,
+        ListingCacheService $cache,
+    ): JsonResponse {
         $criteria = $this->criteria($request);
 
-        return DB::transaction(function () use ($criteria, $presentation): JsonResponse {
+        $cached = $cache->getSearch($criteria);
+        if ($cached !== null) {
+            $cachedIds = $cached['listing_ids'] ?? [];
+            if ($cachedIds === []) {
+                return response()->json([
+                    'data' => $cached['data'],
+                    'meta' => $cached['meta'],
+                ])->header('X-Cache', 'HIT');
+            }
+
+            // Fresh visibility gate: ensure all cached listings remain publicly visible
+            $visibleCount = Listing::query()->publiclyVisible()->whereIn('id', $cachedIds)->count();
+            if ($visibleCount === count($cachedIds)) {
+                return response()->json([
+                    'data' => $cached['data'],
+                    'meta' => $cached['meta'],
+                ])->header('X-Cache', 'HIT');
+            }
+        }
+
+        return DB::transaction(function () use ($criteria, $presentation, $cache): JsonResponse {
             ['ids' => $pageIds, 'total' => $total] = EligibleUnitQuery::matchingListingPage($criteria);
             $listings = $presentation->cardsFor($pageIds, $criteria);
 
@@ -37,26 +61,52 @@ class PublicListingsController extends Controller
                 $meta['result_label'] = $total.' tin đăng còn trống từ '.CarbonImmutable::parse($criteria->moveInDate)->format('d/m/Y');
             }
 
-            return response()->json([
-                'data' => PublicListingCardResource::collection($listings),
+            $data = PublicListingCardResource::collection($listings)->resolve();
+
+            $cache->putSearch($criteria, [
+                'data' => $data,
                 'meta' => $meta,
+                'listing_ids' => $pageIds,
             ]);
+
+            return response()->json([
+                'data' => $data,
+                'meta' => $meta,
+            ])->header('X-Cache', 'MISS');
         });
     }
 
-    public function show(PublicListingShowRequest $request, string $listing, ListingPresentation $presentation): JsonResponse
-    {
-        return DB::transaction(function () use ($listing, $presentation): JsonResponse {
+    public function show(
+        PublicListingShowRequest $request,
+        string $listing,
+        ListingPresentation $presentation,
+        ListingCacheService $cache,
+    ): JsonResponse {
+        // Fresh visibility gate: check current live status directly before reading cache
+        if (! Listing::query()->publiclyVisible()->whereKey($listing)->exists()) {
+            abort(404);
+        }
+
+        $cached = $cache->getDetail($listing);
+        if ($cached !== null) {
+            return response()->json([
+                'data' => $cached,
+            ])->header('X-Cache', 'HIT');
+        }
+
+        return DB::transaction(function () use ($listing, $presentation, $cache): JsonResponse {
             $model = Listing::query()->with('property.owner')->find($listing);
             if (! $model instanceof Listing || ! Listing::query()->publiclyVisible()->whereKey($model->id)->exists()) {
                 abort(404);
             }
 
             $presentation->prepareDetail($model);
+            $data = (new PublicListingDetailResource($model))->resolve();
+            $cache->putDetail($listing, $data);
 
             return response()->json([
-                'data' => new PublicListingDetailResource($model),
-            ]);
+                'data' => $data,
+            ])->header('X-Cache', 'MISS');
         });
     }
 

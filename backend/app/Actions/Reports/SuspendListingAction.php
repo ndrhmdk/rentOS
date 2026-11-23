@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Listing;
 use App\Models\Property;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -95,6 +96,8 @@ class SuspendListingAction
                     actorId: (string) $admin->id,
                 );
             }
+
+            app(ListingCacheService::class)->invalidateListing((string) $lockedListing->id);
 
             return $lockedListing;
         });
