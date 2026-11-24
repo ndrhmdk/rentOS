@@ -100,9 +100,11 @@ const listing: ListingDetail = {
 describe("listing detail", () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   beforeEach(() => {
+    vi.setSystemTime(new Date("2026-11-01T00:00:00Z"));
     push.mockReset();
     vi.mocked(submitRentalRequest).mockReset();
   });

@@ -101,7 +101,9 @@ class PublicListingsController extends Controller
             }
 
             $presentation->prepareDetail($model);
-            $data = (new PublicListingDetailResource($model))->resolve();
+            $resource = new PublicListingDetailResource($model);
+            /** @var array<string, mixed> $data */
+            $data = $resource->response()->getData(true)['data'];
             $cache->putDetail($listing, $data);
 
             return response()->json([

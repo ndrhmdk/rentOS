@@ -45,7 +45,7 @@ class PublicListingDetailResource extends JsonResource
             'owner' => [
                 'name' => $property->owner?->name,
             ],
-            'units' => PublicUnitResource::collection($this->resource->getAttribute('public_units')),
+            'units' => PublicUnitResource::collection($this->resource->getAttribute('public_units'))->resolve(),
         ];
     }
 }

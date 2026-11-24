@@ -44,7 +44,7 @@ class PublicUnitResource extends JsonResource
             'rules' => $this->resource->getAttribute('effective_rules'),
             'amenities' => $this->resource->getAttribute('public_amenities'),
             'custom_amenities' => $this->resource->getAttribute('public_custom_amenities'),
-            'photos' => $photos,
+            'photos' => $photos instanceof Collection ? $photos->values()->all() : (array) $photos,
         ];
     }
 

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { DateField } from "@/components/ui/date-field";
 import type { ListingDetail } from "@/features/discovery/listings-api";
 import { ApiError } from "@/lib/http/client";
@@ -21,6 +21,20 @@ const labelClass = "grid gap-1 text-sm font-medium text-heading";
 const controlClass = "w-full rounded-xl border border-border-default bg-surface-card px-4 text-base font-normal focus:border-action-primary focus:ring-4 focus:ring-action-primary/15 focus:outline-none aria-invalid:border-rose-400";
 const messageLimit = 500;
 const phoneDigitLimit = 15;
+
+function calculateDefaultEndDate(startDateStr: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(startDateStr);
+  if (!match) return "";
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (isNaN(date.getTime())) return "";
+  const boundary = new Date(date);
+  boundary.setUTCDate(1);
+  boundary.setUTCMonth(boundary.getUTCMonth() + 12 + 1, 0);
+  boundary.setUTCDate(Math.min(date.getUTCDate(), boundary.getUTCDate()));
+  boundary.setUTCDate(boundary.getUTCDate() - 1);
+  return boundary.toISOString().slice(0, 10);
+}
 
 function formatPhoneChunks(value: string): string {
   const plus = value.trimStart().startsWith("+");
@@ -71,6 +85,14 @@ export function RentalRequestForm({
   const minMonths = listing.units.find((unit) => unit.id === unitId)?.minimum_rental_months ?? minimumMonths(listing.units);
   const duration = start && end && end >= start ? describeDuration(start, end) : null;
   const calendarIcon = <Image src="/images/rental-request/calendar.svg" alt="" width={12} height={12} />;
+
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -214,14 +236,37 @@ export function RentalRequestForm({
 
             <div className="grid gap-2">
               <div className="grid items-start gap-4 sm:grid-cols-2 sm:gap-6">
-                <DateField name="desired_move_in_date" label="Ngày dọn vào mong muốn" picker pickerIcon={calendarIcon} error={errors.start} onValueChange={(value) => {
-                  setStart(value);
-                  setSubmitError("");
-                }} />
-                <DateField name="desired_end_date" label="Ngày kết thúc mong muốn" picker pickerIcon={calendarIcon} error={errors.end} onValueChange={(value) => {
-                  setEnd(value);
-                  setSubmitError("");
-                }} />
+                <DateField
+                  name="desired_move_in_date"
+                  label="Ngày dọn vào mong muốn"
+                  value={start}
+                  min={todayStr}
+                  picker
+                  pickerIcon={calendarIcon}
+                  error={errors.start}
+                  onValueChange={(value) => {
+                    setStart(value);
+                    setSubmitError("");
+                    if (value && value >= todayStr) {
+                      const autoEnd = calculateDefaultEndDate(value);
+                      if (autoEnd) {
+                        setEnd(autoEnd);
+                      }
+                    }
+                  }}
+                />
+                <DateField
+                  name="desired_end_date"
+                  label="Ngày kết thúc mong muốn"
+                  value={end}
+                  picker
+                  pickerIcon={calendarIcon}
+                  error={errors.end}
+                  onValueChange={(value) => {
+                    setEnd(value);
+                    setSubmitError("");
+                  }}
+                />
               </div>
               <div className="flex flex-wrap items-center gap-3 text-[13px] text-secondary">
                 {duration ? <span className="rounded-lg bg-action-primary/10 px-3 py-1 text-xs font-semibold text-action-primary">{duration}</span> : null}

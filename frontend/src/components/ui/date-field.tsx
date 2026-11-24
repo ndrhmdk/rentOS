@@ -27,30 +27,39 @@ const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 export function DateField({
   name,
   label,
+  value,
   defaultValue = "",
   error,
   onValueChange,
   picker = false,
   pickerIcon,
+  min,
+  max,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "defaultValue"> & {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "defaultValue" | "value"> & {
   name: string;
   label: string;
+  value?: string;
   defaultValue?: string;
   error?: string;
   onValueChange?: (iso: string) => void;
   picker?: boolean;
   pickerIcon?: ReactNode;
+  min?: string;
+  max?: string;
 }) {
   if (picker) {
     return (
       <DatePicker
         name={name}
         label={label}
+        value={value}
         defaultValue={defaultValue}
         error={error}
         onValueChange={onValueChange}
         icon={pickerIcon}
+        min={min}
+        max={max}
       />
     );
   }
@@ -58,6 +67,7 @@ export function DateField({
     <TextDate
       name={name}
       label={label}
+      value={value}
       defaultValue={defaultValue}
       error={error}
       onValueChange={onValueChange}
@@ -69,19 +79,22 @@ export function DateField({
 function TextDate({
   name,
   label,
+  value,
   defaultValue = "",
   error,
   onValueChange,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "defaultValue"> & {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "defaultValue" | "value"> & {
   name: string;
   label: string;
+  value?: string;
   defaultValue?: string;
   error?: string;
   onValueChange?: (iso: string) => void;
 }) {
   const id = useId();
-  const [display, setDisplay] = useState(shown(defaultValue));
+  const [uncontrolledDisplay, setUncontrolledDisplay] = useState(shown(defaultValue));
+  const display = value !== undefined ? shown(value) : uncontrolledDisplay;
   const iso = parseDisplayDate(display);
   const invalid =
     error || (display && !iso ? "Nhập ngày theo định dạng dd/mm/yyyy." : "");
@@ -97,7 +110,7 @@ function TextDate({
         value={display}
         onChange={(event) => {
           const next = event.target.value;
-          setDisplay(next);
+          setUncontrolledDisplay(next);
           onValueChange?.(parseDisplayDate(next) ?? "");
         }}
         aria-invalid={!!invalid}
@@ -121,23 +134,31 @@ function TextDate({
 function DatePicker({
   name,
   label,
+  value,
   defaultValue = "",
   error,
   onValueChange,
   icon,
+  min,
+  max,
 }: {
   name: string;
   label: string;
+  value?: string;
   defaultValue?: string;
   error?: string;
   onValueChange?: (iso: string) => void;
   icon?: ReactNode;
+  min?: string;
+  max?: string;
 }) {
   const id = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [display, setDisplay] = useState(shown(defaultValue));
+  const [uncontrolledDisplay, setUncontrolledDisplay] = useState(shown(defaultValue));
+  const display = value !== undefined ? shown(value) : uncontrolledDisplay;
+
   const iso = parseDisplayDate(display) ?? "";
   const selected = iso ? new Date(`${iso}T00:00:00Z`) : null;
   const start = selected ?? new Date();
@@ -196,10 +217,20 @@ function DatePicker({
     const month = String(cursor.month + 1).padStart(2, "0");
     const date = String(day).padStart(2, "0");
     const next = `${cursor.year}-${month}-${date}`;
-    setDisplay(`${date}/${month}/${cursor.year}`);
+    if (min && next < min) return;
+    if (max && next > max) return;
+    setUncontrolledDisplay(`${date}/${month}/${cursor.year}`);
     onValueChange?.(next);
     setOpen(false);
   }
+
+  const minCursor = min
+    ? { year: Number(min.slice(0, 4)), month: Number(min.slice(5, 7)) - 1 }
+    : null;
+  const canShiftPrev =
+    !minCursor ||
+    cursor.year > minCursor.year ||
+    (cursor.year === minCursor.year && cursor.month > minCursor.month);
 
   const cells = monthCells(cursor.year, cursor.month);
   return (
@@ -235,8 +266,13 @@ function DatePicker({
                 <button
                   type="button"
                   aria-label="Tháng trước"
-                  className="flex size-9 items-center justify-center rounded-lg text-[#254e7a] hover:bg-[#eaf1f7]"
-                  onClick={() => shift(-1)}
+                  disabled={!canShiftPrev}
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    canShiftPrev
+                      ? "text-[#254e7a] hover:bg-[#eaf1f7]"
+                      : "cursor-not-allowed text-[#b5bfc9] opacity-40"
+                  }`}
+                  onClick={() => canShiftPrev && shift(-1)}
                 >
                   ‹
                 </button>
@@ -263,32 +299,40 @@ function DatePicker({
                 ))}
               </div>
               <div className="grid grid-cols-7">
-                {cells.map((day, index) =>
-                  day == null ? (
-                    <span key={`empty-${index}`} />
-                  ) : (
+                {cells.map((day, index) => {
+                  if (day == null) {
+                    return <span key={`empty-${index}`} />;
+                  }
+                  const monthStr = String(cursor.month + 1).padStart(2, "0");
+                  const dayStr = String(day).padStart(2, "0");
+                  const cellIso = `${cursor.year}-${monthStr}-${dayStr}`;
+                  const isDisabled =
+                    (min && cellIso < min) || (max && cellIso > max);
+                  const isSelected =
+                    selected?.getUTCFullYear() === cursor.year &&
+                    selected.getUTCMonth() === cursor.month &&
+                    selected.getUTCDate() === day;
+
+                  return (
                     <button
                       key={day}
                       type="button"
+                      disabled={Boolean(isDisabled)}
                       aria-label={`${day} tháng ${cursor.month + 1} năm ${cursor.year}`}
-                      aria-pressed={
-                        selected?.getUTCFullYear() === cursor.year &&
-                        selected.getUTCMonth() === cursor.month &&
-                        selected.getUTCDate() === day
-                      }
-                      onClick={() => choose(day)}
+                      aria-pressed={isSelected}
+                      onClick={() => !isDisabled && choose(day)}
                       className={`mx-auto flex size-9 items-center justify-center rounded-full text-sm ${
-                        selected?.getUTCFullYear() === cursor.year &&
-                        selected.getUTCMonth() === cursor.month &&
-                        selected.getUTCDate() === day
+                        isSelected
                           ? "bg-[#3368a0] font-semibold text-white"
-                          : "text-[#091216] hover:bg-[#eaf1f7]"
+                          : isDisabled
+                            ? "cursor-not-allowed text-[#b5bfc9] opacity-40"
+                            : "text-[#091216] hover:bg-[#eaf1f7]"
                       }`}
                     >
                       {day}
                     </button>
-                  ),
-                )}
+                  );
+                })}
               </div>
             </div>,
             document.body,

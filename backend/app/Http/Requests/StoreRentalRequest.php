@@ -47,7 +47,7 @@ class StoreRentalRequest extends FormRequest
             'client_operation_id' => ['required', 'uuid'],
             'contact_name' => ['required', 'string', 'max:255', 'not_regex:/\x00/'],
             'contact_phone' => ['required', 'string', 'regex:/\A\+?[0-9]{8,15}\z/'],
-            'desired_move_in_date' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:0001-01-01'],
+            'desired_move_in_date' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:today'],
             'desired_end_date' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:desired_move_in_date'],
             'preferred_unit_id' => ['nullable', 'uuid'],
             'message' => ['nullable', 'string', 'max:500', 'not_regex:/\x00/'],
