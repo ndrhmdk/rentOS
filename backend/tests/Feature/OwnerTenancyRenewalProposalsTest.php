@@ -28,8 +28,13 @@ class OwnerTenancyRenewalProposalsTest extends TestCase
         $payload = $this->proposalPayload($case);
         $url = $this->proposalUrl($case);
 
+        $detailUrl = '/api/v1/listings/'.$case['listing']->listingId;
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'MISS');
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'HIT');
+
         Auth::forgetGuards();
         $response = $this->actingAs($case['listing']->owner, 'web')->postJson($url, $payload);
+        $this->getJson($detailUrl)->assertOk()->assertHeader('X-Cache', 'MISS');
         $response->assertCreated()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertJsonPath('data.tenancy_id', $case['tenancy']->id)

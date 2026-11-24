@@ -92,6 +92,10 @@ class TenancyRenewalResolutionTest extends TestCase
             'reason' => 'Thời gian gia hạn này chưa phù hợp.',
         ];
 
+        $detailUrl = '/api/v1/listings/'.$case['listing']->listingId;
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'MISS');
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'HIT');
+
         Auth::forgetGuards();
         $this->actingAs($case['listing']->owner, 'web')->postJson($url.'/reject', $payload)
             ->assertOk()
@@ -99,6 +103,8 @@ class TenancyRenewalResolutionTest extends TestCase
             ->assertJsonPath('data.review_reason', $payload['reason'])
             ->assertJsonPath('data.blocked_end_date', $case['end_date'])
             ->assertJsonPath('data.replayed', false);
+
+        $this->getJson($detailUrl)->assertOk()->assertHeader('X-Cache', 'MISS');
 
         $this->assertDatabaseHas('tenancy_renewal_requests', [
             'id' => $case['renewal']->id,

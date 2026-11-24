@@ -24,11 +24,17 @@ class OwnerTenancyCloseTest extends TestCase
             'reason' => 'The tenant and owner agreed to cancel.',
         ];
 
+        $detailUrl = '/api/v1/listings/'.$case['listing']->listingId;
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'MISS');
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'HIT');
+
         $this->actingAs($case['listing']->owner)->postJson($url, $payload)
             ->assertOk()
             ->assertJsonPath('data.status', 'CANCELLED')
             ->assertJsonPath('data.end_reason', $payload['reason'])
             ->assertJsonPath('data.replayed', false);
+
+        $this->getJson($detailUrl)->assertOk()->assertHeader('X-Cache', 'MISS');
 
         $this->assertDatabaseHas('tenancies', [
             'id' => $case['tenancy']->id,
