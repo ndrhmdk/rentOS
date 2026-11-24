@@ -45,7 +45,7 @@ function statusDetail(item: TenantRentalRequest) {
   switch (item.status) {
     case "PENDING": return "Chủ nhà sẽ liên lạc cho bạn";
     case "ACCEPTED": {
-      if (!item.tenancy) return "Chủ nhà đã gửi đề xuất thuê";
+      if (!item.tenancy) return "Chủ nhà đã xác nhận thỏa thuận thuê";
       const label = tenancyStatuses[item.tenancy.status] ?? "Xem trạng thái hợp đồng";
       return item.tenancy.status === "PENDING_CONFIRMATION" && item.tenancy.confirmation_expires_at
         ? label + " · hạn " + timestamp(item.tenancy.confirmation_expires_at)

@@ -275,15 +275,15 @@ export default function OwnerTenancyProposalPage() {
         <span aria-hidden="true" className="text-slate-400">
           /
         </span>
-        <span className="text-slate-500">Tạo đề xuất</span>
+        <span className="text-slate-500">Xác nhận thỏa thuận</span>
       </nav>
 
       <header>
         <p className="text-xs font-semibold uppercase tracking-wide text-[#3368a0]">
-          Tạo bản đề xuất
+          Xác nhận thỏa thuận thuê
         </p>
         <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
-          Đề xuất thuê cho {request.contact_name}
+          Lập thỏa thuận thuê cho {request.contact_name}
         </h1>
       </header>
 
@@ -340,6 +340,13 @@ export default function OwnerTenancyProposalPage() {
                 Chỉ các căn sẵn sàng, không bị trùng lịch mới có thể được chọn.
                 Căn ưu tiên của người thuê được đánh dấu nếu còn phù hợp.
               </p>
+
+              {availableUnits.length === 0 && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  <p className="font-semibold">⚠️ Hiện không còn căn nào khả dụng cho khoảng thời gian này</p>
+                  <p className="mt-1 text-xs">Tất cả các căn đều đã có người thuê hoặc bị trùng lịch. Bạn không thể tiếp tục lập thỏa thuận.</p>
+                </div>
+              )}
 
               {detail.units.map((unit) => {
                 const available =
@@ -570,8 +577,8 @@ export default function OwnerTenancyProposalPage() {
                   className="mt-1 size-4 accent-[#3368a0]"
                 />
                 <span>
-                  Tôi xác nhận các điều khoản đã nhập chính xác và muốn gửi
-                  phiên bản này cho người thuê.
+                  Tôi xác nhận hai bên đã thống nhất các điều khoản thuê này bên ngoài.
+                  Thao tác này sẽ lập kỳ thuê chính thức và tự động từ chối các yêu cầu đang chờ khác trùng phòng.
                 </span>
               </label>
             </div>
@@ -602,10 +609,11 @@ export default function OwnerTenancyProposalPage() {
             {step < 2 ? (
               <button
                 type="button"
+                disabled={step === 0 && availableUnits.length === 0}
                 onClick={() => {
                   if (validateStep()) setStep((current) => current + 1);
                 }}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-5 text-sm font-semibold text-white hover:bg-[#285584]"
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-5 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Tiếp tục
               </button>
@@ -615,7 +623,7 @@ export default function OwnerTenancyProposalPage() {
                 disabled={pending || !acknowledged}
                 className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#3368a0] px-5 text-sm font-semibold text-white hover:bg-[#285584] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {pending ? "Đang gửi…" : "Gửi đề xuất kỳ thuê"}
+                {pending ? "Đang gửi…" : "Xác nhận thỏa thuận & Khóa căn"}
               </button>
             )}
           </div>
