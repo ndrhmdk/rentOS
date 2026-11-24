@@ -13,7 +13,30 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PublicListingDetailResource extends JsonResource
 {
     /**
-     * @return array<string, mixed>
+     * @return array{
+     *     id: string,
+     *     property_id: string,
+     *     title: string,
+     *     description: string|null,
+     *     availability_label: string,
+     *     available_unit_count: int,
+     *     gallery: list<string>,
+     *     property: array{
+     *         name: string,
+     *         property_type: string,
+     *         rental_arrangement: string,
+     *         address_line: string,
+     *         ward: string|null,
+     *         city: string|null,
+     *         description: string|null,
+     *         shared_rules: list<string>,
+     *         shared_amenities: list<string>,
+     *         custom_amenities: list<string>,
+     *         area: array{latitude: float, longitude: float}|null
+     *     },
+     *     owner: array{name: string|null},
+     *     units: list<mixed>
+     * }
      */
     public function toArray(Request $request): array
     {

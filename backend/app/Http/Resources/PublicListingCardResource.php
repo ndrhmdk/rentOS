@@ -12,7 +12,24 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PublicListingCardResource extends JsonResource
 {
     /**
-     * @return array<string, mixed>
+     * @return array{
+     *     id: string,
+     *     property_id: string,
+     *     title: string,
+     *     availability_label: string,
+     *     available_unit_count: int,
+     *     rent_min: int|null,
+     *     rent_max: int|null,
+     *     minimum_rental_months: int,
+     *     cover_url: string|null,
+     *     image_urls: list<string>,
+     *     property: array{
+     *         name: string,
+     *         property_type: string,
+     *         ward: string|null,
+     *         city: string|null
+     *     }
+     * }
      */
     public function toArray(Request $request): array
     {
