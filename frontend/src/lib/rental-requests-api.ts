@@ -11,7 +11,7 @@ type SubmitRentalRequestInput = {
   client_operation_id: string;
 };
 
-type SubmittedRentalRequest = {
+export type SubmittedRentalRequest = {
   id: string;
   status: "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN";
 };
