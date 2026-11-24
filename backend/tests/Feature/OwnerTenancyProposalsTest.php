@@ -176,6 +176,49 @@ class OwnerTenancyProposalsTest extends TestCase
         $this->assertDatabaseCount('audit_logs', 0);
         $this->assertDatabaseCount('notifications', 0);
         $this->assertDatabaseCount('idempotency_records', 0);
+    }
 
+    public function test_proposing_tenancy_immediately_rejects_competing_requests_for_same_unit(): void
+    {
+        $listing = PublicListingFixture::published();
+        $unitId = $listing->unitIds[0];
+
+        $tenantA = User::factory()->create();
+        $tenantB = User::factory()->create();
+
+        $requestA = $this->createPendingRentalRequest($listing, $tenantA);
+        $requestB = $this->createPendingRentalRequest($listing, $tenantB);
+
+        $payload = $this->proposalPayload($unitId, (string) Str::uuid());
+
+        $response = $this->actingAs($listing->owner)->post(
+            "/api/v1/owner/rental-requests/{$requestA}/proposal",
+            $payload,
+        );
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('rental_requests', [
+            'id' => $requestA,
+            'status' => 'ACCEPTED',
+        ]);
+
+        $this->assertDatabaseHas('rental_requests', [
+            'id' => $requestB,
+            'status' => 'REJECTED',
+            'outcome_reason' => 'Đã có khách thuê hoàn tất thỏa thuận',
+        ]);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'rental_request',
+            'entity_id' => $requestB,
+            'action' => 'rental_request.rejected_conflict',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => $tenantB->id,
+            'audience' => 'TENANT',
+            'event_key' => 'rental_request.rejected_conflict:'.$requestB,
+        ]);
     }
 }

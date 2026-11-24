@@ -180,6 +180,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
                 createdAt: $now->subDays(16),
                 moveIn: $now->addDays(5)->toDateString(),
                 end: $now->addDays(95)->toDateString(),
+                message: '[Kịch bản 1 - Quá 15 ngày & Hết phòng]: Yêu cầu đã chờ 16 ngày. Căn P.101 duy nhất đã có hợp đồng thuê dài hạn (ACTIVE). Kết quả khi quét FR85: Hệ thống tự động từ chối với lý do NO_AVAILABLE_UNIT vì không còn phòng trống.',
             );
 
             // Block unit 11 with an active tenancy covering that interval
@@ -210,6 +211,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
                 createdAt: $now->subDays(16),
                 moveIn: $now->addDays(5)->toDateString(),
                 end: $now->addDays(95)->toDateString(),
+                message: '[Kịch bản 2 - Quá 15 ngày & Còn phòng thay thế]: Yêu cầu đã chờ 16 ngày, khách thích căn P.201 (đã kín), nhưng tòa nhà còn phòng P.202 trống. Kết quả: VẪN ĐANG CHỜ (PENDING) để chủ nhà giới thiệu phòng thay thế P.202.',
                 preferredUnitId: $this->id(21),
             );
 
@@ -227,7 +229,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
             );
 
             // -------------------------------------------------------------------------
-            // CASE 3: Young request (7 days old), all units blocked -> EXPECTED: PENDING_KEPT (Not due)
+            // CASE 3: Young request (7 days old), room is FREE -> EXPECTED: PENDING_KEPT (Valid pending request)
             // -------------------------------------------------------------------------
             $this->createProperty($this->id(30), $owner->id, 'RNT11 Tòa nhà 3 - Yêu cầu mới 7 ngày');
             $this->createUnit($this->id(31), $this->id(30), $owner->id, 'P.301', 4500000);
@@ -240,19 +242,10 @@ class Rnt11AgedRequestsSeeder extends Seeder
                 createdAt: $now->subDays(7), // Only 7 days old!
                 moveIn: $now->addDays(5)->toDateString(),
                 end: $now->addDays(95)->toDateString(),
+                message: '[Kịch bản 3 - Mới 7 ngày & Phòng còn trống]: Yêu cầu mới gửi 7 ngày (< 15 ngày), phòng P.301 đang hoàn toàn sẵn sàng. Kết quả: Ở trạng thái Đang chờ (PENDING) hợp lệ, chủ nhà có thể bấm "Xác nhận thỏa thuận thuê" bất kỳ lúc nào.',
             );
 
-            $this->createBlockingTenancy(
-                id: $this->id(34),
-                unitId: $this->id(31),
-                ownerId: $owner->id,
-                tenantId: $tenant->id,
-                dummyRequestId: $this->id(35),
-                listingId: $this->id(32),
-                status: 'ACTIVE',
-                start: $now->addDays(1)->toDateString(),
-                end: $now->addDays(180)->toDateString(),
-            );
+            // Room P.301 is free and available! No blocking tenancy needed.
 
             // -------------------------------------------------------------------------
             // CASE 4: Aged >= 16 days, blocked by EXPIRED HOLD -> EXPECTED: Reap hold -> PENDING_KEPT
@@ -268,6 +261,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
                 createdAt: $now->subDays(16),
                 moveIn: $now->addDays(5)->toDateString(),
                 end: $now->addDays(95)->toDateString(),
+                message: '[Kịch bản 4 - Quá 15 ngày & Giữ chỗ đã hết hạn]: Yêu cầu đã chờ 16 ngày. Phòng P.401 từng bị giữ chỗ bởi khách khác nhưng đề xuất đã quá hạn 48h. Kết quả: Hệ thống tự động thu hồi phòng trống và GIỮ NGUYÊN trạng thái Đang chờ (PENDING).',
             );
 
             // Create expired hold tenancy: confirmation_expires_at was 2 hours ago
@@ -293,7 +287,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
             [
                 ['Case 1', $this->id(13), '16 ngày', 'Tất cả phòng kín lịch', 'REJECTED (NO_AVAILABLE_UNIT)'],
                 ['Case 2', $this->id(24), '16 ngày', 'Căn ưu tiên kín, căn P.202 trống', 'PENDING_KEPT (giữ nguyên PENDING)'],
-                ['Case 3', $this->id(33), '7 ngày', 'Phòng kín nhưng chưa đủ 15 ngày', 'PENDING_KEPT (chưa đến hạn quét)'],
+                ['Case 3', $this->id(33), '7 ngày', 'Phòng P.301 còn TRỐNG', 'PENDING_KEPT (hợp lệ đang chờ duyệt)'],
                 ['Case 4', $this->id(43), '16 ngày', 'Phòng vướng hold đã hết hạn', 'PENDING_KEPT (thu hồi hold -> còn phòng)'],
             ]
         );
@@ -406,6 +400,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
         CarbonImmutable $createdAt,
         string $moveIn,
         string $end,
+        string $message,
         ?string $preferredUnitId = null,
     ): void {
         DB::table('rental_requests')->insert([
@@ -416,7 +411,7 @@ class Rnt11AgedRequestsSeeder extends Seeder
             'client_operation_id' => (string) Str::uuid(),
             'desired_move_in_date' => $moveIn,
             'desired_end_date' => $end,
-            'message' => 'Yêu cầu thuê thử nghiệm RNT-11.',
+            'message' => $message,
             'contact_name' => 'Nguyễn Văn Tenant',
             'contact_phone' => '0901234567',
             'status' => 'PENDING',

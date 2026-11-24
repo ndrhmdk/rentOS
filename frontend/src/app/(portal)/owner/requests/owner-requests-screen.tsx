@@ -298,11 +298,18 @@ function Detail({ item, onReject }: { item: OwnerRentalRequestDetail; onReject: 
           <section className={card + " space-y-3 p-5 sm:p-6"}>
             <h2 className="text-lg font-semibold text-heading">{pending ? "Hành động" : "Kết quả"}</h2>
             {pending ? <>
-              <Link href={requestsPath + "/" + item.id + "/proposal"} className={primary + " w-full"}>
-                Tạo đề xuất kỳ thuê
-              </Link>
+              {item.preferred_unit_available === false && item.alternative_units.length === 0 ? (
+                <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                  <p className="font-semibold">⚠️ Không còn căn trống phù hợp</p>
+                  <p>Tất cả các căn thuộc bất động sản này đều đã kín lịch cho khoảng thời gian yêu cầu. Bạn không thể lập thỏa thuận thuê. Vui lòng bấm Từ chối hoặc liên hệ khách để dời ngày.</p>
+                </div>
+              ) : (
+                <Link href={requestsPath + "/" + item.id + "/proposal"} className={primary + " w-full"}>
+                  Xác nhận thỏa thuận thuê
+                </Link>
+              )}
               <button type="button" className={danger + " w-full"} onClick={onReject}>Từ chối</button>
-              <p className="text-[13px] text-secondary">Gửi đề xuất sẽ tạo kỳ thuê và chuyển yêu cầu sang trạng thái đã chấp nhận.</p>
+              <p className="text-[13px] text-secondary">Sử dụng khi hai bên đã thống nhất thuê bên ngoài. Hệ thống sẽ tạo kỳ thuê chính thức và tự động từ chối các yêu cầu đang chờ khác trùng phòng.</p>
             </> : <>
               <p className="text-secondary">{statuses[item.status].label}</p>
               {item.outcome_reason && (

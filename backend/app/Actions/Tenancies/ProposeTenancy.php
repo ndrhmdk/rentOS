@@ -3,10 +3,12 @@
 namespace App\Actions\Tenancies;
 
 use App\Actions\Notifications\RecordNotification;
+use App\Domain\Rentals\PropertyRentalAvailability;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\ListingCacheService;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -251,6 +253,61 @@ class ProposeTenancy
                     actorId: $owner->id,
                     sendEmail: true,
                 );
+
+                $conflictingRequests = DB::table('rental_requests')
+                    ->where('listing_id', $rentalRequest->listing_id)
+                    ->where('id', '!=', $rentalRequestId)
+                    ->where('status', 'PENDING')
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($conflictingRequests as $conflict) {
+                    $conflictMoveIn = Carbon::parse($conflict->desired_move_in_date)->toDateString();
+                    $conflictEnd = Carbon::parse($conflict->desired_end_date)->toDateString();
+                    $datesOverlap = ($conflictMoveIn <= $data['end_date'] && $conflictEnd >= $data['start_date']);
+
+                    $hasAlternative = app(PropertyRentalAvailability::class)->hasEligibleUnit(
+                        (string) $property->id,
+                        $conflictMoveIn,
+                        $conflictEnd,
+                    );
+
+                    if ($datesOverlap && (! $hasAlternative || $conflict->preferred_unit_id === $unit->id)) {
+                        DB::table('rental_requests')
+                            ->where('id', $conflict->id)
+                            ->update([
+                                'status' => 'REJECTED',
+                                'outcome_reason' => 'Đã có khách thuê hoàn tất thỏa thuận',
+                                'closed_at' => $now,
+                                'updated_at' => $now,
+                            ]);
+
+                        DB::table('audit_logs')->insert([
+                            'id' => (string) Str::uuid(),
+                            'actor_id' => $owner->id,
+                            'entity_type' => 'rental_request',
+                            'entity_id' => $conflict->id,
+                            'action' => 'rental_request.rejected_conflict',
+                            'before_values' => json_encode(['status' => 'PENDING'], JSON_THROW_ON_ERROR),
+                            'after_values' => json_encode(['status' => 'REJECTED', 'outcome_reason' => 'Đã có khách thuê hoàn tất thỏa thuận'], JSON_THROW_ON_ERROR),
+                            'reason' => 'Đã có khách thuê hoàn tất thỏa thuận',
+                            'correlation_id' => $data['client_operation_id'],
+                            'created_at' => $now,
+                        ]);
+
+                        app(RecordNotification::class)->record(
+                            recipientId: (string) $conflict->tenant_id,
+                            audience: 'TENANT',
+                            eventKey: "rental_request.rejected_conflict:{$conflict->id}",
+                            title: 'Yêu cầu thuê đã bị từ chối',
+                            body: 'Căn hộ bạn quan tâm đã có khách thuê hoàn tất thỏa thuận.',
+                            resourceType: 'rental_request',
+                            resourceId: (string) $conflict->id,
+                            actorId: $owner->id,
+                            sendEmail: true,
+                        );
+                    }
+                }
 
                 DB::table('idempotency_records')->insert([
                     'id' => (string) Str::uuid(),
