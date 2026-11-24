@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/http/client";
-import { getOwnerRentalRequest, rejectOwnerRentalRequest, type OwnerRentalRequestDetail } from "@/lib/rental-requests-api";
+import { getOwnerRentalRequest, getOwnerRentalRequests, rejectOwnerRentalRequest, type OwnerRentalRequest, type OwnerRentalRequestDetail } from "@/lib/rental-requests-api";
 import { OwnerRequestsScreen } from "./owner-requests-screen";
 
 vi.mock("@/lib/auth-context", () => ({
@@ -95,5 +95,62 @@ describe("owner rental requests", () => {
     expect((await screen.findAllByText("Đã rút lại")).length).toBeGreaterThan(0);
     expect(screen.getByRole("alert").textContent).toContain("Yêu cầu đã thay đổi");
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("renders auto-rejection explanation for NO_AVAILABLE_UNIT to owner", async () => {
+    const autoRejected: OwnerRentalRequestDetail = {
+      ...pending,
+      status: "REJECTED",
+      outcome_reason: "NO_AVAILABLE_UNIT",
+      closed_at: "2026-11-21T08:00:00+07:00",
+    };
+    vi.mocked(getOwnerRentalRequest).mockResolvedValueOnce(autoRejected);
+    render(<OwnerRequestsScreen requestId={pending.id} />);
+
+    expect(
+      await screen.findByText("Tự động từ chối do không còn căn trống phù hợp sau 15 ngày"),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Hệ thống tự động từ chối sau 15 ngày do không có phòng trống/),
+    ).toBeTruthy();
+  });
+
+  it("renders auto-rejection reason NO_AVAILABLE_UNIT in inbox table for owner", async () => {
+    const user = userEvent.setup();
+    const rejectedItem: OwnerRentalRequest = {
+      id: "req-rejected-1",
+      contact_name: "Lê Văn Hùng",
+      contact_phone: "0901234567",
+      title: "Căn hộ cao cấp ven sông",
+      desired_move_in_date: "2027-01-01",
+      desired_end_date: "2027-03-31",
+      preferred_unit: "P.301",
+      status: "REJECTED",
+      outcome_reason: "NO_AVAILABLE_UNIT",
+      created_at: "2026-11-01T08:00:00+07:00",
+      closed_at: "2026-11-17T08:00:00+07:00",
+    };
+
+    vi.mocked(getOwnerRentalRequests).mockResolvedValueOnce({
+      items: [],
+      counts: { PENDING: 0, ACCEPTED: 0, REJECTED: 1, WITHDRAWN: 0 },
+      page: 1,
+      last_page: 1,
+    }).mockResolvedValueOnce({
+      items: [rejectedItem],
+      counts: { PENDING: 0, ACCEPTED: 0, REJECTED: 1, WITHDRAWN: 0 },
+      page: 1,
+      last_page: 1,
+    });
+
+    render(<OwnerRequestsScreen />);
+
+    // Click on "Đã từ chối" tab
+    await user.click(await screen.findByRole("button", { name: /Đã từ chối/ }));
+
+    expect(
+      await screen.findByText("Tự động từ chối do không còn căn trống phù hợp sau 15 ngày"),
+    ).toBeTruthy();
+    expect(screen.getByText("Lê Văn Hùng")).toBeTruthy();
   });
 });

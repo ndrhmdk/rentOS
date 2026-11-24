@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('tenancies:expire-confirmations')
     ->everyMinute()
     ->withoutOverlapping(5);
+
+Schedule::command('rentals:reject-aged')
+    ->hourly()
+    ->withoutOverlapping(10);

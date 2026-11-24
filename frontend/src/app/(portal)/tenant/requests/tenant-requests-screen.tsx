@@ -15,7 +15,7 @@ import {
   type TenantRentalRequestList,
 } from "@/lib/rental-requests-api";
 import { describeDuration } from "@/components/listings/listing-format";
-import { dateFormat, dateRange, statuses, timestamp } from "@/lib/rental-request-format";
+import { dateFormat, dateRange, formatOutcomeReason, isAutoRejection, statuses, timestamp } from "@/lib/rental-request-format";
 
 const requestsPath = "/tenant/requests";
 const card = "rounded-2xl border border-border-default bg-surface-card";
@@ -51,7 +51,7 @@ function statusDetail(item: TenantRentalRequest) {
         ? label + " · hạn " + timestamp(item.tenancy.confirmation_expires_at)
         : label;
     }
-    case "REJECTED": return item.outcome_reason ?? "Chủ nhà đã từ chối yêu cầu";
+    case "REJECTED": return formatOutcomeReason(item.outcome_reason) ?? "Chủ nhà đã từ chối yêu cầu";
     case "WITHDRAWN": return item.closed_at ? "Rút ngày " + dateFormat.format(new Date(item.closed_at)) : "Bạn đã rút yêu cầu";
   }
 }
@@ -265,6 +265,16 @@ function RequestDetail({ item, onWithdraw }: { item: TenantRentalRequestDetail; 
               {pending ? "Chủ nhà sẽ trao đổi và hẹn xem nhà với bạn. Căn chỉ được giữ khi chủ nhà gửi đề xuất hợp đồng." : statusDetail(item)}
             </p>
             {item.status === "WITHDRAWN" && item.outcome_reason && <p className="break-words text-secondary">Lý do rút: {item.outcome_reason}</p>}
+            {item.status === "REJECTED" && (
+              <div className="space-y-2 pt-1">
+                {isAutoRejection(item.outcome_reason) && (
+                  <p className="text-secondary text-sm">
+                    Yêu cầu đã quá 15 ngày kể từ ngày gửi và hiện không còn căn trống phù hợp trong bất động sản này. Bạn có thể tìm kiếm các phòng hoặc căn hộ tương tự trên RentOS.
+                  </p>
+                )}
+                <Link href="/" className={outline + " mt-1"}>Tìm phòng khác</Link>
+              </div>
+            )}
             {pending && item.desired_move_in_date < localDate && <p className="text-amber-900">Ngày dọn vào mong muốn đã qua. Bạn có thể rút yêu cầu nếu không còn nhu cầu thuê.</p>}
             {pending && <button type="button" className={danger + " mt-1 px-5"} onClick={() => onWithdraw(item)}>Rút yêu cầu</button>}
             {item.status === "ACCEPTED" && <Link href="/tenant/contracts" className={outline + " mt-1"}>Căn hộ và hợp đồng</Link>}

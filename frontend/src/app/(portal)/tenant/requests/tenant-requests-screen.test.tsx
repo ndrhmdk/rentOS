@@ -6,6 +6,7 @@ import {
   getTenantRentalRequest,
   getTenantRentalRequests,
   withdrawTenantRentalRequest,
+  type TenantRentalRequest,
   type TenantRentalRequestDetail,
 } from "@/lib/rental-requests-api";
 import { TenantRequestsScreen } from "./tenant-requests-screen";
@@ -102,5 +103,58 @@ describe("tenant rental requests", () => {
     expect(screen.getByRole("alert").textContent).toContain("Yêu cầu đã thay đổi");
     expect(screen.getByRole("link", { name: "Căn hộ và hợp đồng" }).getAttribute("href")).toBe("/tenant/contracts");
     expect(screen.queryByRole("button", { name: "Rút yêu cầu" })).toBeNull();
+  });
+
+  it("renders Vietnamese auto-rejection explanation when outcome_reason is NO_AVAILABLE_UNIT", async () => {
+    const rejected: TenantRentalRequestDetail = {
+      ...pending,
+      status: "REJECTED",
+      outcome_reason: "NO_AVAILABLE_UNIT",
+      closed_at: "2026-11-21T08:00:00+07:00",
+    };
+    vi.mocked(getTenantRentalRequest).mockResolvedValueOnce(rejected);
+    render(<TenantRequestsScreen requestId={pending.id} />);
+
+    expect(
+      await screen.findByText("Tự động từ chối do không còn căn trống phù hợp sau 15 ngày"),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Yêu cầu đã quá 15 ngày kể từ ngày gửi/),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Tìm phòng khác" }).getAttribute("href"),
+    ).toBe("/");
+  });
+
+  it("renders auto-rejection explanation for NO_AVAILABLE_UNIT in the request table for tenant", async () => {
+    const rejectedItem: TenantRentalRequest = {
+      id: "req-rejected-tenant-1",
+      title: "Phòng trọ sinh viên tiện nghi",
+      ward: "Hòa Khánh Bắc",
+      city: "Đà Nẵng",
+      desired_move_in_date: "2027-02-01",
+      desired_end_date: "2027-08-01",
+      preferred_unit: "P.101",
+      status: "REJECTED",
+      outcome_reason: "NO_AVAILABLE_UNIT",
+      updated_at: "2026-11-17T08:00:00.000000+07:00",
+      created_at: "2026-11-01T08:00:00+07:00",
+      closed_at: "2026-11-17T08:00:00+07:00",
+      tenancy: null,
+    };
+
+    vi.mocked(getTenantRentalRequests).mockResolvedValueOnce({
+      items: [rejectedItem],
+      counts: { all: 1, pending: 0, accepted: 0, closed: 1 },
+      page: 1,
+      last_page: 1,
+    });
+
+    render(<TenantRequestsScreen />);
+
+    expect(
+      await screen.findByText("Tự động từ chối do không còn căn trống phù hợp sau 15 ngày"),
+    ).toBeTruthy();
+    expect(screen.getAllByText("Phòng trọ sinh viên tiện nghi").length).toBeGreaterThan(0);
   });
 });

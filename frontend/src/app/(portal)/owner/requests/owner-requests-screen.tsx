@@ -6,7 +6,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { describeDuration, dong } from "@/components/listings/listing-format";
 import { ApiError } from "@/lib/http/client";
 import { useAuth } from "@/lib/auth-context";
-import { dateRange, statuses, timestamp } from "@/lib/rental-request-format";
+import { dateRange, formatOutcomeReason, isAutoRejection, statuses, timestamp } from "@/lib/rental-request-format";
 import {
   getOwnerRentalRequest,
   getOwnerRentalRequests,
@@ -203,6 +203,11 @@ function Inbox({ data, onPage }: { data: OwnerRentalRequestList; onPage: (page: 
                     <td className="min-w-44 px-4 py-4">
                       <div className="grid gap-1">
                         <StatusBadge item={item} />
+                        {item.outcome_reason && (
+                          <p className="text-[13px] text-secondary">
+                            {formatOutcomeReason(item.outcome_reason)}
+                          </p>
+                        )}
                         {pastMoveIn(item) && <DateWarning />}
                       </div>
                     </td>
@@ -300,7 +305,18 @@ function Detail({ item, onReject }: { item: OwnerRentalRequestDetail; onReject: 
               <p className="text-[13px] text-secondary">Gửi đề xuất sẽ tạo kỳ thuê và chuyển yêu cầu sang trạng thái đã chấp nhận.</p>
             </> : <>
               <p className="text-secondary">{statuses[item.status].label}</p>
-              {item.outcome_reason && <p className="break-words whitespace-pre-wrap">{item.outcome_reason}</p>}
+              {item.outcome_reason && (
+                <div className="space-y-1">
+                  <p className="break-words font-medium text-heading">
+                    {formatOutcomeReason(item.outcome_reason)}
+                  </p>
+                  {isAutoRejection(item.outcome_reason) && (
+                    <p className="text-xs text-secondary">
+                      Hệ thống tự động từ chối sau 15 ngày do không có phòng trống phù hợp toàn bộ khoảng thời gian.
+                    </p>
+                  )}
+                </div>
+              )}
             </>}
           </section>
           <section className={card + " space-y-2 p-5 sm:p-6"}>

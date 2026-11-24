@@ -6,6 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -178,6 +179,8 @@ class ExpireTenancyReservation
                 resourceType: 'tenancy',
                 resourceId: $tenancyId,
             );
+
+            app(ListingCacheService::class)->invalidateUnit((string) $context->unit_id);
 
             return true;
         });

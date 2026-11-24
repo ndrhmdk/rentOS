@@ -91,6 +91,11 @@ export async function savePreviewDecision(
 }
 
 export function resetReviewPreview(): void {
-  window.localStorage.removeItem(storageKey);
-  window.dispatchEvent(new Event(changeEvent));
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(storageKey);
+    window.dispatchEvent(new Event(changeEvent));
+  } catch {
+    // Ignore environments where localStorage is blocked
+  }
 }

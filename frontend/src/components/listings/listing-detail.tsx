@@ -49,25 +49,26 @@ export function ListingDetailView({
   preview?: boolean;
 }) {
   const searchParams = useSearchParams();
+  const units = Array.isArray(listing.units) ? listing.units : [];
   const [requestOpen, setRequestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [preferredUnitId, setPreferredUnitId] = useState(
-    listing.units[0]?.id ?? "",
+    units[0]?.id ?? "",
   );
   const [openUnitId, setOpenUnitId] = useState<string | null>(null);
-  const rents = rentBounds(listing.units);
-  const months = minimumMonths(listing.units);
+  const rents = rentBounds(units);
+  const months = minimumMonths(units);
   const openCount = listing.available_unit_count;
   const query = searchParams.toString();
   const listingsHref = query ? `/listings?${query}` : "/listings";
   const extras = extraAmenities(listing);
   const slides = photoSlides(listing);
   const wholeSpace = listing.property.rental_arrangement === "WHOLE_SPACE";
-  const wholeUnit = wholeSpace ? listing.units[0] : undefined;
+  const wholeUnit = wholeSpace ? units[0] : undefined;
   const sharedAmenityKeys = new Set(
     listing.property.shared_amenities.map((amenity) => amenity.key),
   );
-  const unitAmenities = uniqueUnitAmenities(listing.units).filter((amenity) =>
+  const unitAmenities = uniqueUnitAmenities(units).filter((amenity) =>
     wholeSpace ? !sharedAmenityKeys.has(amenity.key) : true,
   );
 

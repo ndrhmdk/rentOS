@@ -69,7 +69,8 @@ export function placeLine(listing: ListingDetail): string {
 export function rentBounds(
   units: PublicUnit[],
 ): { min: number; max: number } | null {
-  const rents = units
+  const safeUnits = Array.isArray(units) ? units : [];
+  const rents = safeUnits
     .map((unit) => Number(unit.advertised_monthly_rent))
     .filter(Number.isFinite);
   if (rents.length === 0) return null;
@@ -77,12 +78,14 @@ export function rentBounds(
 }
 
 export function minimumMonths(units: PublicUnit[]): number {
-  const months = units.map((unit) => unit.minimum_rental_months);
+  const safeUnits = Array.isArray(units) ? units : [];
+  const months = safeUnits.map((unit) => unit.minimum_rental_months);
   return months.length === 0 ? 0 : Math.min(...months);
 }
 
 export function areaLabel(units: PublicUnit[]): string {
-  const areas = units
+  const safeUnits = Array.isArray(units) ? units : [];
+  const areas = safeUnits
     .map((unit) => Number(unit.area_m2))
     .filter(Number.isFinite);
   if (areas.length === 0) return "—";
@@ -92,21 +95,24 @@ export function areaLabel(units: PublicUnit[]): string {
 }
 
 export function bathLabel(units: PublicUnit[]): string {
-  return units.some((unit) => Number(unit.bathrooms) >= 1)
+  const safeUnits = Array.isArray(units) ? units : [];
+  return safeUnits.some((unit) => Number(unit.bathrooms) >= 1)
     ? "WC riêng"
     : "WC chung";
 }
 
 export function unitKindLabel(units: PublicUnit[]): string {
-  const kinds = [...new Set(units.map((unit) => unit.unit_kind))];
+  const safeUnits = Array.isArray(units) ? units : [];
+  const kinds = [...new Set(safeUnits.map((unit) => unit.unit_kind))];
   if (kinds.length === 1) return kindLabels[kinds[0]] ?? kinds[0];
   return "Nhiều loại";
 }
 
 export function uniqueUnitAmenities(units: PublicUnit[]): PublicAmenity[] {
+  const safeUnits = Array.isArray(units) ? units : [];
   const seen = new Set<string>();
   const amenities: PublicAmenity[] = [];
-  for (const unit of units) {
+  for (const unit of safeUnits) {
     for (const amenity of unit.amenities) {
       if (seen.has(amenity.key)) continue;
       seen.add(amenity.key);
@@ -117,16 +123,18 @@ export function uniqueUnitAmenities(units: PublicUnit[]): PublicAmenity[] {
 }
 
 export function extraAmenities(listing: ListingDetail): string[] {
+  const safeUnits = Array.isArray(listing.units) ? listing.units : [];
   return [
     ...listing.property.custom_amenities,
-    ...listing.units.flatMap((unit) => unit.custom_amenities),
+    ...safeUnits.flatMap((unit) => unit.custom_amenities),
   ].filter((item, index, all) => all.indexOf(item) === index);
 }
 
 export function depositCopy(units: PublicUnit[]): string {
+  const safeUnits = Array.isArray(units) ? units : [];
   const deposits = [
     ...new Set(
-      units.map((unit) => Number(unit.deposit)).filter(Number.isFinite),
+      safeUnits.map((unit) => Number(unit.deposit)).filter(Number.isFinite),
     ),
   ];
   if (deposits.length === 0) return "Theo từng căn";
@@ -135,9 +143,10 @@ export function depositCopy(units: PublicUnit[]): string {
 }
 
 export function petCopy(units: PublicUnit[]): string {
+  const safeUnits = Array.isArray(units) ? units : [];
   const labels = [
     ...new Set(
-      units
+      safeUnits
         .map((unit) => petLabels[unit.pets ?? ""] ?? null)
         .filter((label): label is string => label !== null),
     ),
@@ -199,7 +208,7 @@ export function describeDuration(start: string, end: string): string {
   return [months > 0 ? `${months} tháng` : "", days > 0 ? `${days} ngày` : ""].filter(Boolean).join(" ");
 }
 
-function addCalendarMonths(date: Date, months: number): Date {
+export function addCalendarMonths(date: Date, months: number): Date {
   const boundary = new Date(date);
   boundary.setUTCDate(1);
   boundary.setUTCMonth(boundary.getUTCMonth() + months + 1, 0);

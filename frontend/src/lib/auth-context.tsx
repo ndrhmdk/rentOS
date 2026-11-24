@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/http/client";
 import { getCurrentUser, logout } from "@/lib/auth/api";
 import { type CurrentUser } from "@/lib/auth/types";
+import { resetReviewPreview } from "./admin-review-store";
 import { getQueryClient } from "./query-provider";
 
 export type AuthStatus = "loading" | "authenticated" | "guest";
@@ -18,10 +19,10 @@ const currentUserKey = ["current-user"] as const;
 
 function markCurrentUserGuest(): void {
   const client = getQueryClient();
-  void client.cancelQueries({ queryKey: currentUserKey });
+  void client.cancelQueries();
   client.setQueryData<CurrentUser | null>(currentUserKey, null);
-  client.removeQueries({ queryKey: ["notifications"] });
-  client.removeQueries({ queryKey: ["notifications-page"] });
+  client.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
+  resetReviewPreview();
 }
 
 interface AuthContextValue {
@@ -64,11 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const signOut = useCallback(async () => {
-    await queryClient.cancelQueries({ queryKey: currentUserKey });
+    await queryClient.cancelQueries();
     try {
       await logout();
-    } catch{
+    } catch {
     } finally {
+      queryClient.setQueryData<CurrentUser | null>(currentUserKey, null);
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
       markCurrentUserGuest();
     }
   }, [queryClient]);
