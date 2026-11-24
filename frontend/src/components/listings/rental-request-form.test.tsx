@@ -106,6 +106,13 @@ describe("RentalRequestForm", () => {
     });
   });
 
+  it("autofills contact name and formatted phone from authenticated user", () => {
+    render(<RentalRequestForm listing={mockListing} isSignedIn={true} onCancel={vi.fn()} />);
+
+    expect(screen.getByDisplayValue("Khách Thuê")).toBeTruthy();
+    expect(screen.getByDisplayValue("090 111 1111")).toBeTruthy();
+  });
+
   it("submits rental request successfully with contact details", async () => {
     const user = userEvent.setup();
     vi.mocked(submitRentalRequest).mockResolvedValue({
@@ -116,9 +123,7 @@ describe("RentalRequestForm", () => {
     render(<RentalRequestForm listing={mockListing} isSignedIn={true} onCancel={vi.fn()} />);
 
     expect(screen.getByDisplayValue("Khách Thuê")).toBeTruthy();
-
-    const phoneInput = screen.getByLabelText(/Số điện thoại/);
-    await user.type(phoneInput, "0901111111");
+    expect(screen.getByDisplayValue("090 111 1111")).toBeTruthy();
 
     const startInput = screen.getByLabelText("Ngày dọn vào mong muốn");
     fireEvent.change(startInput, { target: { value: "2026-12-01" } });
@@ -149,9 +154,6 @@ describe("RentalRequestForm", () => {
 
     render(<RentalRequestForm listing={mockListing} isSignedIn={true} onCancel={vi.fn()} />);
 
-    const phoneInput = screen.getByLabelText(/Số điện thoại/);
-    await user.type(phoneInput, "0901111111");
-
     const startInput = screen.getByLabelText("Ngày dọn vào mong muốn");
     fireEvent.change(startInput, { target: { value: "2026-12-01" } });
 
@@ -175,9 +177,6 @@ describe("RentalRequestForm", () => {
     );
 
     render(<RentalRequestForm listing={mockListing} isSignedIn={true} onCancel={vi.fn()} />);
-
-    const phoneInput = screen.getByLabelText(/Số điện thoại/);
-    await user.type(phoneInput, "0901111111");
 
     const startInput = screen.getByLabelText("Ngày dọn vào mong muốn");
     fireEvent.change(startInput, { target: { value: "2026-12-01" } });
