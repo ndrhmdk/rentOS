@@ -165,7 +165,7 @@ export default function Home() {
               <span aria-hidden="true">↗</span>
             </Link>
           </div>
-          <ListingSearchForm locations={listings.flatMap((listing) => [listing.property.ward, listing.property.city].filter((name): name is string => Boolean(name)))} />
+          <ListingSearchForm />
         </div>
       </section>
 
@@ -272,7 +272,7 @@ export default function Home() {
             {areas.map((area) => (
               <Link
                 key={area.name}
-                href={`/listings?location=${encodeURIComponent(area.query)}`}
+                href={`/listings?ward=${encodeURIComponent(area.query)}`}
                 className="relative block h-[240px] overflow-hidden rounded-2xl sm:h-[340px]"
               >
                 <Image

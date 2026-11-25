@@ -27,7 +27,7 @@ class EligibleUnitQueryTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_location_matches_ward_text_typos_and_ignores_district_and_hidden_listings(): void
+    public function test_ward_matches_exactly_after_accent_folding_and_ignores_street_noise(): void
     {
         $haiChau = PublicListingFixture::published([
             'ward' => 'Hải Châu',
@@ -37,7 +37,7 @@ class EligibleUnitQueryTest extends TestCase
         ]);
         PublicListingFixture::published([
             'ward' => 'Sơn Trà',
-            'address_line' => '99 Võ Nguyên Giáp',
+            'address_line' => '12 Hai Chauu',
             'city' => 'Đà Nẵng',
             'district' => 'Sơn Trà',
         ]);
@@ -55,26 +55,26 @@ class EligibleUnitQueryTest extends TestCase
 
         $this->assertSame([$haiChau->listingId], $this->listingIds('  hải   châu '));
         $this->assertSame([$haiChau->listingId], $this->listingIds('hai chau'));
-        $this->assertSame([$haiChau->listingId], $this->listingIds('Hải Châ'));
         $this->assertSame([], $this->listingIds('zzzzqqqq'));
     }
 
-    public function test_exact_ward_ranks_before_a_looser_street_match(): void
+    public function test_street_matches_address_line_only(): void
     {
-        $exact = PublicListingFixture::published([
+        $tranPhu = PublicListingFixture::published([
             'ward' => 'Hải Châu',
             'address_line' => '12 Trần Phú',
             'city' => 'Đà Nẵng',
-            'district' => 'Quận cũ',
         ]);
-        $loose = PublicListingFixture::published([
+        PublicListingFixture::published([
             'ward' => 'Sơn Trà',
-            'address_line' => '12 Hai Chauu',
+            'address_line' => '99 Võ Nguyên Giáp',
             'city' => 'Đà Nẵng',
-            'district' => 'Quận cũ',
         ]);
 
-        $this->assertSame([$exact->listingId, $loose->listingId], $this->listingIds('Hải Châu'));
+        $this->assertSame(
+            [$tranPhu->listingId],
+            $this->listingIdsFor($this->criteria(street: 'Trần Phú')),
+        );
     }
 
     public function test_occupied_unit_stays_visible_until_a_move_in_date_requires_a_free_stay(): void
@@ -88,7 +88,7 @@ class EligibleUnitQueryTest extends TestCase
 
         $this->assertSame([$published->listingId], $this->listingIds(null));
 
-        $blocked = $this->criteria(location: null, moveInDate: '2026-11-01');
+        $blocked = $this->criteria(moveInDate: '2026-11-01');
         $this->assertSame([], $this->listingIdsFor($blocked, requireFree: true));
 
         $later = PublicListingFixture::published([
@@ -119,7 +119,7 @@ class EligibleUnitQueryTest extends TestCase
             ],
         ]);
 
-        $criteria = $this->criteria(location: null, maxRent: 4000000, unitKind: 'STUDIO');
+        $criteria = $this->criteria(maxRent: 4000000, unitKind: 'STUDIO');
 
         $this->assertSame([], $this->listingIdsFor($criteria));
     }
@@ -135,7 +135,7 @@ class EligibleUnitQueryTest extends TestCase
             ]],
         ]);
 
-        $criteria = $this->criteria(location: null, amenityKeys: ['washing_machine']);
+        $criteria = $this->criteria(amenityKeys: ['washing_machine']);
 
         $this->assertSame([], $this->listingIdsFor($criteria));
     }
@@ -154,7 +154,7 @@ class EligibleUnitQueryTest extends TestCase
             ]],
         ]);
 
-        $criteria = $this->criteria(location: null, pets: 'ALLOWED');
+        $criteria = $this->criteria(pets: 'ALLOWED');
 
         $this->assertSame([$published->listingId], $this->listingIdsFor($criteria));
     }
@@ -191,7 +191,7 @@ class EligibleUnitQueryTest extends TestCase
         PublicListingFixture::blockUnit($published->unitIds[0], '2026-11-01', '2027-05-01');
 
         $criteria = $this->criteria(
-            location: 'Hải Châu',
+            ward: 'Hải Châu',
             maxRent: 5000000,
             amenityKeys: ['washing_machine'],
             pets: 'ALLOWED',
@@ -236,9 +236,9 @@ class EligibleUnitQueryTest extends TestCase
     /**
      * @return list<string>
      */
-    private function listingIds(?string $location): array
+    private function listingIds(?string $ward): array
     {
-        return $this->listingIdsFor($this->criteria(location: $location));
+        return $this->listingIdsFor($this->criteria(ward: $ward));
     }
 
     /**
@@ -256,7 +256,8 @@ class EligibleUnitQueryTest extends TestCase
      * @param  list<string>  $amenityKeys
      */
     private function criteria(
-        ?string $location,
+        ?string $ward = null,
+        ?string $street = null,
         ?string $moveInDate = null,
         ?int $maxRent = null,
         ?string $unitKind = null,
@@ -264,7 +265,8 @@ class EligibleUnitQueryTest extends TestCase
         ?string $pets = null,
     ): ListingSearchCriteria {
         return new ListingSearchCriteria(
-            location: LocationQuery::fromInput($location),
+            ward: LocationQuery::fromInput($ward),
+            street: LocationQuery::fromInput($street),
             moveInDate: $moveInDate,
             minRent: null,
             maxRent: $maxRent,

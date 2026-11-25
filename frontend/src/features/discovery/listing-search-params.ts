@@ -6,7 +6,8 @@ export class ListingSearchValidationError extends Error {
 }
 
 export type ListingSearchState = {
-  location: string;
+  ward: string;
+  street: string;
   moveInDate: string;
   minRent: string;
   maxRent: string;
@@ -50,6 +51,10 @@ export function displayDateToIso(value: string): string | null {
   return isIsoDate(iso) ? iso : null;
 }
 
+function cleanText(value: string | null): string {
+  return (value ?? "").trim().replace(/\s+/g, " ");
+}
+
 export function parseListingSearchParams(
   params: URLSearchParams,
 ): ListingSearchState {
@@ -59,9 +64,12 @@ export function parseListingSearchParams(
   }
 
   const page = Number(params.get("page") ?? "1");
+  const ward =
+    cleanText(params.get("ward")) || cleanText(params.get("location"));
 
   return {
-    location: (params.get("location") ?? "").trim().replace(/\s+/g, " "),
+    ward,
+    street: cleanText(params.get("street")),
     moveInDate,
     minRent: params.get("min_rent") ?? "",
     maxRent: params.get("max_rent") ?? "",
@@ -82,8 +90,10 @@ export function toListingSearchParams(
   state: ListingSearchState,
 ): URLSearchParams {
   const params = new URLSearchParams();
-  const location = state.location.trim().replace(/\s+/g, " ");
-  if (location !== "") params.set("location", location);
+  const ward = state.ward.trim().replace(/\s+/g, " ");
+  const street = state.street.trim().replace(/\s+/g, " ");
+  if (ward !== "") params.set("ward", ward);
+  if (street !== "") params.set("street", street);
   if (state.moveInDate !== "") params.set("move_in_date", state.moveInDate);
   if (state.minRent !== "") params.set("min_rent", state.minRent);
   if (state.maxRent !== "") params.set("max_rent", state.maxRent);
@@ -97,9 +107,16 @@ export function toListingSearchParams(
   return params;
 }
 
-export function clearLocation(params: URLSearchParams): URLSearchParams {
+export function clearPlace(params: URLSearchParams): URLSearchParams {
   const next = new URLSearchParams(params);
+  next.delete("ward");
+  next.delete("street");
   next.delete("location");
   next.set("page", "1");
   return next;
+}
+
+/** @deprecated Prefer clearPlace */
+export function clearLocation(params: URLSearchParams): URLSearchParams {
+  return clearPlace(params);
 }

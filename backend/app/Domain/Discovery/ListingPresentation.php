@@ -18,7 +18,21 @@ final class ListingPresentation
 {
     public function prepareDetail(Listing $model): void
     {
-        $criteria = new ListingSearchCriteria(null, null, null, null, null, null, null, null, [], null, 1, 12);
+        $criteria = new ListingSearchCriteria(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            [],
+            null,
+            1,
+            12,
+        );
         $units = $this->eligibleUnits([$model->property_id], $criteria)->get();
         $this->attachUnitPresentation($units, $model->property, null);
 

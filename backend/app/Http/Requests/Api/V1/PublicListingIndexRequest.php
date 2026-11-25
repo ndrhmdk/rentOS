@@ -19,6 +19,9 @@ class PublicListingIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'ward' => ['nullable', 'string', 'max:120'],
+            'street' => ['nullable', 'string', 'max:200'],
+            // Legacy free-text location is accepted as a ward alias.
             'location' => ['nullable', 'string', 'max:200'],
             'move_in_date' => ['nullable', 'date_format:Y-m-d'],
             'min_rent' => ['nullable', 'integer', 'min:0'],

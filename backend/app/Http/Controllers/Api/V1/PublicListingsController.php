@@ -131,8 +131,14 @@ class PublicListingsController extends Controller
         /** @var list<string> $amenities */
         $amenities = array_values($request->input('amenities', []));
 
+        $ward = LocationQuery::fromInput(
+            $request->input('ward') ?? $request->input('location'),
+        );
+        $street = LocationQuery::fromInput($request->input('street'));
+
         return new ListingSearchCriteria(
-            location: LocationQuery::fromInput($request->input('location')),
+            ward: $ward,
+            street: $street,
             moveInDate: $request->input('move_in_date'),
             minRent: $request->filled('min_rent') ? $request->integer('min_rent') : null,
             maxRent: $request->filled('max_rent') ? $request->integer('max_rent') : null,

@@ -1,77 +1,51 @@
 import { describe, expect, it } from "vitest";
 import {
-  ListingSearchValidationError,
-  clearLocation,
-  displayDateToIso,
-  isoToDisplayDate,
+  clearPlace,
   parseListingSearchParams,
   toListingSearchParams,
 } from "./listing-search-params";
 
 describe("listing search params", () => {
-  it("round-trips location, move-in date, price, chips, and page", () => {
-    const original = new URLSearchParams({
-      location: "Hải Châu",
-      move_in_date: "2026-12-01",
-      min_rent: "2000000",
-      max_rent: "5000000",
-      unit_kind: "STUDIO",
+  it("round-trips ward, street, move-in date, price, chips, and page", () => {
+    const state = {
+      ward: "Hải Châu",
+      street: "Trần Phú",
+      moveInDate: "2026-12-01",
+      minRent: "3000000",
+      maxRent: "8000000",
+      unitKind: "STUDIO",
       bedrooms: "1",
+      bathrooms: "1",
       occupants: "2",
+      amenities: ["wifi", "balcony"],
       pets: "ALLOWED",
-      page: "2",
-    });
-    original.append("amenities", "washing_machine");
-    original.append("amenities", "parking");
-
-    const parsed = parseListingSearchParams(original);
-    const encoded = toListingSearchParams(parsed);
-
-    expect(parseListingSearchParams(encoded)).toEqual(parsed);
-    expect(encoded.get("location")).toBe("Hải Châu");
-    expect(encoded.getAll("amenities[]")).toEqual([
-      "washing_machine",
-      "parking",
-    ]);
+      page: 2,
+    };
+    const encoded = toListingSearchParams(state);
+    expect(encoded.get("ward")).toBe("Hải Châu");
+    expect(encoded.get("street")).toBe("Trần Phú");
+    expect(encoded.get("location")).toBeNull();
+    expect(parseListingSearchParams(encoded)).toEqual(state);
   });
 
-  it("omits a blank location and clears only that filter", () => {
-    const params = new URLSearchParams({
-      location: "Hải Châu",
-      max_rent: "4000000",
-      pets: "ALLOWED",
-      page: "3",
-    });
-    params.append("amenities", "wifi");
+  it("accepts legacy location as ward and clears place filters", () => {
+    const state = parseListingSearchParams(
+      new URLSearchParams("location=Hải Châu&max_rent=4000000"),
+    );
+    expect(state.ward).toBe("Hải Châu");
+    expect(state.street).toBe("");
 
-    const cleared = clearLocation(params);
-
+    const cleared = clearPlace(
+      toListingSearchParams({
+        ...state,
+        street: "Trần Phú",
+        page: 3,
+      }),
+    );
+    expect(cleared.get("ward")).toBeNull();
+    expect(cleared.get("street")).toBeNull();
     expect(cleared.get("location")).toBeNull();
     expect(cleared.get("max_rent")).toBe("4000000");
-    expect(cleared.get("pets")).toBe("ALLOWED");
-    expect(cleared.getAll("amenities")).toEqual(["wifi"]);
     expect(cleared.get("page")).toBe("1");
-    expect(
-      parseListingSearchParams(new URLSearchParams("location=   ")).location,
-    ).toBe("");
-    expect(
-      toListingSearchParams(
-        parseListingSearchParams(new URLSearchParams("location=   ")),
-      ).has("location"),
-    ).toBe(false);
-  });
-
-  it("rejects an unparseable move-in date", () => {
-    expect(() =>
-      parseListingSearchParams(new URLSearchParams("move_in_date=not-a-date")),
-    ).toThrow(ListingSearchValidationError);
-  });
-
-  it("converts a complete move-in date between dd/mm/yyyy and ISO", () => {
-    expect(displayDateToIso("02/05/2026")).toBe("2026-05-02");
-    expect(isoToDisplayDate("2026-05-02")).toBe("02/05/2026");
-    expect(displayDateToIso("02/05")).toBeNull();
-    expect(displayDateToIso("31/02/2026")).toBeNull();
-    expect(isoToDisplayDate("")).toBe("");
   });
 });

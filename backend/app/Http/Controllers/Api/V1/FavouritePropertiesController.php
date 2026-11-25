@@ -46,7 +46,21 @@ class FavouritePropertiesController extends Controller
             ->orderBy('favourite_properties.property_id')
             ->paginate(12, ['favourite_properties.property_id', 'visible.id as listing_id'], 'page', (int) ($input['page'] ?? 1));
 
-        $criteria = new ListingSearchCriteria(null, $input['move_in_date'] ?? null, null, null, null, null, null, null, [], null, 1, 12);
+        $criteria = new ListingSearchCriteria(
+            null,
+            null,
+            $input['move_in_date'] ?? null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            [],
+            null,
+            1,
+            12,
+        );
         $cards = $presentation->cardsFor($results->getCollection()->pluck('listing_id')->filter()->values()->all(), $criteria, requireFree: false)->keyBy('id');
 
         $items = [];

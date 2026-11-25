@@ -96,7 +96,7 @@ class PublicListingSearchTest extends TestCase
             ->assertJsonPath('data.0.available_unit_count', 1);
     }
 
-    public function test_location_ranks_accent_insensitive_matches_and_ignores_district_only_text(): void
+    public function test_ward_matches_exactly_and_street_matches_address_line_only(): void
     {
         $exact = PublicListingFixture::published([
             'ward' => 'Hải Châu',
@@ -104,7 +104,7 @@ class PublicListingSearchTest extends TestCase
             'city' => 'Đà Nẵng',
             'district' => 'Quận cũ',
         ]);
-        $loose = PublicListingFixture::published([
+        PublicListingFixture::published([
             'ward' => 'Sơn Trà',
             'address_line' => '12 Hai Chauu',
             'city' => 'Đà Nẵng',
@@ -117,19 +117,22 @@ class PublicListingSearchTest extends TestCase
             'district' => 'Hải Châu',
         ]);
 
-        $ranked = $this->getJson('/api/v1/listings?location=hai%20chau');
-
-        $ranked->assertOk();
-        $this->assertSame(
-            [$exact->listingId, $loose->listingId],
-            collect($ranked->json('data'))->pluck('id')->all(),
-        );
+        $this->getJson('/api/v1/listings?ward=hai%20chau')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $exact->listingId);
 
         $this->getJson('/api/v1/listings?location='.urlencode('Hải Châu'))
             ->assertOk()
-            ->assertJsonCount(2, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $exact->listingId);
 
-        $this->getJson('/api/v1/listings?location=zzzzqqqq')
+        $this->getJson('/api/v1/listings?street='.urlencode('Trần Phú'))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $exact->listingId);
+
+        $this->getJson('/api/v1/listings?ward=zzzzqqqq')
             ->assertOk()
             ->assertJsonPath('data', []);
     }

@@ -24,11 +24,11 @@ describe("listings-api", () => {
     const mockData = { data: [], meta: { current_page: 1, per_page: 10, total: 0, last_page: 1 } };
     vi.mocked(global.fetch).mockResolvedValueOnce(new Response(JSON.stringify(mockData), { status: 200 }));
 
-    const params = new URLSearchParams({ location: "Cau Giay", page: "1" });
+    const params = new URLSearchParams({ ward: "Cau Giay", page: "1" });
     const res = await fetchListings(params);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/v1/listings?location=Cau+Giay&page=1"),
+      expect.stringContaining("/api/v1/listings?ward=Cau+Giay&page=1"),
       expect.objectContaining({ cache: "default", headers: { Accept: "application/json" } }),
     );
     expect(res).toEqual(mockData);
@@ -98,7 +98,7 @@ describe("HTTP cache mode", () => {
   it("lets the browser cache public discovery reads and sends no credentials", async () => {
     const fetchMock = stubFetch();
 
-    await fetchListings(new URLSearchParams("location=Hai%20Chau"));
+    await fetchListings(new URLSearchParams("ward=Hai%20Chau"));
     await fetchListing("listing-1");
     await fetchAmenities();
 

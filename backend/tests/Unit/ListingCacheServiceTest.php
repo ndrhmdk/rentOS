@@ -21,7 +21,8 @@ class ListingCacheServiceTest extends TestCase
     public function test_amenity_keys_order_invariance_produces_identical_search_key(): void
     {
         $criteria1 = new ListingSearchCriteria(
-            location: null,
+            ward: null,
+            street: null,
             moveInDate: '2026-12-01',
             minRent: 3000000,
             maxRent: 8000000,
@@ -36,7 +37,8 @@ class ListingCacheServiceTest extends TestCase
         );
 
         $criteria2 = new ListingSearchCriteria(
-            location: null,
+            ward: null,
+            street: null,
             moveInDate: '2026-12-01',
             minRent: 3000000,
             maxRent: 8000000,
@@ -59,7 +61,8 @@ class ListingCacheServiceTest extends TestCase
     public function test_pagination_produces_distinct_search_keys(): void
     {
         $criteriaPage1 = new ListingSearchCriteria(
-            location: null,
+            ward: null,
+            street: null,
             moveInDate: null,
             minRent: null,
             maxRent: null,
@@ -74,7 +77,8 @@ class ListingCacheServiceTest extends TestCase
         );
 
         $criteriaPage2 = new ListingSearchCriteria(
-            location: null,
+            ward: null,
+            street: null,
             moveInDate: null,
             minRent: null,
             maxRent: null,
@@ -97,7 +101,8 @@ class ListingCacheServiceTest extends TestCase
     public function test_bump_search_version_invalidates_all_previous_search_keys(): void
     {
         $criteria = new ListingSearchCriteria(
-            location: null,
+            ward: null,
+            street: null,
             moveInDate: null,
             minRent: null,
             maxRent: null,

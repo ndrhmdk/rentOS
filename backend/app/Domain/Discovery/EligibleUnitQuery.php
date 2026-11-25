@@ -78,9 +78,12 @@ final class EligibleUnitQuery
     {
         $query = self::matchingListingIdBaseQuery($criteria);
 
-        if ($criteria->location !== null) {
-            $needle = $criteria->location->value();
-            $query->selectRaw('MAX('.self::relevanceExpression().') as relevance', [$needle, $needle, $needle]);
+        if ($criteria->street !== null) {
+            $needle = $criteria->street->value();
+            $query->selectRaw(
+                'MAX('.self::streetRelevanceExpression().') as relevance',
+                [$needle],
+            );
             $query->orderByDesc('relevance')->orderBy('discovery_listings.id');
         } else {
             $query->selectRaw('MAX(discovery_listings.created_at) as published_at');
@@ -119,16 +122,18 @@ final class EligibleUnitQuery
             ->whereNotNull('units.max_occupants');
         MarketedUnitPhotoQuery::whereHasSelectedPhoto($unitQuery);
 
-        if ($criteria->location !== null) {
-            $needle = $criteria->location->value();
-            $unitQuery->where(function (Builder|QueryBuilder $match) use ($needle): void {
-                foreach (['address_line', 'ward', 'city'] as $column) {
-                    $match->orWhereRaw(
-                        self::folded('?').' <% '.self::folded('discovery_properties.'.$column),
-                        [$needle],
-                    );
-                }
-            });
+        if ($criteria->ward !== null) {
+            $unitQuery->whereRaw(
+                self::folded('discovery_properties.ward').' = '.self::folded('?'),
+                [$criteria->ward->value()],
+            );
+        }
+
+        if ($criteria->street !== null) {
+            $unitQuery->whereRaw(
+                self::folded('?').' <% '.self::folded('discovery_properties.address_line'),
+                [$criteria->street->value()],
+            );
         }
 
         if ($criteria->minRent !== null) {
@@ -199,21 +204,27 @@ final class EligibleUnitQuery
      */
     private static function order(Builder|QueryBuilder $unitQuery, ListingSearchCriteria $criteria): void
     {
-        if ($criteria->location === null) {
+        if ($criteria->street === null) {
             $unitQuery->orderByDesc('discovery_listings.created_at')->orderBy('discovery_listings.id');
 
             return;
         }
 
-        $needle = $criteria->location->value();
-        $unitQuery->orderByRaw(self::relevanceExpression().' DESC', [$needle, $needle, $needle])
+        $needle = $criteria->street->value();
+        $unitQuery->orderByRaw(self::streetRelevanceExpression().' DESC', [$needle])
             ->orderBy('discovery_listings.id');
     }
 
+    public static function streetRelevanceExpression(): string
+    {
+        return 'word_similarity('.self::folded('?').', '.self::folded("COALESCE(discovery_properties.address_line, '')").')';
+    }
+
+    /** @deprecated Prefer streetRelevanceExpression() */
     public static function relevanceExpression(): string
     {
         return 'GREATEST(
-            word_similarity('.self::folded('?').', '.self::folded("COALESCE(discovery_properties.address_line, '')").'),
+            '.self::streetRelevanceExpression().',
             word_similarity('.self::folded('?').', '.self::folded("COALESCE(discovery_properties.ward, '')").'),
             word_similarity('.self::folded('?').', '.self::folded("COALESCE(discovery_properties.city, '')").')
         )';
