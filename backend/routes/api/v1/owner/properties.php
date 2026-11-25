@@ -5,11 +5,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('v1')->name('api.v1.owner.')->group(function (): void {
     // Properties
-    Route::get('/owner/properties', [OwnerPropertiesController::class, 'index'])->name('properties.index');
-    Route::post('/owner/properties', [OwnerPropertiesController::class, 'store'])->name('properties.store');
-    Route::get('/owner/properties/{property}', [OwnerPropertiesController::class, 'show'])->name('properties.show');
-    Route::put('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('properties.update');
-    Route::patch('/owner/properties/{property}', [OwnerPropertiesController::class, 'update'])->name('properties.patch');
+    // Standard resource actions. There is no destroy: a property is soft-archived
+    // (PATCH .../archive) so its audit trail and tenancy history are kept.
+    Route::apiResource('owner/properties', OwnerPropertiesController::class)
+        ->only(['index', 'store', 'show', 'update'])
+        ->names([
+            'index' => 'properties.index',
+            'store' => 'properties.store',
+            'show' => 'properties.show',
+            'update' => 'properties.update',
+        ]);
     Route::patch('/owner/properties/{property}/archive', [OwnerPropertiesController::class, 'archive'])->name('properties.archive');
 
     // Units
