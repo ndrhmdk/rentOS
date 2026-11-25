@@ -8,6 +8,9 @@
 - [API design and caching examples](api-design.md)
 - [Security design](security-design.md)
 - [Technical decisions](technical-decisions/README.md)
+- [Caching and resource-loading evidence](performance-evidence.md)
+- [Query plans and query counts](query-evidence.md)
+- [Performance anti-patterns and detection](antipatterns.md)
 
 This is the Advanced Web project using Next.js + Laravel + Supabase. Do not substitute the user’s separate full-Next.js/Prisma project. Laravel is the single application migration/API authority.
 

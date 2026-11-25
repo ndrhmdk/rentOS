@@ -105,7 +105,7 @@ export function SiteHeader() {
           alt="rentOS"
           width={120}
           height={30}
-          priority
+          loading="eager"
           className={`${onHome ? "w-24" : "w-[110px]"} h-auto object-contain sm:w-[120px]`}
         />
       </Link>

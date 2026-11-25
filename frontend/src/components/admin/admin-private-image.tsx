@@ -46,6 +46,8 @@ export function AdminPrivateImage({ media }: { media: AdminMedia }) {
     <img
       className="admin-privateImage"
       src={state.src}
+      loading="lazy"
+      decoding="async"
       alt={media.caption ?? "Ảnh được chọn cho tin đăng"}
     />
   );

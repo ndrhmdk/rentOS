@@ -25,9 +25,16 @@ import {
   unitKindLabel,
 } from "./listing-format";
 import { ListingPhotoGrid } from "./listing-photo-grid";
-import { ListingReportDialog } from "./listing-report-dialog";
 import { ListingRequestAside } from "./listing-request-aside";
-import { RentalRequestDialog } from "./rental-request-dialog";
+
+// Both dialogs only render after a click, so their code (form, validation,
+// photo previews) is split out of the listing page bundle.
+const ListingReportDialog = dynamic(() =>
+  import("./listing-report-dialog").then((mod) => mod.ListingReportDialog),
+);
+const RentalRequestDialog = dynamic(() =>
+  import("./rental-request-dialog").then((mod) => mod.RentalRequestDialog),
+);
 
 const ListingAreaMap = dynamic(
   () => import("./listing-area-map").then((mod) => mod.ListingAreaMap),
