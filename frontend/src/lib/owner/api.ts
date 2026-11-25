@@ -1,5 +1,18 @@
 import { ApiError, request } from "@/lib/http/client";
-import type { OwnerRentalRequestSummary, OwnerRentalRequestDetail, OwnerProperty, AmenityCatalogEntry, OwnerPropertyDetail, OwnerPropertyMedia, OwnerListing, OwnerUnit } from "./types";
+import type {
+  OwnerRentalRequestSummary,
+  OwnerRentalRequestDetail,
+  OwnerProperty,
+  AmenityCatalogEntry,
+  OwnerPropertyDetail,
+  OwnerPropertyMedia,
+  OwnerListing,
+  OwnerUnit,
+  OwnerPropertyPage,
+  OwnerPropertyRental,
+  OwnerOccupancyFilter,
+  OwnerListingStatusFilter,
+} from "./types";
 
 export async function getOwnerRentalRequests(): Promise<
   OwnerRentalRequestSummary[]
@@ -15,14 +28,68 @@ export async function getOwnerRentalRequest(
   );
 }
 
+export type OwnerPropertyListQuery = {
+  page?: number;
+  includeArchived?: boolean;
+  occupancy?: OwnerOccupancyFilter;
+  listingStatuses?: OwnerListingStatusFilter[];
+};
+
+export async function getOwnerPropertyPage(
+  options: OwnerPropertyListQuery = {},
+): Promise<OwnerPropertyPage> {
+  const params = new URLSearchParams();
+  if (options.page && options.page > 1) {
+    params.set("page", String(options.page));
+  }
+  if (options.includeArchived) {
+    params.set("include_archived", "1");
+  }
+  if (options.occupancy && options.occupancy !== "all") {
+    params.set("occupancy", options.occupancy);
+  }
+  for (const status of options.listingStatuses ?? []) {
+    if (status !== "all") params.append("listing_status[]", status);
+  }
+  const query = params.toString();
+  const result = await request<
+    OwnerPropertyPage | OwnerPropertyPage["data"]
+  >(`/api/v1/owner/properties${query ? `?${query}` : ""}`);
+  if (Array.isArray(result)) {
+    return {
+      data: result,
+      meta: {
+        current_page: 1,
+        per_page: result.length || 20,
+        total: result.length,
+        last_page: 1,
+      },
+    };
+  }
+  return {
+    data: Array.isArray(result.data) ? result.data : [],
+    meta: result.meta ?? {
+      current_page: 1,
+      per_page: 20,
+      total: 0,
+      last_page: 1,
+    },
+  };
+}
+
 export async function getOwnerProperties(
   includeArchived = false,
 ): Promise<OwnerProperty[]> {
-  const query = includeArchived ? "?include_archived=1" : "";
-  const result = await request<OwnerProperty[] | { data: OwnerProperty[] }>(
-    `/api/v1/owner/properties${query}`,
+  const page = await getOwnerPropertyPage({ includeArchived });
+  return page.data;
+}
+
+export async function getOwnerPropertyRental(
+  propertyId: string,
+): Promise<OwnerPropertyRental> {
+  return request<OwnerPropertyRental>(
+    `/api/v1/owner/properties/${encodeURIComponent(propertyId)}/rental`,
   );
-  return Array.isArray(result) ? result : result.data;
 }
 
 export async function getAmenityCatalog(): Promise<AmenityCatalogEntry[]> {

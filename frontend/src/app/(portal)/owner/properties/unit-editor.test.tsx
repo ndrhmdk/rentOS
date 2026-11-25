@@ -82,7 +82,11 @@ describe("UnitEditor", () => {
     await user.clear(screen.getByLabelText("Diện tích (m²)"));
     await user.click(screen.getByRole("button", { name: "Lưu phòng" }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/owner/properties/property-1?tab=units"));
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith(
+        "/owner/properties/property-1/edit?tab=units",
+      ),
+    );
     expect(updateOwnerUnit).toHaveBeenCalledWith("property-1", "unit-1", expect.objectContaining({
       expected_content_revision: 7,
       label: "Phòng 102",

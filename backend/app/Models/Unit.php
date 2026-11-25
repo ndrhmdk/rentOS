@@ -73,4 +73,10 @@ class Unit extends Model
     {
         return $this->hasMany(PropertyMedia::class, 'unit_id');
     }
+
+    /** @return HasMany<Tenancy, $this> */
+    public function tenancies(): HasMany
+    {
+        return $this->hasMany(Tenancy::class, 'unit_id');
+    }
 }

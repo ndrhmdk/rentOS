@@ -45,6 +45,26 @@ export function AmenitiesStep({
     });
   }
 
+  function handleUnitAmenityChange(key: string, checked: boolean) {
+    setUnitAmenityKeys((current) => {
+      const next = new Set(current);
+      if (checked) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }
+
+  function setUnitSelection(keys: string[], checked: boolean) {
+    setUnitAmenityKeys((current) => {
+      const next = new Set(current);
+      for (const key of keys) {
+        if (checked) next.add(key);
+        else next.delete(key);
+      }
+      return next;
+    });
+  }
+
   function setWholeSpaceSelection(keys: string[], checked: boolean) {
     const shared = new Set(sharedAmenityKeys);
     const units = new Set(unitAmenityKeys);
@@ -203,11 +223,12 @@ export function AmenitiesStep({
               items={unitAmenityEntries.map((amenity) => ({
                 key: amenity.key,
                 label: amenity.label,
-                checked: false,
+                checked: unitAmenityKeys.has(amenity.key),
               }))}
               namePrefix="unit_amenity:"
               detailsNamePrefix="unit_amenity_details:"
-              onChange={() => {}}
+              onBulkChange={setUnitSelection}
+              onChange={handleUnitAmenityChange}
             />
           )}
         </fieldset>

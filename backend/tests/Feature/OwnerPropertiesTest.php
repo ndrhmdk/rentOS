@@ -248,7 +248,7 @@ class OwnerPropertiesTest extends TestCase
 
         $ownerQueries = [];
         DB::listen(function (QueryExecuted $query) use (&$ownerQueries): void {
-            if (preg_match('/\\b(from|join)\s+"?(properties|units|listings)"?/i', $query->sql) === 1) {
+            if (preg_match('/\\b(from|join)\s+"?(properties|units|listings|tenancies)"?/i', $query->sql) === 1) {
                 $ownerQueries[] = [
                     'sql' => $query->sql,
                     'bindings' => $query->bindings,
@@ -260,11 +260,13 @@ class OwnerPropertiesTest extends TestCase
 
         $response->assertOk()
             ->assertJsonCount(20, 'data')
-            ->assertJsonCount(2, 'data.0.units')
+            ->assertJsonPath('data.0.unit_count', 2)
+            ->assertJsonPath('data.0.occupancy.kind', 'single')
+            ->assertJsonPath('data.0.occupancy.status', 'VACANT')
             ->assertJsonPath('meta.per_page', 20)
             ->assertJsonPath('meta.total', 25);
 
-        $this->assertSame(4, count($ownerQueries));
+        $this->assertSame(5, count($ownerQueries));
         $currentPageQueryCount = count($ownerQueries);
         $this->assertCount(20, collect($response->json('data'))->pluck('listing')->filter());
         $this->assertSame(
@@ -274,6 +276,10 @@ class OwnerPropertiesTest extends TestCase
         $this->assertSame(
             1,
             collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"units"'))->count(),
+        );
+        $this->assertSame(
+            1,
+            collect($ownerQueries)->filter(fn (array $query): bool => str_contains($query['sql'], '"tenancies"'))->count(),
         );
 
         $ownerQueries = [];
@@ -304,19 +310,45 @@ class OwnerPropertiesTest extends TestCase
             $legacyBaseQueryCount + $legacyPerPropertyQueryCount,
             'The previous listing page pattern required the property list plus detail and listing requests per row.',
         );
-        $this->assertSame(4, $currentPageQueryCount);
+        $this->assertSame(5, $currentPageQueryCount);
 
         $ownerQueries = [];
         $secondPage = $this->actingAs($owner)->getJson('/api/v1/owner/properties?page=2');
 
         $secondPage->assertOk()
             ->assertJsonCount(5, 'data')
-            ->assertJsonCount(2, 'data.0.units')
+            ->assertJsonPath('data.0.unit_count', 2)
             ->assertJsonPath('meta.current_page', 2)
             ->assertJsonPath('meta.total', 25);
 
-        $this->assertSame(4, count($ownerQueries));
+        $this->assertSame(5, count($ownerQueries));
         $this->assertCount(5, collect($secondPage->json('data'))->pluck('listing')->filter());
+    }
+
+    public function test_owner_property_rental_endpoint_returns_counts_and_unit_rows(): void
+    {
+        $owner = User::factory()->create();
+        $propertyId = $this->createProperty($owner->id, null, 'SEPARATE_UNITS');
+        DB::table('units')->insert([
+            'id' => (string) Str::uuid(),
+            'property_id' => $propertyId,
+            'client_operation_id' => (string) Str::uuid(),
+            'label' => 'S201',
+            'unit_kind' => 'ROOM',
+            'bedrooms' => 1,
+            'bathrooms' => 1,
+            'bathroom_arrangement' => 'PRIVATE',
+            'minimum_rental_months' => 3,
+            'operational_status' => 'READY',
+        ]);
+
+        $this->actingAs($owner)
+            ->getJson("/api/v1/owner/properties/{$propertyId}/rental")
+            ->assertOk()
+            ->assertJsonPath('data.counts.total', 1)
+            ->assertJsonPath('data.counts.vacant', 1)
+            ->assertJsonPath('data.units.0.label', 'S201')
+            ->assertJsonPath('data.units.0.rental', 'VACANT');
     }
 
     public function test_archived_properties_are_excluded(): void
