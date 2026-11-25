@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { QueryProvider } from "@/lib/query-provider";
@@ -7,6 +8,13 @@ import { FavouritesProvider } from "@/features/discovery/favourites-provider";
 import "./globals.css";
 import { LoadingScreen } from "@/components/loading-screen";
 
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  weight: "variable",
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
   title: "rentOS — Tìm nơi ở phù hợp",
   description: "Một tài khoản cho người thuê và chủ nhà trên rentOS.",
@@ -14,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-surface-app text-primary antialiased">
         <QueryProvider>
           <AuthProvider>

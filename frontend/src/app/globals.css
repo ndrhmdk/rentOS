@@ -1,21 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Reddit+Sans:wght@500&family=Jura:wght@700&family=Cousine:wght@400;700&family=Roboto:wght@400&display=swap');
 @import "tailwindcss";
 
 /* rentOS design tokens — source: Figma "rentOS Design (AWDesign)".
    Import once in backend/frontend/src/index.css:  @import '../../../design/tokens/rentos-tokens.css';
    (or copy this file into src/styles/). Do not hard-code hex values in components — use these variables. */
 
-/* Webfonts — loaded from Google Fonts (no font binaries in the Figma source).
-   Liberation Mono is not on Google Fonts; Cousine (metric-compatible, same design lineage) is aliased below. */
-@font-face{font-family:"Liberation Mono";font-weight:400;src:local("Liberation Mono"),local("Cousine")}
-@font-face{font-family:"Liberation Mono";font-weight:700;src:local("Liberation Mono Bold"),local("Cousine Bold")}
+/* Inter is self-hosted by next/font as --font-inter on <html>. The other
+   family names stay as system stacks so a utility cannot request a font
+   that is no longer downloaded. */
 :root{
---font-sans:"Inter",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
---font-ui-alt:"Plus Jakarta Sans","Inter",system-ui,sans-serif;
---font-serif-display:"Playfair Display",Georgia,serif;
---font-mono:"Liberation Mono","Cousine",ui-monospace,Menlo,monospace;
---font-numeric-display:"Reddit Sans","Inter",system-ui,sans-serif;
---font-annotation:"Jura","Inter",sans-serif;
+--font-sans:var(--font-inter),system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+--font-ui-alt:var(--font-inter),system-ui,sans-serif;
+--font-serif-display:Georgia,"Times New Roman",serif;
+--font-mono:ui-monospace,Menlo,monospace;
+--font-numeric-display:var(--font-inter),system-ui,sans-serif;
+--font-annotation:var(--font-inter),system-ui,sans-serif;
 }
 
 /* rentOS brand + product tokens — values from the Figma "Colour Palette" / "Type Hierarchy" sections
