@@ -145,6 +145,83 @@ class OwnerRentalRequestsTest extends TestCase
         $this->postJson(self::OWNER.'/'.$item->id.'/reject', $this->payload($item))->assertForbidden();
     }
 
+    public function test_owner_gets_proposal_context_and_availability_for_pending_and_closed_requests(): void
+    {
+        $listing = PublicListingFixture::published();
+        $foreign = PublicListingFixture::published();
+        $tenant = User::factory()->create();
+
+        $item = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'tenant_id' => $tenant->id,
+            'preferred_unit_id' => null,
+            'desired_move_in_date' => '2026-12-01',
+            'desired_end_date' => '2027-06-01',
+            'status' => 'PENDING',
+        ]);
+
+        // Archived unit must be excluded from proposal context
+        $primaryUnit = DB::table('units')->where('property_id', $listing->propertyId)->first();
+        $this->assertNotNull($primaryUnit);
+        $baseUnit = (array) $primaryUnit;
+        $baseUnit['id'] = (string) Str::uuid();
+        $baseUnit['client_operation_id'] = (string) Str::uuid();
+        $baseUnit['label'] = 'Archived Unit';
+        $baseUnit['archived_at'] = now();
+        DB::table('units')->insert($baseUnit);
+
+        // Conflicting tenancy on the primary unit
+        $blockingReq = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'status' => 'ACCEPTED',
+            'closed_at' => now(),
+        ]);
+        DB::table('tenancies')->insert([
+            'id' => (string) Str::uuid(),
+            'unit_id' => $primaryUnit->id,
+            'owner_id' => $listing->owner->id,
+            'tenant_id' => $blockingReq->tenant_id,
+            'rental_request_id' => $blockingReq->id,
+            'client_operation_id' => (string) Str::uuid(),
+            'status' => 'CONFIRMED',
+            'blocked_start_date' => '2026-11-15',
+            'blocked_end_date' => '2027-01-15',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($listing->owner, 'web')
+            ->getJson(self::OWNER.'/'.$item->id.'/proposal-context')
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertJsonPath('data.request.id', $item->id)
+            ->assertJsonCount(1, 'data.units')
+            ->assertJsonPath('data.units.0.id', $primaryUnit->id)
+            ->assertJsonPath('data.units.0.has_date_conflict', true);
+
+        // Non-owner or missing request returns 404
+        $foreignReq = RentalRequest::factory()->create(['listing_id' => $foreign->listingId]);
+        $this->actingAs($listing->owner, 'web')
+            ->getJson(self::OWNER.'/'.$foreignReq->id.'/proposal-context')
+            ->assertNotFound();
+
+        // show() when preferred_unit_id is null
+        $this->actingAs($listing->owner, 'web')
+            ->getJson(self::OWNER.'/'.$item->id)
+            ->assertOk()
+            ->assertJsonPath('data.preferred_unit_available', null);
+
+        // show() when status !== PENDING
+        $this->actingAs($listing->owner, 'web')
+            ->postJson(self::OWNER.'/'.$item->id.'/reject', $this->payload($item))
+            ->assertNoContent();
+        $this->actingAs($listing->owner, 'web')
+            ->getJson(self::OWNER.'/'.$item->id)
+            ->assertOk()
+            ->assertJsonPath('data.preferred_unit_available', null)
+            ->assertJsonPath('data.alternative_units', []);
+    }
+
     /** @return array<string, string> */
     private function payload(RentalRequest $item): array
     {

@@ -624,4 +624,77 @@ class ListingReportsFlowsTest extends TestCase
         // View 2
         $this->getJson("/api/v1/listings/{$published->listingId}")->assertStatus(404);
     }
+
+    public function test_admin_can_dismiss_reviewing_report_with_audit_and_notification(): void
+    {
+        $published = PublicListingFixture::published();
+        $reporter = User::factory()->create();
+        $admin = $this->createAdminUser();
+
+        $submitRes = $this->actingAs($reporter)->postJson("/api/v1/listings/{$published->listingId}/reports", [
+            'reason_code' => 'FRAUD',
+            'description' => 'Báo cáo thử nghiệm dismiss',
+        ])->assertCreated();
+
+        $reportId = $submitRes->json('data.id');
+        $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$reportId}/start-review")->assertOk();
+
+        $dismissRes = $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$reportId}/dismiss", [
+            'resolution_summary' => 'Tin đăng hợp lệ, không vi phạm quy định.',
+        ]);
+
+        $dismissRes->assertOk()
+            ->assertJsonPath('data.status', 'DISMISSED')
+            ->assertJsonPath('data.resolution_summary', 'Tin đăng hợp lệ, không vi phạm quy định.');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'entity_type' => 'listing_report',
+            'entity_id' => $reportId,
+            'action' => 'listing_report.dismissed',
+            'actor_id' => $admin->id,
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'event_key' => 'listing_report.dismissed:'.$reportId.':'.now()->timestamp,
+            'audience' => 'TENANT',
+            'recipient_id' => $reporter->id,
+        ]);
+    }
+
+    public function test_admin_can_list_filter_and_view_listing_reports(): void
+    {
+        $published = PublicListingFixture::published();
+        $reporter = User::factory()->create(['name' => 'Tran Bao Cao', 'email' => 'reporter@example.test']);
+        $admin = $this->createAdminUser();
+
+        $submitRes = $this->actingAs($reporter)->postJson("/api/v1/listings/{$published->listingId}/reports", [
+            'reason_code' => 'FRAUD',
+            'description' => 'Tin có dấu hiệu lừa đảo.',
+        ])->assertCreated();
+        $reportId = $submitRes->json('data.id');
+
+        $listRes = $this->actingAs($admin)->getJson('/api/v1/admin/listing-reports?status=OPEN&reason_code=FRAUD&search=Tran&per_page=5');
+        $listRes->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $reportId)
+            ->assertJsonPath('meta.per_page', 5);
+
+        $detailRes = $this->actingAs($admin)->getJson("/api/v1/admin/listing-reports/{$reportId}");
+        $detailRes->assertOk()
+            ->assertJsonPath('data.id', $reportId);
+
+        $missingId = '00000000-0000-4000-8000-000000000000';
+        $this->actingAs($admin)->getJson("/api/v1/admin/listing-reports/{$missingId}")->assertNotFound();
+        $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$missingId}/start-review")->assertNotFound();
+        $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$missingId}/resolve", [
+            'resolution_summary' => 'Không tồn tại',
+        ])->assertNotFound();
+        $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$missingId}/dismiss", [
+            'resolution_summary' => 'Không tồn tại',
+        ])->assertNotFound();
+
+        $nonAdmin = User::factory()->create();
+        $this->actingAs($nonAdmin)->getJson('/api/v1/admin/listing-reports')->assertNotFound();
+        $this->actingAs($nonAdmin)->getJson("/api/v1/admin/listing-reports/{$reportId}")->assertNotFound();
+    }
 }

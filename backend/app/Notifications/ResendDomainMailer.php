@@ -7,6 +7,13 @@ use Resend\Exceptions\TransporterException;
 
 final class ResendDomainMailer implements DomainMailer
 {
+    /**
+     * @param  (\Closure(string): object)|null  $clientFactory
+     */
+    public function __construct(
+        private readonly ?\Closure $clientFactory = null,
+    ) {}
+
     public function send(string $eventKey, DomainMessage $message): void
     {
         $apiKey = config('services.resend.key');
@@ -15,7 +22,11 @@ final class ResendDomainMailer implements DomainMailer
         }
 
         try {
-            \Resend::client($apiKey)->emails->send([
+            $client = $this->clientFactory !== null
+                ? ($this->clientFactory)($apiKey)
+                : \Resend::client($apiKey);
+
+            $client->emails->send([
                 'from' => $message->from,
                 'to' => [$message->to],
                 'subject' => $message->subject,
