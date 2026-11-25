@@ -105,6 +105,76 @@ class RejectAgedRentalRequestsTest extends TestCase
     }
 
     /**
+     * A retried job runs the action again for a request it already rejected.
+     */
+    public function test_retrying_the_action_for_an_already_rejected_request_changes_nothing(): void
+    {
+        $listing = PublicListingFixture::published();
+        PublicListingFixture::blockUnit($listing->unitIds[0], now()->addDay()->toDateString(), now()->addMonths(6)->toDateString(), 'CONFIRMED');
+
+        $request = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'created_at' => now()->subDays(16),
+            'desired_move_in_date' => now()->addDays(5)->toDateString(),
+            'desired_end_date' => now()->addMonths(3)->toDateString(),
+            'status' => 'PENDING',
+        ]);
+        $action = app(RejectAgedRentalRequestAction::class);
+
+        $this->assertSame('REJECTED', $action->execute($request->id));
+        $closedAt = $request->fresh()->closed_at;
+
+        $this->assertNull($action->execute($request->id));
+
+        $this->assertEquals($closedAt, $request->fresh()->closed_at);
+        $this->assertSame(1, DB::table('audit_logs')->where('entity_id', $request->id)->where('action', 'rental_request.rejected_aged')->count());
+        $this->assertSame(1, DB::table('notifications')->where('event_key', 'rental_request.rejected_aged:'.$request->id)->count());
+    }
+
+    /**
+     * A block covering only the tail of the desired stay still makes the unit unavailable.
+     */
+    public function test_block_overlapping_only_part_of_the_desired_interval_rejects_the_request(): void
+    {
+        $listing = PublicListingFixture::published();
+        $moveIn = now()->addDays(5);
+        $end = now()->addMonths(3);
+        PublicListingFixture::blockUnit($listing->unitIds[0], $end->copy()->subDays(10)->toDateString(), $end->copy()->addMonths(2)->toDateString(), 'CONFIRMED');
+
+        $request = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'created_at' => now()->subDays(16),
+            'desired_move_in_date' => $moveIn->toDateString(),
+            'desired_end_date' => $end->toDateString(),
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertSame('REJECTED', app(RejectAgedRentalRequestAction::class)->execute($request->id));
+        $this->assertSame('NO_AVAILABLE_UNIT', $request->fresh()->outcome_reason);
+    }
+
+    /**
+     * A block that ends the day before move-in leaves the whole desired interval free.
+     */
+    public function test_block_ending_before_move_in_keeps_the_request_pending(): void
+    {
+        $listing = PublicListingFixture::published();
+        $moveIn = now()->addDays(20);
+        PublicListingFixture::blockUnit($listing->unitIds[0], now()->addDay()->toDateString(), $moveIn->copy()->subDay()->toDateString(), 'CONFIRMED');
+
+        $request = RentalRequest::factory()->create([
+            'listing_id' => $listing->listingId,
+            'created_at' => now()->subDays(16),
+            'desired_move_in_date' => $moveIn->toDateString(),
+            'desired_end_date' => $moveIn->copy()->addMonths(3)->toDateString(),
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertSame('PENDING_KEPT', app(RejectAgedRentalRequestAction::class)->execute($request->id));
+        $this->assertSame('PENDING', $request->fresh()->status);
+    }
+
+    /**
      * FR85-AC03: Alternative unit available although preferred unit is blocked -> Keep PENDING.
      */
     public function test_aged_request_is_kept_pending_if_alternative_unit_in_property_is_free(): void
