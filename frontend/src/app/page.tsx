@@ -134,6 +134,8 @@ export default function Home() {
           alt=""
           fill
           preload
+          fetchPriority="high"
+          quality={60}
           sizes="100vw"
           className="object-cover"
         />
@@ -204,13 +206,22 @@ export default function Home() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-5 rounded-b-[25px] bg-[#091216] bg-[url('/images/home/why-us.png')] bg-cover bg-center bg-no-repeat px-6 py-6 text-white sm:grid-cols-3 sm:gap-6 sm:px-12 sm:py-8 [&>div:first-child]:col-span-2 sm:[&>div:first-child]:col-span-1">
+        <div className="relative grid grid-cols-2 gap-5 overflow-hidden rounded-b-[25px] bg-[#091216] px-6 py-6 text-white sm:grid-cols-3 sm:gap-6 sm:px-12 sm:py-8">
+          <Image
+            src="/images/home/why-us.png"
+            alt=""
+            fill
+            sizes="(min-width: 1100px) 1100px, 100vw"
+            quality={60}
+            className="object-cover"
+          />
           <Stat
+            className="relative z-10 col-span-2 sm:col-span-1"
             value="Nhà tốt. Người thật."
             label="Tin đăng được kiểm duyệt trước khi công khai"
           />
-          <Stat value="12+" label="Khu phố đang có nhà" />
-          <Stat value="4.8 / 5" label="Mức độ hài lòng" />
+          <Stat className="relative z-10" value="12+" label="Khu phố đang có nhà" />
+          <Stat className="relative z-10" value="4.8 / 5" label="Mức độ hài lòng" />
         </div>
       </section>
 
@@ -268,6 +279,7 @@ export default function Home() {
                   src={area.image}
                   alt=""
                   fill
+                  quality={60}
                   sizes="(min-width: 1024px) 380px, 100vw"
                   className="object-cover"
                 />
@@ -336,6 +348,7 @@ export default function Home() {
             src="/images/discovery/owner-cta.png"
             alt=""
             fill
+            quality={60}
             sizes="(min-width: 1024px) 50vw, 100vw"
             className="object-cover"
           />
@@ -402,9 +415,17 @@ export default function Home() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({
+  value,
+  label,
+  className,
+}: {
+  value: string;
+  label: string;
+  className?: string;
+}) {
   return (
-    <div>
+    <div className={className}>
       <p className="text-2xl font-bold">{value}</p>
       <p className="mt-1 text-[13px] text-[#d5d5d5]">{label}</p>
     </div>

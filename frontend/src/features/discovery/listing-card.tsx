@@ -73,6 +73,7 @@ export function ListingCardView({ listing, href }: { listing: ListingCard; href:
                 alt={selected ? listing.title : ""}
                 fill
                 sizes={cardSizes}
+                quality={60}
                 aria-hidden={selected ? undefined : true}
                 className={`object-cover transition-opacity duration-200 ${visible ? "z-[2] opacity-100" : "opacity-0"}`}
                 onLoad={() => markReady(url)}
