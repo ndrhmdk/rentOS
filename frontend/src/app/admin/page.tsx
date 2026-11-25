@@ -87,7 +87,13 @@ export default function AdminPage() {
               ? "đã phê duyệt"
               : item.action === "listing.rejected"
                 ? "đã từ chối"
-                : item.action,
+                : item.action === "listing.created"
+                  ? "đã tạo tin"
+                  : item.action === "listing.submitted"
+                    ? "đã gửi duyệt"
+                    : item.action === "listing.published"
+                      ? "đã đăng công khai"
+                      : item.action,
           target: item.title ?? "Tin đăng",
           at: item.created_at,
           label: new Intl.DateTimeFormat("vi-VN", {

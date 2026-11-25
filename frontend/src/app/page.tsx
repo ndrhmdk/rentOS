@@ -59,7 +59,7 @@ const reasons = [
   },
   {
     title: "Minh bạch chi phí",
-    body: "Giá thuê, tiền cọc và các khoảng phí được công khai rõ ràng.",
+    body: "Giá thuê, tiền cọc và các khoản phí được công khai rõ ràng.",
     icon: "/images/home/list.svg",
     width: 22,
     height: 22,

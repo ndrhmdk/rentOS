@@ -77,7 +77,7 @@ return [
     'home' => env('FRONTEND_URL', 'http://localhost:3000'),
 
     'redirects' => [
-        'email-verification' => rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/').'/profile?verified=1',
+        'email-verification' => rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/').'/profile',
         'login' => env('FRONTEND_URL', 'http://localhost:3000'),
         'register' => rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/').'/profile',
         'logout' => env('FRONTEND_URL', 'http://localhost:3000'),

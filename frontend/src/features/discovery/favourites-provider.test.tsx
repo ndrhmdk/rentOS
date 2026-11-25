@@ -47,7 +47,7 @@ describe("FavouritesProvider & FavouriteButton", () => {
   it("loads and toggles favourite for authenticated user", async () => {
     const user = userEvent.setup();
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: "user-1", email: "user@example.com", name: "User", phone: "0901234567", is_admin: false, email_verified_at: null },
+      user: { id: "user-1", email: "user@example.com", name: "User", phone: "0901234567", is_admin: false, email_verified_at: "2026-11-25T10:00:00Z" },
       status: "authenticated",
       refreshUser: vi.fn(),
       signOut: vi.fn(),
