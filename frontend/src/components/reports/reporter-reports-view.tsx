@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { getTenantReports, type ReporterListingReport, type PaginationMeta } from "@/lib/reports-api";
 
 const reasonLabels: Record<string, string> = {
@@ -52,35 +53,15 @@ export function ReporterReportsView() {
   function renderStatusBadge(status: string) {
     switch (status) {
       case "OPEN":
-        return (
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
-            Đã tiếp nhận
-          </span>
-        );
+        return <StatusBadge tone="info">Đã tiếp nhận</StatusBadge>;
       case "REVIEWING":
-        return (
-          <span className="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">
-            Đang điều tra
-          </span>
-        );
+        return <StatusBadge tone="review">Đang điều tra</StatusBadge>;
       case "RESOLVED":
-        return (
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-            Đã xử lý
-          </span>
-        );
+        return <StatusBadge tone="success">Đã xử lý</StatusBadge>;
       case "DISMISSED":
-        return (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">
-            Đã bác bỏ
-          </span>
-        );
+        return <StatusBadge tone="neutral">Đã bác bỏ</StatusBadge>;
       default:
-        return (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-            {status}
-          </span>
-        );
+        return <StatusBadge>{status}</StatusBadge>;
     }
   }
 
