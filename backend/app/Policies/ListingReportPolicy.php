@@ -28,7 +28,7 @@ class ListingReportPolicy
      */
     public function investigate(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $user->account_status === 'ACTIVE' && $user->hasVerifiedEmail();
     }
 
     /**
@@ -36,6 +36,6 @@ class ListingReportPolicy
      */
     public function suspendListing(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() && $user->account_status === 'ACTIVE' && $user->hasVerifiedEmail();
     }
 }

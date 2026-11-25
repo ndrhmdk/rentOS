@@ -184,8 +184,11 @@ class OwnerListingsTest extends TestCase
         DB::table('users')->where('id', $admin->id)->update(['is_admin' => true]);
         $admin->refresh();
         $listingId = DB::table('listings')->where('property_id', $propertyId)->value('id');
-        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/approve")
-            ->assertConflict();
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reviews/{$listingId}/approve", [
+            'expected_snapshot' => str_repeat('0', 64),
+            'client_operation_id' => (string) Str::uuid(),
+        ])->assertConflict();
     }
 
     public function test_admin_rejection_requires_a_reason_and_owner_can_resubmit(): void
@@ -202,10 +205,23 @@ class OwnerListingsTest extends TestCase
         DB::table('users')->where('id', $admin->id)->update(['is_admin' => true]);
         $admin->refresh();
         $listingId = DB::table('listings')->where('property_id', $propertyId)->value('id');
-        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/reject", ['reason' => ''])->assertUnprocessable();
-        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/reject", ['reason' => 'Please add unit details.'])
-            ->assertOk()->assertJsonPath('data.moderation_status', 'REJECTED');
+        $this->app['auth']->forgetGuards();
+        $snapshot = $this->actingAs($admin, 'web')
+            ->getJson("/api/v1/admin/listing-reviews/{$listingId}")
+            ->assertOk()
+            ->json('data.snapshot_token');
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reviews/{$listingId}/reject", [
+            'expected_snapshot' => $snapshot,
+            'client_operation_id' => (string) Str::uuid(),
+            'reason' => '',
+        ])->assertUnprocessable();
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reviews/{$listingId}/reject", [
+            'expected_snapshot' => $snapshot,
+            'client_operation_id' => (string) Str::uuid(),
+            'reason' => 'Please add unit details.',
+        ])->assertOk()->assertJsonPath('data.moderation_status', 'REJECTED');
 
+        $this->app['auth']->forgetGuards();
         $this->actingAs($owner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/submit", [
             'expected_content_revision' => 1,
         ])->assertOk()->assertJsonPath('data.moderation_status', 'PENDING')->assertJsonPath('data.review_reason', null);
@@ -230,9 +246,18 @@ class OwnerListingsTest extends TestCase
         DB::table('users')->where('id', $admin->id)->update(['is_admin' => true]);
         $admin->refresh();
         $listingId = DB::table('listings')->where('property_id', $propertyId)->value('id');
-        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/approve")->assertOk()
-            ->assertJsonPath('data.moderation_status', 'APPROVED')->assertJsonPath('data.publication_status', 'DRAFT');
+        $this->app['auth']->forgetGuards();
+        $snapshot = $this->actingAs($admin, 'web')
+            ->getJson("/api/v1/admin/listing-reviews/{$listingId}")
+            ->assertOk()
+            ->json('data.snapshot_token');
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reviews/{$listingId}/approve", [
+            'expected_snapshot' => $snapshot,
+            'client_operation_id' => (string) Str::uuid(),
+        ])->assertOk()
+            ->assertJsonPath('data.moderation_status', 'APPROVED');
 
+        $this->app['auth']->forgetGuards();
         $this->actingAs($owner)->postJson("/api/v1/owner/properties/{$propertyId}/listing/publish", [
             'expected_content_revision' => 1,
         ])->assertOk()->assertJsonPath('data.publication_status', 'PUBLISHED');
@@ -289,9 +314,21 @@ class OwnerListingsTest extends TestCase
         $admin = User::factory()->create();
         DB::table('users')->where('id', $admin->id)->update(['is_admin' => true]);
         $admin->refresh();
-        $this->actingAs($admin)->postJson("/api/v1/admin/listings/{$listingId}/approve")
-            ->assertOk()->assertJsonPath('data.approved_content_revision', 1);
+        $this->app['auth']->forgetGuards();
+        $snapshot = $this->actingAs($admin, 'web')
+            ->getJson("/api/v1/admin/listing-reviews/{$listingId}")
+            ->assertOk()
+            ->json('data.snapshot_token');
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reviews/{$listingId}/approve", [
+            'expected_snapshot' => $snapshot,
+            'client_operation_id' => (string) Str::uuid(),
+        ])->assertOk();
+        $this->assertDatabaseHas('listings', [
+            'id' => $listingId,
+            'approved_content_revision' => 1,
+        ]);
 
+        $this->app['auth']->forgetGuards();
         $this->actingAs($owner)->patchJson("/api/v1/owner/properties/{$propertyId}/listing", [
             'expected_content_revision' => 1,
             'title' => 'Updated approved listing',
@@ -405,7 +442,7 @@ class OwnerListingsTest extends TestCase
     {
         $id = $this->createProperty($ownerId);
         DB::table('properties')->where('id', $id)->update([
-            'address_line' => '123 Test Street', 'description' => 'A well maintained apartment in a central neighborhood.',
+            'address_line' => '123 Test Street', 'ward' => 'Hai Chau', 'description' => 'A well maintained apartment in a central neighborhood.',
         ]);
         $unitId = (string) Str::uuid();
         DB::table('units')->insert([

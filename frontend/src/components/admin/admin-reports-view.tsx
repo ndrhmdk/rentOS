@@ -31,6 +31,7 @@ export function AdminReportsView() {
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isForbiddenOrNotFound, setIsForbiddenOrNotFound] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export function AdminReportsView() {
     let ignore = false;
     async function load() {
       try {
+        setLoadError(null);
         const response = await getAdminListingReports({
           status: statusFilter || undefined,
           reason_code: reasonFilter || undefined,
@@ -71,7 +73,7 @@ export function AdminReportsView() {
           if (err instanceof ApiError && (err.status === 404 || err.status === 403 || err.status === 401)) {
             setIsForbiddenOrNotFound(true);
           } else {
-            setActionError("Không thể tải danh sách điều tra. Vui lòng thử lại sau.");
+            setLoadError("Không thể tải danh sách điều tra. Vui lòng thử lại sau.");
           }
           setLoading(false);
         }
@@ -240,16 +242,16 @@ export function AdminReportsView() {
       </div>
 
       {actionSuccess ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 flex justify-between items-center">
+        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 flex justify-between items-center">
           <span>{actionSuccess}</span>
-          <button type="button" onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-800 font-bold ml-4">✕</button>
+          <button type="button" aria-label="Đóng thông báo thành công" onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-800 font-bold ml-4">✕</button>
         </div>
       ) : null}
 
       {actionError ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex justify-between items-center">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex justify-between items-center">
           <span>{actionError}</span>
-          <button type="button" onClick={() => setActionError(null)} className="text-rose-600 hover:text-rose-800 font-bold ml-4">✕</button>
+          <button type="button" aria-label="Đóng thông báo lỗi" onClick={() => setActionError(null)} className="text-rose-600 hover:text-rose-800 font-bold ml-4">✕</button>
         </div>
       ) : null}
 
@@ -282,6 +284,7 @@ export function AdminReportsView() {
 
         <div className="flex flex-col sm:flex-row gap-2">
           <select
+            aria-label="Lọc theo lý do vi phạm"
             value={reasonFilter}
             onChange={(e) => {
               setReasonFilter(e.target.value);
@@ -298,6 +301,7 @@ export function AdminReportsView() {
 
           <input
             type="text"
+            aria-label="Tìm theo tin đăng hoặc người báo cáo"
             placeholder="Tìm theo tin đăng, người báo..."
             value={search}
             onChange={(e) => {
@@ -327,8 +331,24 @@ export function AdminReportsView() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={7} role="status" className="px-4 py-8 text-center text-sm text-slate-500">
                     Đang tải dữ liệu điều tra...
+                  </td>
+                </tr>
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7} role="alert" className="px-4 py-8 text-center text-sm text-rose-700">
+                    <p>{loadError}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoading(true);
+                        setReloadKey((k) => k + 1);
+                      }}
+                      className="mt-3 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+                    >
+                      Thử lại
+                    </button>
                   </td>
                 </tr>
               ) : (reports?.length ?? 0) === 0 ? (
@@ -413,8 +433,14 @@ export function AdminReportsView() {
       {/* Investigation Detail Modal / Drawer */}
       {selectedReport && !actionType ? (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-report-detail-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setSelectedReport(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setSelectedReport(null);
+          }}
         >
           <div
             className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-5"
@@ -423,13 +449,14 @@ export function AdminReportsView() {
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-slate-900">Chi tiết Hồ sơ Báo cáo</h2>
+                  <h2 id="admin-report-detail-title" className="text-xl font-bold text-slate-900">Chi tiết Hồ sơ Báo cáo</h2>
                   {renderStatusBadge(selectedReport.status)}
                 </div>
                 <p className="text-xs text-slate-400 mt-1">Mã hồ sơ: {selectedReport.id}</p>
               </div>
               <button
                 type="button"
+                aria-label="Đóng chi tiết hồ sơ báo cáo"
                 onClick={() => setSelectedReport(null)}
                 className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
               >
@@ -586,15 +613,21 @@ export function AdminReportsView() {
       {/* Decision Action Modal */}
       {selectedReport && actionType ? (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-report-action-title"
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
           onClick={() => setActionType(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setActionType(null);
+          }}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 id="admin-report-action-title" className="text-lg font-bold text-slate-900">
                 {actionType === "RESOLVE" && "Giải quyết Báo cáo"}
                 {actionType === "DISMISS" && "Bác bỏ Báo cáo"}
                 {actionType === "SUSPEND" && "Đình chỉ Tin đăng"}
@@ -602,6 +635,7 @@ export function AdminReportsView() {
               </h3>
               <button
                 type="button"
+                aria-label="Đóng hộp thoại thao tác"
                 onClick={() => setActionType(null)}
                 className="text-slate-400 hover:text-slate-600"
               >
