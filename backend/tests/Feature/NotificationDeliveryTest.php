@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\DomainMailer;
 use App\Notifications\DomainMailException;
 use App\Notifications\DomainMessage;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -403,6 +404,89 @@ class NotificationDeliveryTest extends TestCase
     private function detailPath(string $listingId): string
     {
         return '/api/v1/admin/listing-reviews/'.$listingId;
+    }
+
+    public function test_deliver_notification_handles_missing_row_missing_email_concurrent_exception_and_all_links(): void
+    {
+        config(['mail.from.name' => '', 'mail.from.address' => 'noreply@rentos.test', 'app.frontend_url' => 'http://localhost:3000']);
+
+        // 1. Missing notification ID -> returns early, nothing sent
+        (new DeliverNotification((string) Str::uuid()))->handle($this->mailer);
+        $this->assertCount(0, $this->mailer->outcomes);
+
+        // 2. Missing email on recipient -> job fails via mock job
+        $noEmailUser = User::factory()->create();
+        DB::table('users')->where('id', $noEmailUser->id)->update(['email' => '']);
+        $noEmailNotifId = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            'id' => $noEmailNotifId,
+            'recipient_id' => $noEmailUser->id,
+            'audience' => 'TENANT',
+            'event_key' => 'test.missing_email:'.$noEmailNotifId,
+            'title' => 'Missing email',
+            'body' => 'Body',
+            'resource_type' => 'listing',
+            'resource_id' => (string) Str::uuid(),
+            'created_at' => now(),
+        ]);
+
+        $jobMock = \Mockery::mock(Job::class);
+        $jobMock->shouldReceive('fail')->once();
+        $job = new DeliverNotification($noEmailNotifId);
+        $job->setJob($jobMock);
+        $job->handle($this->mailer);
+
+        // 3. All link() branches + empty from name
+        $user = User::factory()->create();
+        $resourceId = (string) Str::uuid();
+        $cases = [
+            ['ADMIN', 'listing', $resourceId, '/admin/review-queue/'.$resourceId],
+            ['OWNER', 'rental_request', $resourceId, '/owner/requests/'.$resourceId],
+            ['TENANT', 'rental_request', $resourceId, '/tenant/requests/'.$resourceId],
+            ['OWNER', 'tenancy', $resourceId, '/owner/tenancies/'.$resourceId],
+            ['TENANT', 'tenancy', $resourceId, '/tenant/tenancies/'.$resourceId],
+            ['TENANT', 'unknown_type', $resourceId, 'http://localhost:3000'],
+        ];
+
+        foreach ($cases as $idx => [$audience, $type, $resId, $expectedLink]) {
+            $id = (string) Str::uuid();
+            DB::table('notifications')->insert([
+                'id' => $id,
+                'recipient_id' => $user->id,
+                'audience' => $audience,
+                'event_key' => 'test.link.'.$idx.':'.$id,
+                'title' => 'Title '.$idx,
+                'body' => 'Body '.$idx,
+                'resource_type' => $type,
+                'resource_id' => $resId,
+                'created_at' => now(),
+            ]);
+            (new DeliverNotification($id))->handle($this->mailer);
+            $last = end($this->mailer->outcomes);
+            $this->assertNotFalse($last);
+            $this->assertSame('noreply@rentos.test', $last['message']->from);
+            $this->assertStringContainsString($expectedLink, $last['message']->html);
+        }
+
+        // 4. Concurrent DomainMailException -> releases job back to queue
+        $this->mailer->throw = DomainMailException::concurrent('busy');
+        $releaseJobMock = \Mockery::mock(Job::class);
+        $releaseJobMock->shouldReceive('release')->once()->with(0);
+        $concurrentId = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            'id' => $concurrentId,
+            'recipient_id' => $user->id,
+            'audience' => 'TENANT',
+            'event_key' => 'test.concurrent:'.$concurrentId,
+            'title' => 'Concurrent',
+            'body' => 'Body',
+            'resource_type' => 'listing',
+            'resource_id' => $resourceId,
+            'created_at' => now(),
+        ]);
+        $concurrentJob = new DeliverNotification($concurrentId);
+        $concurrentJob->setJob($releaseJobMock);
+        $concurrentJob->handle($this->mailer);
     }
 }
 
