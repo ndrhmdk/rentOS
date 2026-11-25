@@ -152,10 +152,10 @@ Bảng dưới đây dùng đúng nhãn của đề bài gốc; chi tiết đầ
 | ![Telescope Mail](../06-acceptance/evidence/ui/13-mail-telescope.png) | ![Scramble OpenAPI](../06-acceptance/evidence/ui/14-openapi-scramble.png) |
 
 ### 7.4. Báo cáo Hiệu năng Lighthouse (Production `rentos.io.vn`)
-- **Lần đo 1 (`2026-11-25 20:30:56`):** Performance **94** · Accessibility **96** · Best Practices **96** · SEO **100**
-- **Lần đo 2 (`2026-11-25 20:32:00`):** Performance **100** · Accessibility **96** · Best Practices **96** · SEO **100**
+- **Lần đo 1 — mobile (`2026-11-25 20:30:56`):** Performance **94** · Accessibility **96** · Best Practices **96** · SEO **100**
+- **Lần đo 2 — desktop (`2026-11-25 20:32:00`):** Performance **100** · Accessibility **96** · Best Practices **96** · SEO **100**
 
-| Lighthouse Run 1 (Perf 94 / A11y 96 / BP 96 / SEO 100) | Lighthouse Run 2 (Perf 100 / A11y 96 / BP 96 / SEO 100) |
+| Lighthouse mobile (Perf 94 / A11y 96 / BP 96 / SEO 100) | Lighthouse desktop (Perf 100 / A11y 96 / BP 96 / SEO 100) |
 | :---: | :---: |
 | ![Lighthouse 20-30-56](../06-acceptance/evidence/ui/15-lighthouse-rentos-20-30-56.png) | ![Lighthouse 20-32-00](../06-acceptance/evidence/ui/16-lighthouse-rentos-20-32-00.png) |
 
