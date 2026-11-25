@@ -317,16 +317,16 @@ export function AdminReportsView() {
       {/* Reports Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-[860px] w-full divide-y divide-slate-200 text-left text-sm">
+          <table className="w-full min-w-[780px] divide-y divide-slate-200 text-left text-sm">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-4 py-3.5">Tin đăng</th>
-                <th className="px-4 py-3.5">Lý do vi phạm</th>
-                <th className="px-4 py-3.5">Người gửi</th>
-                <th className="px-4 py-3.5">Trạng thái</th>
-                <th className="px-4 py-3.5">Đình chỉ</th>
-                <th className="px-4 py-3.5">Ngày gửi</th>
-                <th className="px-4 py-3.5 text-right">Thao tác</th>
+                <th className="px-3 py-3.5">Tin đăng</th>
+                <th className="px-3 py-3.5">Lý do vi phạm</th>
+                <th className="px-3 py-3.5">Người gửi</th>
+                <th className="px-3 py-3.5">Trạng thái</th>
+                <th className="px-3 py-3.5">Đình chỉ</th>
+                <th className="px-3 py-3.5">Ngày gửi</th>
+                <th className="px-3 py-3.5 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -361,32 +361,32 @@ export function AdminReportsView() {
               ) : (
                 (reports ?? []).map((report) => (
                   <tr key={report.id} className="hover:bg-slate-50/80 transition cursor-pointer" onClick={() => setSelectedReport(report)}>
-                    <td className="px-4 py-3.5 font-medium text-slate-900 max-w-xs truncate">
+                    <td className="px-3 py-3.5 font-medium text-slate-900 max-w-[200px] truncate">
                       {report.listing?.title ?? report.listing_id}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3.5">
                       <StatusBadge>
                         {reasonLabels[report.reason_code] ?? report.reason_code}
                       </StatusBadge>
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">
+                    <td className="px-3 py-3.5 text-xs text-slate-600">
                       <div className="font-medium text-slate-900">{report.reporter?.name}</div>
                       <div className="text-slate-400">{report.reporter?.email}</div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3.5">
                       {renderStatusBadge(report.status)}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3.5">
                       {report.listing?.is_suspended ? (
                         <StatusBadge tone="danger">Đã đình chỉ</StatusBadge>
                       ) : (
                         <span className="text-xs text-slate-400">Bình thường</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-500 whitespace-nowrap">
+                    <td className="px-3 py-3.5 text-xs text-slate-500 whitespace-nowrap">
                       {formatDate(report.created_at)}
                     </td>
-                    <td className="px-4 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => setSelectedReport(report)}
