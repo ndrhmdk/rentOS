@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\EnforcePersonalAccessTokenScope;
 use App\Http\Middleware\LogApiRequest;
+use App\Http\Middleware\PrivateNoStore;
+use App\Http\Middleware\PublicCacheHeaders;
 use App\Monitoring\ErrorCode;
 use App\Monitoring\OpsAlerter;
 use App\Monitoring\ReferenceId;
@@ -23,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->alias(['public.cache' => PublicCacheHeaders::class]);
+        $middleware->prependToGroup('web', PrivateNoStore::class);
+        $middleware->prependToGroup('api', PrivateNoStore::class);
         $middleware->appendToGroup('api', [LogApiRequest::class, EnforcePersonalAccessTokenScope::class]);
         $middleware->appendToPriorityList(AuthenticatesRequests::class, EnforcePersonalAccessTokenScope::class);
         $middleware->statefulApi();
@@ -71,8 +76,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 $response->headers->set('Content-Type', 'application/json');
             }
 
-            if ($request->is('api/v1/admin/*')) {
-                $response->headers->set('Cache-Control', 'private, no-store');
+            if ($request->is('api/*')) {
+                $response->headers->set('Cache-Control', PrivateNoStore::HEADER_VALUE);
             }
 
             if (! $request->is('api/*') || $response->getStatusCode() < 500) {

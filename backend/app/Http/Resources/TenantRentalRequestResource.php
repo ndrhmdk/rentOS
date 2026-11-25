@@ -20,6 +20,7 @@ class TenantRentalRequestResource extends JsonResource
             'desired_end_date' => $this->desired_end_date instanceof \DateTimeInterface ? $this->desired_end_date->format('Y-m-d') : (string) $this->desired_end_date,
             'preferred_unit' => $this->unit_label,
             'status' => $this->status,
+            /** Owner rejection reason, tenant withdrawal reason, or `NO_AVAILABLE_UNIT` when the 15-day rule rejected the request. */
             'outcome_reason' => $this->outcome_reason,
             'updated_at' => $this->updated_at->format('Y-m-d\TH:i:s.uP'),
             'created_at' => $this->created_at->toIso8601String(),

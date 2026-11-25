@@ -126,10 +126,16 @@ export type AmenityCatalogItem = {
   label_vi: string;
 };
 
+/**
+ * Public, user-independent reads. They send no credentials and let the browser
+ * HTTP cache follow the API's Cache-Control/ETag headers (short max-age for
+ * search, always-revalidate for detail). Private account calls go through
+ * `@/lib/http/client`, which stays `no-store`.
+ */
 async function publicGet<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${apiUrl}${path}`, {
     signal,
-    cache: "no-store",
+    cache: "default",
     headers: { Accept: "application/json" },
   });
 

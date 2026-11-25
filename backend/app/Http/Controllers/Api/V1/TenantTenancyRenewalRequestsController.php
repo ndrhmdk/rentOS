@@ -41,8 +41,7 @@ class TenantTenancyRenewalRequestsController extends Controller
                 'created_at' => $item->created_at,
                 'replayed' => ! $result['created'],
             ],
-        ])->setStatusCode($result['created'] ? 201 : 200)
-            ->header('Cache-Control', 'private, no-store');
+        ])->setStatusCode($result['created'] ? 201 : 200);
     }
 
     #[Response(200, description: 'Đề nghị gia hạn đã được rút.', type: 'array{data: array{id: string, tenancy_id: string, status: "CANCELLED", reviewed_at: string, replayed: bool}}')]
@@ -80,6 +79,6 @@ class TenantTenancyRenewalRequestsController extends Controller
                 'blocked_end_date' => $result['tenancy']->blocked_end_date,
                 'replayed' => $result['replayed'],
             ],
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 }

@@ -45,8 +45,7 @@ class OwnerSummaryController extends Controller
         /** @var User $owner */
         $owner = $request->user();
 
-        return response()->json(['data' => $summary->handle($owner)])
-            ->header('Cache-Control', 'private, no-store');
+        return response()->json(['data' => $summary->handle($owner)]);
     }
 
     #[Response(
@@ -63,7 +62,6 @@ class OwnerSummaryController extends Controller
         /** @var User $owner */
         $owner = $request->user();
 
-        return response()->json(['data' => $preview->handle($owner, $storage)])
-            ->header('Cache-Control', 'private, no-store');
+        return response()->json(['data' => $preview->handle($owner, $storage)]);
     }
 }

@@ -40,6 +40,6 @@ class AmenitiesController extends Controller
 
         return response()->json([
             'data' => AmenityCatalog::search($query),
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 }

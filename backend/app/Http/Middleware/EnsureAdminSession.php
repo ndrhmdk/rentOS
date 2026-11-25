@@ -23,9 +23,6 @@ class EnsureAdminSession
         Auth::guard('web')->setUser($current);
         $request->setUserResolver(fn (?string $guard = null): User => $current);
 
-        $response = $next($request);
-        $response->headers->set('Cache-Control', 'private, no-store');
-
-        return $response;
+        return $next($request);
     }
 }

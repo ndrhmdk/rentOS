@@ -116,7 +116,7 @@ class FavouritePropertiesController extends Controller
         Gate::allowIf($this->policy->write(...));
         $this->owned($request)->where('property_id', strtolower($property))->delete();
 
-        return response()->noContent()->header('Cache-Control', 'private, no-store');
+        return response()->noContent();
     }
 
     private function owned(Request $request): Builder
@@ -131,6 +131,6 @@ class FavouritePropertiesController extends Controller
     /** @param array<string, mixed> $data */
     private function privateJson(array $data, int $status = 200): JsonResponse
     {
-        return response()->json(['data' => $data], $status)->header('Cache-Control', 'private, no-store');
+        return response()->json(['data' => $data], $status);
     }
 }

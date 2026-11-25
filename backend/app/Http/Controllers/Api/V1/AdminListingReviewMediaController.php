@@ -53,6 +53,6 @@ class AdminListingReviewMediaController extends Controller
 
         abort_unless(hash_equals(strtolower($photo->sha256), hash('sha256', $body)), 503, 'Nội dung ảnh không khớp với gói tin.');
 
-        return response($body, 200, ['Content-Type' => $photo->mime_type, 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'Content-Disposition' => 'inline']);
+        return response($body, 200, ['Content-Type' => $photo->mime_type, 'X-Content-Type-Options' => 'nosniff', 'Content-Disposition' => 'inline']);
     }
 }

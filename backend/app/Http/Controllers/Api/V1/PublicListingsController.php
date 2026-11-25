@@ -14,11 +14,19 @@ use App\Http\Resources\PublicListingDetailResource;
 use App\Models\Listing;
 use App\Services\ListingCacheService;
 use Carbon\CarbonImmutable;
+use Dedoc\Scramble\Attributes\Header;
+use Dedoc\Scramble\Attributes\HeaderParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class PublicListingsController extends Controller
 {
+    #[HeaderParameter('If-None-Match', 'ETag from a previous response; a match returns 304 with no body.', required: false)]
+    #[Header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60 on success; no-store, private on errors.', example: 'max-age=30, public, stale-while-revalidate=60')]
+    #[Header('ETag', 'Weak validator over the response body. Changes whenever the cached search is invalidated.', example: 'W/"3f786850e387550fdab836ed7e6dc881de23001b"')]
+    #[Header('X-Cache', 'HIT when served from the server-side listing cache, MISS when freshly queried.', example: 'MISS')]
+    #[Response(304, description: 'Not modified: the If-None-Match ETag still matches.')]
     public function index(
         PublicListingIndexRequest $request,
         ListingPresentation $presentation,
@@ -76,6 +84,12 @@ class PublicListingsController extends Controller
         });
     }
 
+    #[HeaderParameter('If-None-Match', 'ETag from a previous response; a match returns 304 with no body.', required: false)]
+    #[Header('Cache-Control', 'public, no-cache: browsers must revalidate every time, so a hidden or suspended listing returns 404 instead of a stale copy.', example: 'no-cache, public')]
+    #[Header('ETag', 'Weak validator over the response body.', example: 'W/"3f786850e387550fdab836ed7e6dc881de23001b"')]
+    #[Header('X-Cache', 'HIT when served from the server-side listing cache, MISS when freshly queried.', example: 'HIT')]
+    #[Response(304, description: 'Not modified: the listing is still public and unchanged.')]
+    #[Response(404, description: 'The listing does not exist or is no longer publicly visible.', type: 'array{message: string}')]
     public function show(
         PublicListingShowRequest $request,
         string $listing,
