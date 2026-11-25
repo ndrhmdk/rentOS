@@ -368,13 +368,9 @@ class PublicListingCacheAndVisibilityTest extends TestCase
         $writer = app(PropertyWriteService::class);
         $writer->update($listing->owner, $property, [
             'expected_content_revision' => $property->content_revision,
-            'title' => 'Tòa nhà mới sửa sang tuyệt đẹp',
-            'summary' => 'Mô tả tóm tắt mới nhất',
+            'name' => 'Tòa nhà mới sửa sang tuyệt đẹp',
             'description' => 'Mô tả chi tiết đã cập nhật qua PropertyWriteService',
             'property_type' => $property->property_type,
-            'room_count' => $property->room_count,
-            'house_rules' => [],
-            'amenities' => ['wifi'],
         ]);
 
         // 4. Verify search cache is MISS with fresh version

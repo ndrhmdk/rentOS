@@ -27,6 +27,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $attributes = [
         'account_status' => 'ACTIVE',
+        'is_admin' => false,
+        'phone' => null,
     ];
 
     /**

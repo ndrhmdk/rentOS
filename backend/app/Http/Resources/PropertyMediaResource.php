@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\PropertyMedia;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,11 +11,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class PropertyMediaResource extends JsonResource
 {
-    public function withResponse(Request $request, JsonResponse $response): void
-    {
-        $response->headers->set('Cache-Control', 'private, no-store');
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -32,8 +26,10 @@ class PropertyMediaResource extends JsonResource
             'revision' => $this->revision,
             'mime_type' => $this->mime_type,
             'size_bytes' => $this->size_bytes,
-            'preview_url' => $this->preview_url,
-            'assigned_unit_ids' => array_values($this->resource->getAttribute('assigned_unit_ids') ?? []),
+            /** Signed preview URL, present only when the controller attached one. */
+            'preview_url' => $this->resource->hasAttribute('preview_url') ? $this->resource->getAttribute('preview_url') : null,
+            /** Unit ids sharing this photo, present only when the controller attached them. */
+            'assigned_unit_ids' => array_values($this->resource->hasAttribute('assigned_unit_ids') ? ($this->resource->getAttribute('assigned_unit_ids') ?? []) : []),
             'created_at' => $this->created_at,
         ];
     }
