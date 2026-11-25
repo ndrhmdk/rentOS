@@ -25,4 +25,22 @@ class RentalRequestFactory extends Factory
             'status' => 'PENDING',
         ];
     }
+
+    /**
+     * Created the given number of days ago (the 15-day rule looks at created_at).
+     */
+    public function agedDays(int $days): static
+    {
+        return $this->state(fn (): array => ['created_at' => now()->subDays($days), 'updated_at' => now()->subDays($days)]);
+    }
+
+    public function withdrawn(): static
+    {
+        return $this->state(fn (): array => ['status' => 'WITHDRAWN', 'closed_at' => now()]);
+    }
+
+    public function rejected(string $reason = 'Không còn phòng phù hợp.'): static
+    {
+        return $this->state(fn (): array => ['status' => 'REJECTED', 'outcome_reason' => $reason, 'closed_at' => now()]);
+    }
 }

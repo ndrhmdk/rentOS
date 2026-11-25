@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         if (! app()->isProduction()) {
             $this->call(BaselineSeeder::class);
+            $this->call(BulkDataSeeder::class);
         }
     }
 }
