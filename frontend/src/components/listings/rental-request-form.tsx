@@ -74,7 +74,9 @@ export function RentalRequestForm({
   const [submitError, setSubmitError] = useState("");
   const lastAttempt = useRef<{ payload: string; operationId: string } | null>(null);
   const [name, setName] = useState(isSignedIn ? user?.name ?? "" : "");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(
+    isSignedIn && user?.phone ? formatPhoneChunks(user.phone) : "",
+  );
   const [message, setMessage] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -85,6 +87,17 @@ export function RentalRequestForm({
   const minMonths = listing.units.find((unit) => unit.id === unitId)?.minimum_rental_months ?? minimumMonths(listing.units);
   const duration = start && end && end >= start ? describeDuration(start, end) : null;
   const calendarIcon = <Image src="/images/rental-request/calendar.svg" alt="" width={12} height={12} />;
+
+  const initializedUserRef = useRef<string | null>(user?.id ?? null);
+
+  useEffect(() => {
+    if (!isSignedIn || !user) return;
+    if (initializedUserRef.current !== user.id) {
+      initializedUserRef.current = user.id;
+      setName(user.name ?? "");
+      setPhone(user.phone ? formatPhoneChunks(user.phone) : "");
+    }
+  }, [isSignedIn, user]);
 
   const todayStr = useMemo(() => {
     const now = new Date();

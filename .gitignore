@@ -9,6 +9,8 @@
 
 # Generated build files
 /frontend/dist/
+/frontend/coverage/
+/.local-reports/
 /backend/storage/*.key
 /supabase/.branches/
 /supabase/.temp/

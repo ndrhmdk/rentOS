@@ -6,6 +6,7 @@ import { ApiError } from "./http/client";
 import { getCurrentUser, logout } from "./auth/api";
 import { AuthProvider, useAuth } from "./auth-context";
 import { getQueryClient } from "./query-provider";
+import { getNewlyCreatedToken, saveNewlyCreatedToken } from "./tokens/new-token-secret";
 
 vi.mock("./auth/api", () => ({
   getCurrentUser: vi.fn(),
@@ -36,9 +37,11 @@ describe("auth context and sign out", () => {
     const user = userEvent.setup();
     const queryClient = getQueryClient();
 
-    // Populate a private query in query cache
+    // Populate a private query in query cache and a newly created token
     queryClient.setQueryData(["private-tenant-requests"], [{ id: "req-1" }]);
     expect(queryClient.getQueryData(["private-tenant-requests"])).toBeTruthy();
+    saveNewlyCreatedToken({ name: "CLI", plainTextToken: "1|secret" });
+    expect(getNewlyCreatedToken()).toEqual({ name: "CLI", plainTextToken: "1|secret" });
 
     vi.mocked(getCurrentUser)
       .mockResolvedValueOnce({
@@ -78,7 +81,8 @@ describe("auth context and sign out", () => {
     // Verify logout API was called
     expect(logout).toHaveBeenCalled();
 
-    // Verify private queries were cleared
+    // Verify private queries and tokens were cleared
     expect(queryClient.getQueryData(["private-tenant-requests"])).toBeUndefined();
+    expect(getNewlyCreatedToken()).toBeNull();
   });
 });
