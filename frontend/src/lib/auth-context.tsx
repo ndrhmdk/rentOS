@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/http/client";
 import { getCurrentUser, logout } from "@/lib/auth/api";
 import { type CurrentUser } from "@/lib/auth/types";
 import { resetReviewPreview } from "./admin-review-store";
+import { clearNewlyCreatedToken } from "./tokens/new-token-secret";
 import { getQueryClient } from "./query-provider";
 
 export type AuthStatus = "loading" | "authenticated" | "guest";
@@ -23,6 +24,7 @@ function markCurrentUserGuest(): void {
   client.setQueryData<CurrentUser | null>(currentUserKey, null);
   client.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] });
   resetReviewPreview();
+  clearNewlyCreatedToken();
 }
 
 interface AuthContextValue {
