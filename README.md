@@ -106,7 +106,7 @@ cd backend && php artisan schedule:work
 
 # Manual execution of scheduled domain jobs:
 php artisan rentals:reject-aged            # FR85: 15-day auto-rejection using real availability
-php artisan tenancies:expire-reservations  # Release expired pending-confirmation holds
+php artisan tenancies:expire-confirmations # Release expired pending-confirmation holds
 ```
 
 ### 5.3 Entity-Relationship Diagram (ERD)
