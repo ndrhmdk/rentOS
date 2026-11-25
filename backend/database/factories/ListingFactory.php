@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Listing;
+use App\Models\Property;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class ListingFactory extends Factory
     public function definition(): array
     {
         return [
+            'property_id' => Property::factory(),
             'client_operation_id' => fake()->uuid(),
             'title' => fake()->sentence(),
             'description' => fake()->paragraph(),

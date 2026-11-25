@@ -142,7 +142,7 @@ describe("listing detail", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Gửi yêu cầu thuê" }));
-    const dialog = screen.getByRole("dialog", { name: "Gửi yêu cầu thuê" });
+    const dialog = await screen.findByRole("dialog", { name: "Gửi yêu cầu thuê" });
     await user.click(
       within(dialog).getByRole("button", { name: "Gửi yêu cầu thuê" }),
     );
@@ -161,7 +161,7 @@ describe("listing detail", () => {
     render(<ListingDetailView listing={listing} isSignedIn />);
 
     await user.click(screen.getByRole("button", { name: "Gửi yêu cầu thuê" }));
-    const dialog = within(screen.getByRole("dialog", { name: "Gửi yêu cầu thuê" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Gửi yêu cầu thuê" }));
     const submit = dialog.getByRole("button", { name: "Gửi yêu cầu thuê" });
     const name = dialog.getByRole("textbox", { name: /Họ và tên liên hệ/ });
     expect(name).toHaveProperty("value", "Mai Nguyễn");
@@ -237,7 +237,7 @@ describe("listing detail", () => {
 
     await user.click(screen.getByRole("button", { name: "Gửi yêu cầu thuê" }));
     await user.click(
-      within(screen.getByRole("dialog")).getByRole("button", {
+      within(await screen.findByRole("dialog")).getByRole("button", {
         name: "Gửi yêu cầu thuê",
       }),
     );
@@ -254,7 +254,7 @@ describe("listing detail", () => {
     ).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Báo cáo" }));
-    const dialog = screen.getByRole("dialog", { name: "Báo cáo tin đăng này" });
+    const dialog = await screen.findByRole("dialog", { name: "Báo cáo tin đăng này" });
     await user.click(
       within(dialog).getByRole("button", { name: "Gửi báo cáo" }),
     );

@@ -44,7 +44,7 @@ export function AuthShell({
               src="/images/auth-hero.png"
               alt="Không gian sống rentOS"
               fill
-              priority
+              preload
               sizes="(min-width: 768px) 450px, 100vw"
               className="object-cover object-center"
             />

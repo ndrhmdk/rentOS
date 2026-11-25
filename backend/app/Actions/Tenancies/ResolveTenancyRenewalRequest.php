@@ -6,6 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -222,6 +223,8 @@ class ResolveTenancyRenewalRequest
                 'response_status' => 200,
                 'created_at' => $now,
             ]);
+
+            app(ListingCacheService::class)->invalidateUnit((string) $context->unit_id);
 
             return $this->result($tenancyId, $renewalRequestId, false);
         });

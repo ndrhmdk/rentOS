@@ -8,6 +8,7 @@ use App\Models\Listing;
 use App\Models\ListingReport;
 use App\Models\Property;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -134,6 +135,9 @@ class ResolveListingReportAction
                             actorId: (string) $admin->id,
                         );
                     }
+
+                    // Same as SuspendListingAction: drop cached public copies after commit.
+                    app(ListingCacheService::class)->invalidateListing((string) $lockedListing->id);
                 }
             }
 

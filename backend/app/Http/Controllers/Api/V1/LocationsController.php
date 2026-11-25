@@ -68,6 +68,6 @@ class LocationsController extends Controller
             ], 503);
         }
 
-        return response()->json($data)->header('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+        return response()->json($data);
     }
 }

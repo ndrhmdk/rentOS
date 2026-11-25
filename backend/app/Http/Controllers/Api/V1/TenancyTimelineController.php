@@ -22,7 +22,7 @@ class TenancyTimelineController extends Controller
 
         return response()->json([
             'data' => $timeline->handle($viewer, $tenancy),
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 
     public function ownerIndex(
@@ -40,6 +40,6 @@ class TenancyTimelineController extends Controller
 
         return response()->json([
             'data' => $tenancies->forOwner($owner),
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 }

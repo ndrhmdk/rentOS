@@ -7,9 +7,12 @@ import { ApiError } from "@/lib/http/client";
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
+// Next's useRouter() returns the same instance on every render; a new object
+// per render would re-run effects that depend on `router` and reload the page.
+const mockRouter = { push: mockPush, replace: mockReplace };
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useRouter: () => mockRouter,
 }));
 
 vi.mock("@/lib/tenancies/api", () => ({

@@ -12,10 +12,13 @@ import type { TenancyTimeline } from "@/lib/tenancies/types";
 import { ApiError } from "@/lib/http/client";
 
 const mockReplace = vi.fn();
+// Next's useRouter() returns the same instance on every render; a new object
+// per render would re-run effects that depend on `router` and reload the page.
+const mockRouter = { replace: mockReplace };
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "tenancy-123" }),
-  useRouter: () => ({ replace: mockReplace }),
+  useRouter: () => mockRouter,
 }));
 
 vi.mock("@/lib/tenancies/api", () => ({

@@ -20,8 +20,7 @@ class PersonalAccessTokensController extends Controller
         abort_unless($user instanceof User && ! ($user->currentAccessToken() instanceof PersonalAccessToken), 403);
 
         return PersonalAccessTokenResource::collection($user->tokens()->latest('created_at')->get())
-            ->toResponse(request())
-            ->header('Cache-Control', 'private, no-store');
+            ->toResponse(request());
     }
 
     public function store(StorePersonalAccessTokenRequest $request): JsonResponse
@@ -41,7 +40,7 @@ class PersonalAccessTokensController extends Controller
             'message' => 'Personal access token created.',
             'data' => (new PersonalAccessTokenResource($token->accessToken))->resolve(),
             'plain_text_token' => $token->plainTextToken,
-        ], 201)->header('Cache-Control', 'private, no-store');
+        ], 201);
     }
 
     public function destroy(string $tokenId): Response
@@ -51,6 +50,6 @@ class PersonalAccessTokensController extends Controller
 
         $user->tokens()->whereKey($tokenId)->firstOrFail()->delete();
 
-        return response()->noContent()->header('Cache-Control', 'private, no-store');
+        return response()->noContent();
     }
 }

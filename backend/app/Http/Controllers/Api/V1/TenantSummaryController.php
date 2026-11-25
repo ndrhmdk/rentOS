@@ -44,7 +44,6 @@ class TenantSummaryController extends Controller
         /** @var User $tenant */
         $tenant = $request->user();
 
-        return response()->json(['data' => $summary->handle($tenant)])
-            ->header('Cache-Control', 'private, no-store');
+        return response()->json(['data' => $summary->handle($tenant)]);
     }
 }

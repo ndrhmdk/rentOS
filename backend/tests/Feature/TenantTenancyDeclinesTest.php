@@ -44,6 +44,10 @@ class TenantTenancyDeclinesTest extends TestCase
         ];
         $url = "/api/v1/tenant/tenancies/{$tenancy->id}/contracts/{$contract->id}/decline";
 
+        $detailUrl = '/api/v1/listings/'.$listing->listingId;
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'MISS');
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'HIT');
+
         $this->actingAs($tenant)->postJson($url, $payload)
             ->assertOk()
             ->assertJsonPath('data.tenancy_id', $tenancy->id)
@@ -51,6 +55,8 @@ class TenantTenancyDeclinesTest extends TestCase
             ->assertJsonPath('data.contract_id', $contract->id)
             ->assertJsonPath('data.reason', $payload['reason'])
             ->assertJsonPath('data.replayed', false);
+
+        $this->getJson($detailUrl)->assertOk()->assertHeader('X-Cache', 'MISS');
 
         $this->assertDatabaseHas('tenancies', [
             'id' => $tenancy->id,

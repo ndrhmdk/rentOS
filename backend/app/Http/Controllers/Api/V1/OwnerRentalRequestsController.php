@@ -51,7 +51,7 @@ class OwnerRentalRequestsController extends Controller
             'counts' => $counts,
             'page' => $results->currentPage(),
             'last_page' => $results->lastPage(),
-        ]])->header('Cache-Control', 'private, no-store');
+        ]]);
     }
 
     #[Response(403, description: 'Tài khoản hoặc phiên không có quyền xem hộp thư.', type: 'array{message: string}')]
@@ -66,7 +66,7 @@ class OwnerRentalRequestsController extends Controller
             ->findOrFail($rentalRequest);
         $this->loadAvailability($item);
 
-        return (new OwnerRentalRequestDetailResource($item))->response()->header('Cache-Control', 'private, no-store');
+        return (new OwnerRentalRequestDetailResource($item))->response();
     }
 
     #[Response(204, description: 'Đã từ chối yêu cầu hoặc phát lại cùng thao tác.')]
@@ -79,7 +79,7 @@ class OwnerRentalRequestsController extends Controller
         $input = $request->validated();
         $close->reject($request->user(), strtolower($rentalRequest), $input['expected_updated_at'], $input['client_operation_id'], $input['reason']);
 
-        return response()->noContent()->header('Cache-Control', 'private, no-store');
+        return response()->noContent();
     }
 
     #[Response(403, description: 'Tài khoản hoặc phiên không có quyền xem hộp thư.', type: 'array{message: string}')]
@@ -158,7 +158,7 @@ class OwnerRentalRequestsController extends Controller
                 'property_policies' => json_decode($rentalRequestData->policies ?? '{}'),
                 'units' => $units,
             ],
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 
     /** @return Builder<RentalRequest> */

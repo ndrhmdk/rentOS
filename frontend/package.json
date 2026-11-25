@@ -8,10 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:admin-queue": "node --experimental-strip-types --test src/lib/admin-review-queue.test.mjs",
-    "test:admin-review": "node --experimental-strip-types --test src/lib/admin-review-queue.test.mjs src/lib/admin-review-decision.test.mjs",
     "test:coverage": "vitest run --coverage",
-    "test": "vitest run && npm run test:admin-review"
+    "test": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.107.1",

@@ -33,6 +33,10 @@ class OwnerTenancyCorrectionsTest extends TestCase
         );
         $url = "/api/v1/owner/tenancies/{$case['tenancy']->id}/correction";
 
+        $detailUrl = '/api/v1/listings/'.$case['listing']->listingId;
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'MISS');
+        $this->getJson($detailUrl)->assertHeader('X-Cache', 'HIT');
+
         $this->actingAs($case['listing']->owner)->post($url, $payload)
             ->assertCreated()
             ->assertJsonPath('data.tenancy_id', $case['tenancy']->id)
@@ -43,6 +47,8 @@ class OwnerTenancyCorrectionsTest extends TestCase
                 $case['contract']->id,
             )
             ->assertJsonPath('data.replayed', false);
+
+        $this->getJson($detailUrl)->assertOk()->assertHeader('X-Cache', 'MISS');
 
         $newContractId = DB::table('tenancy_contracts')
             ->where('tenancy_id', $case['tenancy']->id)

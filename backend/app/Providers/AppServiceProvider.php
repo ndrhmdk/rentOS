@@ -2,11 +2,15 @@
 
 namespace App\Providers;
 
+use App\Monitoring\ReferenceId;
 use App\Notifications\DomainMailer;
 use App\Notifications\LogDomainMailer;
 use App\Notifications\ResendDomainMailer;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
@@ -37,6 +41,34 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureEloquentStrictness();
+    }
+
+    /**
+     * Catch N+1 queries and attribute mistakes before they reach production.
+     *
+     * Outside production every violation throws. In production lazy loading is
+     * still detected, but logged as `ops.lazy_loading` instead of failing the
+     * request, so the slow-query and lazy-loading monitors run side by side.
+     */
+    private function configureEloquentStrictness(): void
+    {
+        $isProduction = $this->app->isProduction();
+
+        Model::preventLazyLoading();
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation) use ($isProduction): void {
+            if (! $isProduction) {
+                throw new LazyLoadingViolationException($model, $relation);
+            }
+
+            Log::warning('ops.lazy_loading', [
+                'model' => $model::class,
+                'relation' => $relation,
+                'reference' => ReferenceId::current(),
+            ]);
+        });
+        Model::preventSilentlyDiscardingAttributes(! $isProduction);
+        Model::preventAccessingMissingAttributes(! $isProduction);
     }
 
     private function configureRateLimiting(): void

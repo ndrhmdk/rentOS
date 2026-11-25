@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { request } from "@/lib/http/client";
 import {
   fetchListings,
   fetchListing,
@@ -28,7 +29,7 @@ describe("listings-api", () => {
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/v1/listings?location=Cau+Giay&page=1"),
-      expect.objectContaining({ cache: "no-store", headers: { Accept: "application/json" } }),
+      expect.objectContaining({ cache: "default", headers: { Accept: "application/json" } }),
     );
     expect(res).toEqual(mockData);
   });
@@ -75,5 +76,46 @@ describe("listings-api", () => {
     vi.mocked(global.fetch).mockResolvedValueOnce(new Response("{}", { status: 500 }));
 
     await expect(fetchListing("err")).rejects.toThrow(ListingsRequestError);
+  });
+});
+
+describe("HTTP cache mode", () => {
+  function stubFetch() {
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(
+        async () =>
+          new Response(JSON.stringify({ data: [], meta: {} }), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("lets the browser cache public discovery reads and sends no credentials", async () => {
+    const fetchMock = stubFetch();
+
+    await fetchListings(new URLSearchParams("location=Hai%20Chau"));
+    await fetchListing("listing-1");
+    await fetchAmenities();
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const [, init] of fetchMock.mock.calls) {
+      expect(init.cache).toBe("default");
+      expect(init.credentials).toBeUndefined();
+    }
+  });
+
+  it("keeps private account requests out of the browser cache", async () => {
+    const fetchMock = stubFetch();
+
+    await request("/api/v1/me");
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.cache).toBe("no-store");
+    expect(init.credentials).toBe("include");
   });
 });

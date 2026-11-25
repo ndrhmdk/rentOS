@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\Unit;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,11 +11,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class UnitResource extends JsonResource
 {
-    public function withResponse(Request $request, JsonResponse $response): void
-    {
-        $response->headers->set('Cache-Control', 'private, no-store');
-    }
-
     /**
      * @return array<string, mixed>
      */

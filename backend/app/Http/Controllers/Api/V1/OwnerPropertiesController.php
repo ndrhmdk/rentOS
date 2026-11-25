@@ -171,8 +171,7 @@ class OwnerPropertiesController extends Controller
                 'media' => (new PropertyMediaResource($result['media']))->resolve($request),
                 'content_revision' => $result['content_revision'],
             ],
-        ], $result['replayed'] ? 200 : 201)
-            ->header('Cache-Control', 'private, no-store');
+        ], $result['replayed'] ? 200 : 201);
     }
 
     public function indexMedia(Request $request, Property $property): JsonResponse
@@ -194,8 +193,7 @@ class OwnerPropertiesController extends Controller
         $this->attachPreviewUrls($media);
 
         return PropertyMediaResource::collection($media)
-            ->response()
-            ->header('Cache-Control', 'private, no-store');
+            ->response();
     }
 
     public function updateGallery(
@@ -211,8 +209,7 @@ class OwnerPropertiesController extends Controller
 
         return PropertyMediaResource::collection($result['media'])
             ->additional(['meta' => ['content_revision' => $result['content_revision']]])
-            ->response()
-            ->header('Cache-Control', 'private, no-store');
+            ->response();
     }
 
     public function updateUnitGallery(
@@ -230,8 +227,7 @@ class OwnerPropertiesController extends Controller
 
         return PropertyMediaResource::collection($result['media'])
             ->additional(['meta' => ['content_revision' => $result['content_revision']]])
-            ->response()
-            ->header('Cache-Control', 'private, no-store');
+            ->response();
     }
 
     public function archiveMedia(

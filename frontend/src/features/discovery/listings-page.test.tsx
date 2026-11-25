@@ -4,11 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ListingSearchResponse } from "./listings-api";
 
 const replace = vi.fn();
+// Next's useRouter() returns the same instance on every render; a new object
+// per render would re-run effects that depend on `router` and reload the page.
+const mockRouter = { replace };
 let query =
   "location=H%E1%BA%A3i%20Ch%C3%A2u&max_rent=4000000&amenities=wifi&page=2";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
+  useRouter: () => mockRouter,
   usePathname: () => "/listings",
   useSearchParams: () => new URLSearchParams(query),
 }));

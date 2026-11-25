@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\PropertyFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +17,8 @@ use Illuminate\Support\Carbon;
  */
 class Property extends Model
 {
-    use HasUuids;
+    /** @use HasFactory<PropertyFactory> */
+    use HasFactory, HasUuids;
 
     protected $table = 'properties';
 

@@ -49,7 +49,7 @@ class OwnerTenancyRenewalRequestsController extends Controller
                 ],
                 'replayed' => $result['replayed'],
             ],
-        ], $result['replayed'] ? 200 : 201)->header('Cache-Control', 'private, no-store');
+        ], $result['replayed'] ? 200 : 201);
     }
 
     #[Response(201, description: 'Đề xuất gia hạn đã được gửi cho người thuê.', type: 'array{data: array{tenancy_id: string, status: string, confirmation_expires_at: string, contract: array{id: string, version_number: int, type: "RENEWAL", start_date: string, end_date: string}, replayed: bool}}')]
@@ -87,7 +87,7 @@ class OwnerTenancyRenewalRequestsController extends Controller
                 ],
                 'replayed' => $result['replayed'],
             ],
-        ], $result['replayed'] ? 200 : 201)->header('Cache-Control', 'private, no-store');
+        ], $result['replayed'] ? 200 : 201);
     }
 
     #[Response(200, description: 'Đề nghị gia hạn đã bị từ chối.', type: 'array{data: array{id: string, tenancy_id: string, status: "REJECTED", reviewed_at: string, review_reason: string, blocked_end_date: string, replayed: bool}}')]
@@ -118,6 +118,6 @@ class OwnerTenancyRenewalRequestsController extends Controller
                 'blocked_end_date' => $result['tenancy']->blocked_end_date,
                 'replayed' => $result['replayed'],
             ],
-        ])->header('Cache-Control', 'private, no-store');
+        ]);
     }
 }

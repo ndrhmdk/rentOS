@@ -1547,7 +1547,8 @@ class PropertyWriteService
 
                 $sortOrder = (int) ($property->media()->max('sort_order') ?? -1) + 1;
 
-                $media = $property->media()->create([
+                // forceCreate keeps the pre-generated id that the storage path is built from.
+                $media = $property->media()->forceCreate([
                     'id' => $mediaId,
                     'unit_id' => $unitId,
                     'uploaded_by' => $owner->id,

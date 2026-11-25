@@ -192,6 +192,21 @@ class PublicListingSearchTest extends TestCase
         );
     }
 
+    public function test_listings_index_rejects_page_sizes_above_the_cap(): void
+    {
+        $this->getJson('/api/v1/listings?per_page=20')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 20);
+
+        $this->getJson('/api/v1/listings?per_page=1000')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('per_page');
+
+        $this->getJson('/api/v1/listings?per_page=0')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('per_page');
+    }
+
     public function test_amenity_catalog_is_public(): void
     {
         $this->getJson('/api/v1/amenities')

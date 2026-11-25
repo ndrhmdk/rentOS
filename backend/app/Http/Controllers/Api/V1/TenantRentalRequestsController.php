@@ -57,7 +57,7 @@ class TenantRentalRequestsController extends Controller
             'counts' => $counts,
             'page' => $results->currentPage(),
             'last_page' => $results->lastPage(),
-        ]])->header('Cache-Control', 'private, no-store');
+        ]]);
     }
 
     #[Response(404, description: 'Không tìm thấy yêu cầu của người thuê.', type: 'array{message: string}')]
@@ -71,7 +71,7 @@ class TenantRentalRequestsController extends Controller
             ->findOrFail($rentalRequest);
         Gate::authorize('view', $item);
 
-        return (new TenantRentalRequestDetailResource($item))->response()->header('Cache-Control', 'private, no-store');
+        return (new TenantRentalRequestDetailResource($item))->response();
     }
 
     #[Response(204, description: 'Đã rút yêu cầu hoặc phát lại cùng thao tác.')]
@@ -90,7 +90,7 @@ class TenantRentalRequestsController extends Controller
             $input['reason'] ?? null,
         );
 
-        return response()->noContent()->header('Cache-Control', 'private, no-store');
+        return response()->noContent();
     }
 
     #[Response(201, description: 'Yêu cầu thuê đã được lưu.', type: 'array{data: array{id: string, status: "PENDING"}}')]
@@ -102,8 +102,7 @@ class TenantRentalRequestsController extends Controller
         $result = $submit->handle($request->user(), $request->validated());
 
         return (new SubmittedRentalRequestResource($result))->response()
-            ->setStatusCode($result['created'] ? 201 : 200)
-            ->header('Cache-Control', 'private, no-store');
+            ->setStatusCode($result['created'] ? 201 : 200);
     }
 
     /** @return Builder<RentalRequest> */

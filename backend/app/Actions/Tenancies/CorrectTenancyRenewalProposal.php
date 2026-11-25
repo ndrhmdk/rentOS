@@ -6,6 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -317,6 +318,8 @@ class CorrectTenancyRenewalProposal
                     'response_status' => 201,
                     'created_at' => $now,
                 ]);
+
+                app(ListingCacheService::class)->invalidateUnit((string) $context->unit_id);
 
                 return $this->result($tenancyId, $contractId, false);
             });

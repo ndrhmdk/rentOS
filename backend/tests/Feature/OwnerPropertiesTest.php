@@ -862,6 +862,8 @@ class OwnerPropertiesTest extends TestCase
             'uploaded_by' => $owner->id,
             'caption' => 'Living room',
         ]);
+        $storagePath = (string) DB::table('property_media')->where('id', $mediaId)->value('storage_path');
+        $this->assertStringStartsWith("properties/{$propertyId}/media/{$mediaId}.", $storagePath);
 
         $this->assertDatabaseHas('properties', [
             'id' => $propertyId,
