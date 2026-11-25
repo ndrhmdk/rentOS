@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Listing;
 use App\Models\User;
+use App\Services\ListingCacheService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -257,6 +258,11 @@ class ListingReportsFlowsTest extends TestCase
             ->postJson("/api/v1/admin/listing-reports/{$reportId}/start-review")
             ->assertOk();
 
+        $cache = app(ListingCacheService::class);
+        $this->getJson("/api/v1/listings/{$published->listingId}")->assertOk();
+        $this->assertNotNull($cache->getDetail($published->listingId));
+        $searchVersion = $cache->getSearchVersion();
+
         $resolveRes = $this->actingAs($admin)->postJson("/api/v1/admin/listing-reports/{$reportId}/resolve", [
             'resolution_summary' => 'Xác minh có dấu hiệu lừa đảo. Đình chỉ tin đăng và hoàn tiền cho người thuê.',
             'internal_notes' => 'Tài khoản ngân hàng trùng với danh sách đen.',
@@ -267,6 +273,11 @@ class ListingReportsFlowsTest extends TestCase
         $resolveRes->assertOk()
             ->assertJsonPath('data.status', 'RESOLVED')
             ->assertJsonPath('data.listing.is_suspended', true);
+
+        // The cached public copies are dropped, exactly as a direct suspension does.
+        $this->assertNull($cache->getDetail($published->listingId));
+        $this->assertGreaterThan($searchVersion, $cache->getSearchVersion());
+        $this->getJson("/api/v1/listings/{$published->listingId}")->assertNotFound();
 
         // Verify listing is suspended
         $listing = Listing::find($published->listingId);
