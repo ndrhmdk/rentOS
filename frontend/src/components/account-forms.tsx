@@ -122,7 +122,7 @@ export function AccountForm({ mode }: { mode: AuthMode }) {
         ) {
           friendlyMessage =
             "Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.";
-        } else if (error.errors) {
+        } else if (Object.keys(error.errors ?? {}).length > 0) {
           for (const [field, msgs] of Object.entries(error.errors)) {
             const rawMsg = msgs[0] ?? "";
             if (rawMsg.includes("already been taken")) {
