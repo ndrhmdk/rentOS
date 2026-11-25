@@ -41,6 +41,7 @@ Capture rules for every replacement: production build (`next build && next start
 
 Recaptured: 01, 02, 03, 04, 05, 06, 06b, 08, 09, 10, 11, 12, 14.
 Kept: 13 (Telescope), 15 (Lighthouse mobile), 16 (Lighthouse desktop).
-Still missing: 07 CSRF, 17 revoked-token 401, 18 Netdata, 19/20 coverage, 21 admin dashboard, 22 ERD.
+New: 07 CSRF, 17 revoked-token 401, 19/20 coverage, 21 admin dashboard, 22 ERD.
+Still missing: 18 Netdata. It runs on the VPS host (see `infrastructure/netdata/README.md`); it cannot be captured from the local machine without misrepresenting the environment, so take it from the VPS dashboard through the SSH tunnel and trigger one threshold alert.
 
 Known leftovers: ui images 05/10 use demo data (property type "Nhà" for an apartment name; token has only `favourites:read`); the screenshots were taken with a puppeteer-driven Chrome, flows (report, approve, publish, resolve+suspend) were done through the real UI.

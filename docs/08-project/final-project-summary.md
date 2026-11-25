@@ -151,6 +151,21 @@ Bảng dưới đây dùng đúng nhãn của đề bài gốc; chi tiết đầ
 | :---: | :---: |
 | ![Telescope Mail](../06-acceptance/evidence/ui/13-mail-telescope.png) | ![Scramble OpenAPI](../06-acceptance/evidence/ui/14-openapi-scramble.png) |
 
+### 7.3b. Bằng chứng bảo mật, kiểm thử và dữ liệu
+| CSRF hợp lệ / bị từ chối (`419` / `422` / `201`) | Token theo scope: cho phép, từ chối, thu hồi (`200` / `403` / `401`) |
+| :---: | :---: |
+| ![CSRF](../06-acceptance/evidence/ui/07-csrf-valid-and-rejected.png) | ![Token 401](../06-acceptance/evidence/ui/17-token-401-revoked.png) |
+
+| Coverage Backend (`94.2%`) | Coverage Frontend (`75.8%`) |
+| :---: | :---: |
+| ![Coverage backend](../06-acceptance/evidence/ui/19-coverage-backend.png) | ![Coverage frontend](../06-acceptance/evidence/ui/20-coverage-frontend.png) |
+
+| Bảng điều khiển Admin (`/admin`) | ERD (render từ `database-schema.mmd`) |
+| :---: | :---: |
+| ![Admin dashboard](../06-acceptance/evidence/ui/21-admin-dashboard.png) | ![ERD](../06-acceptance/evidence/ui/22-erd.png) |
+
+> Ảnh `07` và `17` là kết quả phản hồi thật từ API local, được dựng lại thành ảnh; ảnh `19` là phần cuối output thật của `php artisan test --coverage`.
+
 ### 7.4. Báo cáo Hiệu năng Lighthouse (Production `rentos.io.vn`)
 - **Lần đo 1 — mobile (`2026-11-25 20:30:56`):** Performance **94** · Accessibility **96** · Best Practices **96** · SEO **100**
 - **Lần đo 2 — desktop (`2026-11-25 20:32:00`):** Performance **100** · Accessibility **96** · Best Practices **96** · SEO **100**
