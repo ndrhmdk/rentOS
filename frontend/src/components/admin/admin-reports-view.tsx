@@ -135,6 +135,23 @@ export function AdminReportsView() {
     }
   }
 
+  function patchSelectedListingSuspension(
+    isSuspended: boolean,
+    reason: string | null,
+  ) {
+    setSelectedReport((current) => {
+      if (!current?.listing) return current;
+      return {
+        ...current,
+        listing: {
+          ...current.listing,
+          is_suspended: isSuspended,
+          suspension_reason: reason,
+        },
+      };
+    });
+  }
+
   async function handleExecuteAction(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedReport || !actionType) return;
@@ -144,7 +161,9 @@ export function AdminReportsView() {
     try {
       if (actionType === "RESOLVE") {
         if (!resolutionSummary.trim()) {
-          setActionError("Vui lòng nhập tóm tắt kết quả xử lý gửi cho người báo cáo.");
+          setActionError(
+            "Vui lòng nhập tóm tắt kết quả xử lý gửi cho người báo cáo.",
+          );
           setSubmittingAction(false);
           return;
         }
@@ -157,13 +176,19 @@ export function AdminReportsView() {
           resolution_summary: resolutionSummary.trim(),
           internal_notes: internalNotes.trim() || undefined,
           suspend_listing: suspendListing,
-          suspension_reason: suspendListing ? suspensionReason.trim() : undefined,
+          suspension_reason: suspendListing
+            ? suspensionReason.trim()
+            : undefined,
         });
-        setSelectedReport(res.data ?? (res as unknown as AdminListingReport));
+        setSelectedReport(
+          res.data ?? (res as unknown as AdminListingReport),
+        );
         setActionSuccess("Báo cáo đã được giải quyết thành công.");
       } else if (actionType === "DISMISS") {
         if (!resolutionSummary.trim()) {
-          setActionError("Vui lòng nhập lý do bác bỏ gửi cho người báo cáo.");
+          setActionError(
+            "Vui lòng nhập lý do bác bỏ gửi cho người báo cáo.",
+          );
           setSubmittingAction(false);
           return;
         }
@@ -171,7 +196,9 @@ export function AdminReportsView() {
           resolution_summary: resolutionSummary.trim(),
           internal_notes: internalNotes.trim() || undefined,
         });
-        setSelectedReport(res.data ?? (res as unknown as AdminListingReport));
+        setSelectedReport(
+          res.data ?? (res as unknown as AdminListingReport),
+        );
         setActionSuccess("Báo cáo đã được bác bỏ thành công.");
       } else if (actionType === "SUSPEND") {
         if (!directReason.trim()) {
@@ -179,7 +206,15 @@ export function AdminReportsView() {
           setSubmittingAction(false);
           return;
         }
-        await suspendAdminListing(selectedReport.listing_id, directReason.trim());
+        const reason = directReason.trim();
+        const res = await suspendAdminListing(
+          selectedReport.listing_id,
+          reason,
+        );
+        patchSelectedListingSuspension(
+          res.data?.is_suspended ?? true,
+          res.data?.suspension_reason ?? reason,
+        );
         setActionSuccess("Tin đăng đã được đình chỉ thành công.");
       } else if (actionType === "RESTORE") {
         if (!directReason.trim()) {
@@ -187,7 +222,14 @@ export function AdminReportsView() {
           setSubmittingAction(false);
           return;
         }
-        await restoreAdminListing(selectedReport.listing_id, directReason.trim());
+        const res = await restoreAdminListing(
+          selectedReport.listing_id,
+          directReason.trim(),
+        );
+        patchSelectedListingSuspension(
+          res.data?.is_suspended ?? false,
+          null,
+        );
         setActionSuccess("Tin đăng đã được khôi phục thành công.");
       }
 

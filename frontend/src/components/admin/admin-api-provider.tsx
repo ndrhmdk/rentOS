@@ -88,22 +88,27 @@ export function AdminApiProvider({ children }: { children: ReactNode }) {
       notFound();
     }
 
+    // Keep {children} mounted (hidden) so Next.js can validate
+    // instant navigation for nested admin segments.
     return (
-      <div
-        role="alert"
-        className="mx-auto my-12 max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-800"
-      >
-        <p className="font-semibold">
-          Không thể tải bảng điều khiển quản trị. Vui lòng thử lại.
-        </p>
-        <button
-          type="button"
-          onClick={refresh}
-          className="mt-4 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+      <Context.Provider value={{ dashboard: null, revision, refresh }}>
+        <div
+          role="alert"
+          className="mx-auto my-12 max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-800"
         >
-          Thử lại
-        </button>
-      </div>
+          <p className="font-semibold">
+            Không thể tải bảng điều khiển quản trị. Vui lòng thử lại.
+          </p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="mt-4 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+          >
+            Thử lại
+          </button>
+        </div>
+        <div hidden>{children}</div>
+      </Context.Provider>
     );
   }
 
@@ -118,13 +123,21 @@ export function AdminApiProvider({ children }: { children: ReactNode }) {
       {dashboard ? (
         children
       ) : (
-        <div
-          role="status"
-          aria-busy="true"
-          className="mx-auto my-12 max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500"
-        >
-          Đang tải bảng điều khiển quản trị…
-        </div>
+        <>
+          <div
+            role="status"
+            aria-busy="true"
+            className="mx-auto my-12 max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500"
+          >
+            Đang tải bảng điều khiển quản trị…
+          </div>
+          {/*
+            Keep the route segment in the tree while the dashboard
+            loads. Omitting children triggers Next.js
+            instant-unrendered-segment on /admin/*.
+          */}
+          <div hidden>{children}</div>
+        </>
       )}
     </Context.Provider>
   );
