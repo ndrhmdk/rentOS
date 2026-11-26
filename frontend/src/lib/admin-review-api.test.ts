@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  adaptAdminPackage,
   adminMediaUrl,
   decideAdminPackage,
   getAdminDashboard,
@@ -102,5 +103,61 @@ describe("admin-review-api", () => {
     );
     expect(waitingLabel(null)).toBe("Chưa gửi duyệt");
     expect(waitingLabel(new Date().toISOString())).toBe("Dưới 1 giờ");
+  });
+
+  it("adapts AdminPackageDto into ReviewPackage with amenities, policies, and units", () => {
+    const dto = {
+      id: "lst-1",
+      title: "Studio Han River",
+      description: "Full nội thất",
+      moderation_status: "PENDING",
+      publication_status: "DRAFT",
+      submitted_at: "2026-11-25T10:00:00Z",
+      submitted_revision: 2,
+      submitted_content_revision: 2,
+      approved_content_revision: null,
+      reviewed_at: null,
+      review_reason: null,
+      reviewer: null,
+      snapshot_token: "snap-2",
+      cover_media_id: "m-1",
+      owner: { id: "o-1", name: "Minh Tuan", email: "owner@test", other_listings_count: 1 },
+      property: {
+        id: "p-1",
+        name: "Han River House",
+        address_line: "120 Bạch Đằng",
+        ward: "Hải Châu",
+        district: null,
+        city: "Đà Nẵng",
+        content_revision: 1,
+        shared_amenities: { standard: { wifi: { enabled: true } }, custom: ["Ban công"] },
+        policies: { defaults: { pets: "NOT_ALLOWED", smoking: true }, pets: "NEGOTIABLE" },
+      },
+      units: [
+        {
+          id: "u-1",
+          label: "Phòng 101",
+          area_m2: "35",
+          max_occupants: 2,
+          advertised_monthly_rent: "8500000",
+          deposit: "8500000",
+          minimum_rental_months: 6,
+          floor: 2,
+          bathroom_arrangement: "PRIVATE",
+          policy_overrides: { smoking: "NOT_ALLOWED" },
+        },
+      ],
+      media: [{ id: "m-1", unit_id: null, caption: "Mặt tiền", sort_order: 1, mime_type: "image/png", size_bytes: 1024, url: "/m/1" }],
+      audit: [],
+    } as unknown as AdminPackageDto;
+
+    const adapted = adaptAdminPackage(dto);
+    expect(adapted.address).toBe("120 Bạch Đằng, Hải Châu, Đà Nẵng");
+    expect(adapted.amenities).toEqual(["Wi-Fi", "Ban công"]);
+    expect(adapted.policies).toContain("Thú cưng: Không cho phép");
+    expect(adapted.policies).toContain("Thú cưng: Thỏa thuận");
+    expect(adapted.cover).toBe("Mặt tiền");
+    expect(adapted.units[0]?.bathroom).toBe("Phòng tắm riêng");
+    expect(adapted.units[0]?.note).toContain("Tầng 2");
   });
 });
