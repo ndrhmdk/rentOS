@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/http/client";
 import {
   getAdminListingReports,
   startAdminReportReview,
+  suspendAdminListing,
   type AdminListingReport,
   type PaginatedResponse,
 } from "@/lib/reports-api";
@@ -101,5 +102,60 @@ describe("AdminReportsView", () => {
     await waitFor(() => {
       expect(startAdminReportReview).toHaveBeenCalledWith("rep-1");
     });
+  });
+
+  it("updates detail modal after direct suspend so restore is offered", async () => {
+    vi.mocked(getAdminListingReports).mockResolvedValue({
+      data: [sampleAdminReport],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 1,
+      },
+    } as unknown as PaginatedResponse<AdminListingReport>);
+    vi.mocked(suspendAdminListing).mockResolvedValue({
+      message: "Tin đăng đã được đình chỉ thành công.",
+      data: {
+        id: "lst-1",
+        is_suspended: true,
+        suspension_reason: "Nội dung sai lệch",
+      },
+    });
+
+    render(<AdminReportsView />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Chi tiết" }));
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Đình chỉ tin đăng này",
+      }),
+    );
+
+    fireEvent.change(
+      screen.getByPlaceholderText("Nhập lý do chi tiết..."),
+      { target: { value: "Nội dung sai lệch" } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Xác nhận thực hiện" }),
+    );
+
+    await waitFor(() => {
+      expect(suspendAdminListing).toHaveBeenCalledWith(
+        "lst-1",
+        "Nội dung sai lệch",
+      );
+    });
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Khôi phục tin đăng",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", {
+        name: "Đình chỉ tin đăng này",
+      }),
+    ).toBeNull();
   });
 });

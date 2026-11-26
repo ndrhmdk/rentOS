@@ -196,7 +196,7 @@ function SummaryCards({ data, nextProposal }: { data: TenantSummary; nextProposa
   const { counts, upcoming_tenancy: upcoming } = data;
   const cards: { title: string; value: string | number; href: string; action: string; icon: keyof typeof iconDimensions }[] = [
     {
-      title: "Đang chờ bạn xác nhận", value: `${counts.awaiting_confirmation} hợp đồng`, href: nextProposal?.href ?? contractPath,
+      title: "Hợp đồng chờ bạn xác nhận", value: counts.awaiting_confirmation, href: nextProposal?.href ?? contractPath,
       action: nextProposal ? `${timeRemaining(nextProposal.expires_at)} · Xem xét` : "Xem danh sách hợp đồng", icon: "confirmation",
     },
     { title: "Yêu cầu đang chờ", value: counts.pending_rental_requests, href: requestPath, action: "Xem tất cả yêu cầu", icon: "request" },

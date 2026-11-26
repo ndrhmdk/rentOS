@@ -206,6 +206,10 @@
   font-size: 15px;
   line-height: 22px;
 }
+.admin-navItem > span:not(.admin-navIcon):not(.admin-count) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .admin-navItem:disabled {
   opacity: 1;
   cursor: not-allowed;

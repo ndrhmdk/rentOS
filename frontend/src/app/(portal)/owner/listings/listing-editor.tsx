@@ -425,7 +425,7 @@ export function ListingEditor({
     <div className="space-y-5">
       <Link
         href="/owner/listings"
-        className="text-sm font-semibold text-[#3368a0] hover:underline"
+        className="inline-block text-sm font-semibold text-[#3368a0] hover:underline"
       >
         ← Danh sách tin đăng
       </Link>
