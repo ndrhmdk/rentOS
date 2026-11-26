@@ -266,20 +266,12 @@ export const TENANT_PORTAL_CONFIG: PortalConfig = {
       id: "tenant-contracts",
       name: "Căn hộ và hợp đồng",
       href: "/tenant/contracts",
-      badge: {
-        count: "1",
-        color: "orange",
-      },
       icon: ContractsIcon,
     },
     {
       id: "tenant-notifications",
       name: "Thông báo",
       href: "/tenant/notifications",
-      badge: {
-        count: "2",
-        color: "blue",
-      },
       icon: NotificationsIcon,
     },
     {
@@ -324,10 +316,6 @@ export const OWNER_PORTAL_CONFIG: PortalConfig = {
       id: "owner-listings",
       name: "Tin đăng",
       href: "/owner/listings",
-      badge: {
-        count: "1",
-        color: "orange",
-      },
       icon: ListingsIcon,
     },
     {
@@ -340,10 +328,6 @@ export const OWNER_PORTAL_CONFIG: PortalConfig = {
       id: "owner-tenancies",
       name: "Kỳ thuê và hợp đồng",
       href: "/owner/tenancies",
-      badge: {
-        count: "2",
-        color: "blue",
-      },
       icon: TenanciesCalendarIcon,
     },
     {

@@ -12,12 +12,11 @@ import type { TenancyTimeline } from "@/lib/tenancies/types";
 import { ApiError } from "@/lib/http/client";
 
 const mockReplace = vi.fn();
-// Next's useRouter() returns the same instance on every render; a new object
-// per render would re-run effects that depend on `router` and reload the page.
+const mockParams = { id: "tenancy-123" };
 const mockRouter = { replace: mockReplace };
 
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ id: "tenancy-123" }),
+  useParams: () => mockParams,
   useRouter: () => mockRouter,
 }));
 
@@ -173,8 +172,7 @@ describe("TenancyTimelinePage", () => {
       expect(btn.hasAttribute("disabled")).toBe(false);
     });
 
-    const submitDeclineBtn = screen.getByRole("button", { name: "Gửi từ chối" });
-    fireEvent.click(submitDeclineBtn);
+    fireEvent.click(screen.getByRole("button", { name: "Gửi từ chối" }));
 
     await waitFor(() => {
       expect(declineTenantTenancyContract).toHaveBeenCalledWith(

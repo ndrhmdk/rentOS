@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { ApiError } from "@/lib/http/client";
 import {
   adminPreviewMode,
   getAdminDashboard,
@@ -80,7 +81,33 @@ export function AdminApiProvider({ children }: { children: ReactNode }) {
   }
 
   const current = state?.accountId === user?.id ? state : null;
-  if (current?.error || (current && !current.data)) {
+  if (current?.error) {
+    const errStatus =
+      current.error instanceof ApiError ? current.error.status : 0;
+    if (errStatus === 401 || errStatus === 403 || errStatus === 404) {
+      notFound();
+    }
+
+    return (
+      <div
+        role="alert"
+        className="mx-auto my-12 max-w-md rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-800"
+      >
+        <p className="font-semibold">
+          Không thể tải bảng điều khiển quản trị. Vui lòng thử lại.
+        </p>
+        <button
+          type="button"
+          onClick={refresh}
+          className="mt-4 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+        >
+          Thử lại
+        </button>
+      </div>
+    );
+  }
+
+  if (current && !current.data) {
     notFound();
   }
 
@@ -88,7 +115,17 @@ export function AdminApiProvider({ children }: { children: ReactNode }) {
 
   return (
     <Context.Provider value={{ dashboard, revision, refresh }}>
-      {dashboard ? children : <div hidden>{children}</div>}
+      {dashboard ? (
+        children
+      ) : (
+        <div
+          role="status"
+          aria-busy="true"
+          className="mx-auto my-12 max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500"
+        >
+          Đang tải bảng điều khiển quản trị…
+        </div>
+      )}
     </Context.Provider>
   );
 }

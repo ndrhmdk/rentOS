@@ -33,6 +33,7 @@ export function ReporterReportsView() {
               : [];
           setReports(list);
           setMeta(response && "meta" in response ? response.meta : null);
+          setError(null);
           setLoading(false);
         }
       } catch {
@@ -131,7 +132,11 @@ export function ReporterReportsView() {
           <p className="text-sm font-medium text-rose-800">{error}</p>
           <button
             type="button"
-            onClick={() => setReloadKey((k) => k + 1)}
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              setReloadKey((k) => k + 1);
+            }}
             className="mt-3 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
           >
             Thử lại
@@ -152,9 +157,10 @@ export function ReporterReportsView() {
       ) : (
         <div className="space-y-4">
           {reports.map((report) => (
-            <div
+            <button
+              type="button"
               key={report.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md cursor-pointer"
+              className="w-full text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3368a0]"
               onClick={() => setSelectedReport(report)}
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
@@ -195,7 +201,7 @@ export function ReporterReportsView() {
                   </div>
                 ) : null}
               </div>
-            </div>
+            </button>
           ))}
 
           {meta && meta.last_page > 1 ? (
@@ -229,20 +235,27 @@ export function ReporterReportsView() {
       {/* Detail Dialog */}
       {selectedReport ? (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reporter-report-dialog-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setSelectedReport(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setSelectedReport(null);
+          }}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl space-y-4"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Chi tiết báo cáo vi phạm</h3>
+                <h3 id="reporter-report-dialog-title" className="text-lg font-bold text-slate-900">Chi tiết báo cáo vi phạm</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Mã báo cáo: {selectedReport.id}</p>
               </div>
               <button
                 type="button"
+                aria-label="Đóng chi tiết báo cáo"
                 onClick={() => setSelectedReport(null)}
                 className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
               >

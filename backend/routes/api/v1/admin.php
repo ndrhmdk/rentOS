@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\V1\AdminDashboardController;
 use App\Http\Controllers\Api\V1\AdminListingReviewMediaController;
 use App\Http\Controllers\Api\V1\AdminListingReviewsController;
-use App\Http\Controllers\Api\V1\AdminListingsController;
 use App\Http\Middleware\EnsureAdminSession;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +13,4 @@ Route::middleware(['auth:sanctum', 'throttle:api', EnsureAdminSession::class])->
     Route::post('/listing-reviews/{listing}/approve', [AdminListingReviewsController::class, 'approve'])->whereUuid('listing')->name('listing-reviews.approve');
     Route::post('/listing-reviews/{listing}/reject', [AdminListingReviewsController::class, 'reject'])->whereUuid('listing')->name('listing-reviews.reject');
     Route::get('/listing-reviews/{listing}/media/{media}', AdminListingReviewMediaController::class)->whereUuid(['listing', 'media'])->name('listing-reviews.media');
-    Route::get('/listings/pending', [AdminListingsController::class, 'pending'])->name('listings.pending');
-    Route::post('/listings/{listing}/approve', [AdminListingsController::class, 'approve'])->name('listings.approve');
-    Route::post('/listings/{listing}/reject', [AdminListingsController::class, 'reject'])->name('listings.reject');
 });

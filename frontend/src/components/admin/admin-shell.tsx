@@ -216,22 +216,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               {adminPreviewMode ? 2 : (dashboard?.open_reports_count ?? 0)}
             </span>
           </Link>
-          <button
-            type="button"
-            className="admin-navItem"
-            disabled
-            title="Danh sách tin đăng chưa được triển khai"
-          >
-            <span className="admin-navIcon">
-              <AdminIcon name="list" />
-            </span>
-            <span>Danh sách tin đăng</span>
-          </button>
         </nav>
         <div className="admin-sidebarBottom">
-          <p className="admin-navigationNote">
-            Các mục chưa triển khai đang tạm khóa.
-          </p>
           <Link href="/" className="admin-exitLink">
             <AdminIcon name="back" />
             Thoát chế độ Admin
