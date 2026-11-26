@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/http/client";
-import type { OwnerListing, OwnerProperty } from "@/lib/owner/types";
+import type {
+  OwnerProperty,
+  OwnerPropertyListingSummary,
+} from "@/lib/owner/types";
 import { getOwnerProperties } from "@/lib/owner/api";
 
-function statusLabel(listing: OwnerListing): string {
+function statusLabel(listing: OwnerPropertyListingSummary): string {
   if (listing.admin_suspended_at) return "Tạm ẩn bởi quản trị viên";
-  if (listing.archived_at) return "Đã lưu trữ";
   if (listing.publication_status === "PUBLISHED") return "Đang hiển thị";
   if (listing.publication_status === "HIDDEN") return "Đã ẩn";
   if (listing.moderation_status === "PENDING") return "Đang chờ duyệt";
@@ -22,7 +24,7 @@ export default function OwnerListingsPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<OwnerProperty[]>([]);
   const [listingByProperty, setListingByProperty] = useState<
-    Record<string, OwnerListing | null>
+    Record<string, OwnerPropertyListingSummary | null>
   >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,17 +90,26 @@ export default function OwnerListingsPage() {
 
   return (
     <section className="mx-auto w-full max-w-5xl px-1 py-4 sm:px-2 sm:py-6">
-      <header className="mb-6 sm:mb-8">
-        <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          CỔNG CHỦ NHÀ
-        </span>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Tin đăng
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Soạn nội dung riêng cho tin đăng. Gửi duyệt và công khai là hai bước
-          độc lập với việc quản lý bất động sản.
-        </p>
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            CỔNG CHỦ NHÀ
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            Tin đăng
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-600">
+            Soạn nội dung và theo dõi trạng thái xét duyệt, hiển thị của tin đăng.
+          </p>
+        </div>
+        {!loading && !error && firstWithoutListing && (
+          <Link
+            href={`/owner/listings/new?propertyId=${firstWithoutListing}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#3368a0] px-5 text-sm font-semibold text-white"
+          >
+            Tạo bài đăng
+          </Link>
+        )}
       </header>
       {loading ? (
         <div className="animate-pulse space-y-4" aria-busy="true">
@@ -128,21 +139,7 @@ export default function OwnerListingsPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-sm text-slate-600">
-              Theo dõi xét duyệt và trạng thái hiển thị riêng với dữ liệu bất
-              động sản.
-            </p>
-            {firstWithoutListing && (
-              <Link
-                href={`/owner/listings/new?propertyId=${firstWithoutListing}`}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#3368a0] px-5 text-sm font-semibold text-white"
-              >
-                Tạo bài đăng
-              </Link>
-            )}
-          </div>
+        <div className="space-y-3">
           <div className="flex flex-wrap gap-2" role="tablist">
             {(
               [
@@ -170,12 +167,12 @@ export default function OwnerListingsPage() {
                 <table className="w-full min-w-[860px] text-left text-sm">
                   <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
                     <tr>
-                      <th className="px-4 py-4">Tiêu đề</th>
-                      <th className="px-4 py-4">Bất động sản</th>
-                      <th className="px-4 py-4">Trạng thái</th>
-                      <th className="px-4 py-4">Căn đủ điều kiện hôm nay</th>
-                      <th className="px-4 py-4">Cập nhật</th>
-                      <th className="px-4 py-4">Thao tác</th>
+                      <th className="px-4 py-3">Tiêu đề</th>
+                      <th className="px-4 py-3">Bất động sản</th>
+                      <th className="px-4 py-3">Trạng thái</th>
+                      <th className="px-4 py-3">Căn sẵn sàng</th>
+                      <th className="px-4 py-3">Cập nhật</th>
+                      <th className="px-4 py-3">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -192,28 +189,28 @@ export default function OwnerListingsPage() {
                         : `/owner/listings/new?propertyId=${item.id}`;
                       return (
                         <tr key={item.id}>
-                          <td className="px-4 py-4 font-semibold text-slate-900">
+                          <td className="px-4 py-3 font-semibold text-slate-900">
                             {listing?.title || "Chưa có bản nháp"}
                           </td>
-                          <td className="px-4 py-4 text-slate-700">
+                          <td className="px-4 py-3 text-slate-700">
                             {item.name}
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3">
                             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                               {listing ? statusLabel(listing) : "Chưa có tin"}
                             </span>
                           </td>
-                          <td className="px-4 py-4 text-slate-700">
+                          <td className="px-4 py-3 text-slate-700">
                             {eligible} /{" "}
                             {item.units?.filter((unit) => !unit.archived_at)
                               .length ?? 0}
                           </td>
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="px-4 py-3 text-slate-600">
                             {new Date(item.updated_at).toLocaleDateString(
                               "vi-VN",
                             )}
                           </td>
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-3">
                             <Link
                               href={href}
                               className="font-semibold text-[#3368a0] hover:underline"
