@@ -111,9 +111,9 @@ Bảng dưới đây dùng đúng nhãn của đề bài gốc; chi tiết đầ
 | :--- | :--- | :--- |
 | **T1** Git workflow | Repo GitHub, commit message, Issues, PR + CI | [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml), `planning/issues/`, topic branches `feat/*`, `fix/*` |
 | **T2** Database | Migration, seeder, factory | [`database-schema.mmd`](../07-architecture/database-schema.mmd), [`data-dictionary.md`](../07-architecture/data-dictionary.md), `backend/database/seeders/` |
-| **T3** UI & chức năng | UI (Next.js thay Blade/Livewire, cần giảng viên duyệt), đăng ký/đăng nhập, CSRF + validation, tìm kiếm/lọc, API ngoài (Supabase Storage, Resend), test >70% | [`README.md`](../../README.md), [`authentication-setup.md`](../07-architecture/authentication-setup.md), ảnh `01`, `02`, `10`, `13` |
+| **T3** UI & chức năng | UI (Next.js thay Blade/Livewire, cần giảng viên duyệt), đăng ký/đăng nhập, CSRF + validation, tìm kiếm/lọc, API ngoài (Supabase Storage, Resend), test >70% | [`README.md`](../../README.md), ảnh `01`, `02`, `10`, `13`, **`23` (Supabase thật)**, **`24` (Resend delivered)**, coverage `19`/`20` |
 | **T4** REST API | Resource controller, Sanctum token + scopes, Scramble, test >70% | [`api-design.md`](../07-architecture/api-design.md), ảnh `10`, `14`, backend coverage `94.2%` |
-| **T5** Logging & Monitoring | Telescope, error logging, slow-query alert, giám sát server | [`observability.md`](../05-non-functional-requirements/observability.md), `infrastructure/netdata/`, ảnh `13` |
+| **T5** Logging & Monitoring | Telescope, error logging, slow-query alert, giám sát server | [`observability.md`](../05-non-functional-requirements/observability.md), `infrastructure/netdata/`, ảnh `13`, **`18`/`18b` (Netdata dashboard + Discord alert)** |
 | **T6** Hiệu năng | Async/queue, tải tài nguyên, caching, antipattern | [`performance-evidence.md`](../07-architecture/performance-evidence.md), [`query-evidence.md`](../07-architecture/query-evidence.md), Lighthouse ảnh `15`, `16` |
 
 ---
@@ -164,7 +164,16 @@ Bảng dưới đây dùng đúng nhãn của đề bài gốc; chi tiết đầ
 | :---: | :---: |
 | ![Admin dashboard](../06-acceptance/evidence/ui/21-admin-dashboard.png) | ![ERD](../06-acceptance/evidence/ui/22-erd.png) |
 
-> Ảnh `07` và `17` là kết quả phản hồi thật từ API local, được dựng lại thành ảnh; ảnh `19` là phần cuối output thật của `php artisan test --coverage`.
+### 7.3c. Tích hợp dịch vụ ngoài thật (T3f) & giám sát server (T5d)
+| Supabase Storage — bucket `property-media` có object upload thật | Resend — email xác minh đã **Delivered** |
+| :---: | :---: |
+| ![Supabase Storage objects](../06-acceptance/evidence/ui/23-supabase-storage-objects.png) | ![Resend delivered inbox](../06-acceptance/evidence/ui/24-resend-inbox.png) |
+
+| Netdata VPS dashboard (CPU, RAM, disk, network) | Netdata alert đã gửi Discord (`rentos_ram_usage`) |
+| :---: | :---: |
+| ![Netdata dashboard](../06-acceptance/evidence/ui/18-netdata-dashboard.png) | ![Netdata Discord alert](../06-acceptance/evidence/ui/18b-netdata-alert.png) |
+
+> Ảnh `07` và `17` là kết quả phản hồi thật từ API local, được dựng lại thành ảnh; ảnh `19` là phần cuối output thật của `php artisan test --coverage`. Ảnh `23`/`24` là bằng chứng gọi Supabase Storage và Resend trên môi trường thật (không dùng `Http::fake`). Ảnh `18`/`18b` chụp từ Netdata trên VPS host qua SSH tunnel và Discord webhook.
 
 ### 7.4. Báo cáo Hiệu năng Lighthouse (Production `rentos.io.vn`)
 - **Lần đo 1 — mobile (`2026-11-25 20:30:56`):** Performance **94** · Accessibility **96** · Best Practices **96** · SEO **100**

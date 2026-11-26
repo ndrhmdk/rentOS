@@ -21,14 +21,16 @@ Capture rules for every replacement: production build (`next build && next start
 | 15-lighthouse-rentos-20-30-56.png | production Lighthouse | Keep, relabel | Mobile run | State "mobile" in summary |
 | 16-lighthouse-rentos-20-32-00.png | production Lighthouse | Keep, relabel | Desktop run, not a repeat of 15 | State "desktop" in summary |
 
-## Missing evidence (new files)
+## Missing evidence (new files) — all captured
 
-- 07-csrf-valid-and-rejected: a form submit that succeeds and one without the CSRF token that is rejected.
-- 17-token-401-revoked: a cookie-free request with a revoked token returning 401.
-- 18-netdata-dashboard / alert: CPU, memory, disk, network and a fired alert (T5d).
+- 07-csrf-valid-and-rejected: form submit that succeeds and one without CSRF rejected.
+- 17-token-401-revoked: cookie-free request with a revoked token returning 401.
+- 18-netdata-dashboard / 18b-netdata-alert: VPS CPU/RAM/disk/network charts and a Discord threshold alert (T5d).
 - 19-coverage-backend / 20-coverage-frontend: coverage summaries (94.2% and 75.81%).
 - 21-admin-dashboard: `/admin`.
 - 22-erd: rendered ERD from `docs/07-architecture/database-schema.mmd`.
+- 23-supabase-storage-objects: hosted Supabase `property-media` bucket with a real uploaded object (T3f).
+- 24-resend-inbox: Resend dashboard showing a delivered verification email (T3f).
 
 ## Pre-capture fixes (done)
 
@@ -41,7 +43,7 @@ Capture rules for every replacement: production build (`next build && next start
 
 Recaptured: 01, 02, 03, 04, 05, 06, 06b, 08, 09, 10, 11, 12, 14.
 Kept: 13 (Telescope), 15 (Lighthouse mobile), 16 (Lighthouse desktop).
-New: 07 CSRF, 17 revoked-token 401, 19/20 coverage, 21 admin dashboard, 22 ERD.
-Still missing: 18 Netdata. It runs on the VPS host (see `infrastructure/netdata/README.md`); it cannot be captured from the local machine without misrepresenting the environment, so take it from the VPS dashboard through the SSH tunnel and trigger one threshold alert.
+New: 07 CSRF, 17 revoked-token 401, 18/18b Netdata, 19/20 coverage, 21 admin dashboard, 22 ERD, 23 Supabase Storage, 24 Resend delivered email.
+Nothing outstanding for lecturer evidence images.
 
 Known leftovers: ui images 05/10 use demo data (property type "Nhà" for an apartment name; token has only `favourites:read`); the screenshots were taken with a puppeteer-driven Chrome, flows (report, approve, publish, resolve+suspend) were done through the real UI.

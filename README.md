@@ -295,11 +295,27 @@ See full criteria in [`docs/08-project/course-compliance.md`](docs/08-project/co
 | **T2a–T2b** | PostgreSQL schema, constraints, seeders | `backend/database/migrations/`, `seeders/` | UUID schema, partial unique indexes, `BaselineSeeder`, `BulkDataSeeder` |
 | **T3a–T3c** | Auth UI, Registration/Login, CSRF & validation | `frontend/src/app/(auth)/`, Fortify/Sanctum | `AccountAuthFlowsTest`, CSRF browser valid/rejected demo |
 | **T3e** | Search/filter/display & private favourites | `Domain/Discovery/`, `FavouritePropertiesController` | `PublicListingSearchTest`, `FavouritePropertiesTest`, `TenantJourneyIntegrationTest` |
-| **T3f** | External API (Supabase Storage) | `backend/app/Actions/OwnerProperties/`, `Services/` | Signed upload/private media streaming, `AdminListingReviewsMediaTest` |
-| **T3g & T4d** | Separate UI/Business & API >70% Coverage | `frontend/**/*.test.*`, `backend/tests/` | **Backend >90%** (`phpunit --coverage`), **Frontend >70%** (`vitest --coverage`) |
+| **T3f** | External API (Supabase Storage + Resend) | `backend/app/Actions/OwnerProperties/`, `Services/`, Resend mailer | Real evidence: [`23-supabase-storage-objects.png`](docs/06-acceptance/evidence/ui/23-supabase-storage-objects.png), [`24-resend-inbox.png`](docs/06-acceptance/evidence/ui/24-resend-inbox.png); plus `AdminListingReviewsMediaTest` |
+| **T3g & T4d** | Separate UI/Business & API >70% Coverage | `frontend/**/*.test.*`, `backend/tests/` | **Backend >90%** (`phpunit --coverage`), **Frontend >70%** (`vitest --coverage`); CI runs `npm run test:coverage`; screens [`19`](docs/06-acceptance/evidence/ui/19-coverage-backend.png)/[`20`](docs/06-acceptance/evidence/ui/20-coverage-frontend.png) |
 | **T4a–T4c** | Resource CRUD, Scoped Sanctum PAT, Scramble | `routes/api/v1/`, `PersonalAccessTokensController` | `PersonalAccessTokensTest`, `ResponseContractTest`, Scramble OpenAPI |
-| **T5a–T5d** | Telescope, structured logs, slow-query & server alerts | `Monitoring/`, `TelescopeServiceProvider` | `SlowQueryMonitorTest`, `OpsAlerterTest`, `TelescopeRestrictedTest` |
+| **T5a–T5d** | Telescope, structured logs, slow-query & server alerts | `Monitoring/`, `TelescopeServiceProvider`, `infrastructure/netdata/` | Tests + Netdata VPS evidence: [`18-netdata-dashboard.png`](docs/06-acceptance/evidence/ui/18-netdata-dashboard.png), [`18b-netdata-alert.png`](docs/06-acceptance/evidence/ui/18b-netdata-alert.png) |
 | **T6a–T6d** | Async queues/scheduler, code splitting, caching, indexes | `Jobs/`, `PublicCacheHeaders`, `add_availability_and_scan_indexes` | `NotificationDeliveryTest`, `PublicHttpCachingTest`, `performance-evidence.md` |
+
+### Live integration & monitoring evidence (T3f, T5d)
+
+Screenshots live under
+[`docs/06-acceptance/evidence/ui/`](docs/06-acceptance/evidence/ui/).
+Full gallery:
+[`docs/08-project/final-project-summary.md`](docs/08-project/final-project-summary.md)
+§7.
+
+| Supabase Storage (real upload) | Resend (delivered email) |
+| :---: | :---: |
+| ![Supabase Storage](docs/06-acceptance/evidence/ui/23-supabase-storage-objects.png) | ![Resend delivered](docs/06-acceptance/evidence/ui/24-resend-inbox.png) |
+
+| Netdata VPS dashboard | Netdata alert delivered to Discord |
+| :---: | :---: |
+| ![Netdata dashboard](docs/06-acceptance/evidence/ui/18-netdata-dashboard.png) | ![Netdata alert](docs/06-acceptance/evidence/ui/18b-netdata-alert.png) |
 
 ### Known Limitations & Substitutions
 - **UI Stack Substitution (T3a):** Next.js (App Router + Tailwind CSS) is used instead of Blade/Livewire for the frontend portal while Laravel serves the Fortify/Sanctum REST API.

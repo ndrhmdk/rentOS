@@ -55,4 +55,7 @@ Visibility limits:
 - Critical slow query (≥5000 ms) → Discord + email
 - Cumulative callback fires with QueryStats; 5th breach → Discord + email
 - Telescope disabled in production; `viewTelescope` requires ACTIVE verified admin; responses/SQL bindings are redacted when enabled locally
-- Netdata: capture host charts (CPU/memory/disk/network) and one controlled threshold notification from `infrastructure/netdata/` (manual evidence for RNT-12)
+- Netdata: host charts + delivered Discord alert —
+  [`18-netdata-dashboard.png`](../../../docs/06-acceptance/evidence/ui/18-netdata-dashboard.png),
+  [`18b-netdata-alert.png`](../../../docs/06-acceptance/evidence/ui/18b-netdata-alert.png)
+  (manual evidence for RNT-12 / T5d)
