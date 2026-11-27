@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* rentOS design tokens — source: Figma "rentOS Design (AWDesign)".
+   Import once in backend/frontend/src/index.css:  @import '../../../design/tokens/rentos-tokens.css';
+   (or copy this file into src/styles/). Do not hard-code hex values in components — use these variables. */
+
+/* Inter is self-hosted by next/font as --font-inter on <html>. The other
+   family names stay as system stacks so a utility cannot request a font
+   that is no longer downloaded. */
+:root{
+--font-sans:var(--font-inter),system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+--font-ui-alt:var(--font-inter),system-ui,sans-serif;
+--font-serif-display:Georgia,"Times New Roman",serif;
+--font-mono:ui-monospace,Menlo,monospace;
+--font-numeric-display:var(--font-inter),system-ui,sans-serif;
+--font-annotation:var(--font-inter),system-ui,sans-serif;
+}
+
+/* rentOS brand + product tokens — values from the Figma "Colour Palette" / "Type Hierarchy" sections
+   and the most-used fills in the product frames. Figma Variables (iOS/M3 library) live in fig-tokens.css. */
+:root{
+/* Brand palette (named in the brand guideline) */
+--rentos-philadelphia:#3368A0;   /* rgb(51,104,160) primary actions, logo */
+--rentos-placid:#66A3BF;         /* rgb(102,163,191) secondary highlights */
+--rentos-cherub:#8FBCD0;         /* rgb(143,188,208) subtle bg, cards, info panels */
+--rentos-black-steel:#091216;    /* rgb(9,18,22) main text, dark navbar/sidebar, footer */
+--rentos-full-white:#FFFFFF;
+--rentos-sky:#A3C6D9;            /* light button fill (Buttons frame) */
+/* Product blues */
+--blue-600:rgb(27,107,198);      /* links, active nav, selected states */
+--blue-700:rgb(0,97,148);
+--navy-900:rgb(16,35,55);        /* headings on light */
+--navy-850:rgb(18,33,41);        /* tenant sidebar */
+--navy-800:rgb(38,60,73);        /* sidebar active pill */
+/* Neutrals */
+--ink-1:rgb(9,18,22);
+--ink-2:rgb(25,28,30);
+--ink-3:rgb(63,72,80);
+--ink-4:rgb(82,99,108);
+--ink-5:rgb(102,123,145);
+--ink-6:rgb(117,117,117);
+--line-1:rgb(169,184,191);
+--line-2:rgb(188,208,219);
+--line-3:rgb(220,229,234);
+--line-4:rgb(228,235,241);
+--surface-0:#FFFFFF;
+--surface-1:rgb(241,246,248);    /* app canvas (tenant dashboard) */
+--surface-2:rgb(233,238,243);
+--surface-3:rgb(239,246,251);
+--surface-brand-soft:rgb(232,242,247);
+/* Semantic */
+--success:rgb(19,164,122);
+--success-soft:rgba(19,164,122,0.1);
+/* Typography scale (Type Hierarchy section) */
+--type-h1-size:56px;--type-h1-lh:64px;--type-h1-weight:800;--type-h1-track:-0.04em;
+--type-h2-size:40px;--type-h2-lh:48px;--type-h2-weight:700;--type-h2-track:-0.04em;
+--type-h3-size:36px;--type-h3-lh:42px;--type-h3-weight:700;--type-h3-track:-0.04em;
+--type-h4-size:28px;--type-h4-lh:36px;--type-h4-weight:600;--type-h4-track:-0.02em;
+--type-sub-size:24px;--type-sub-lh:32px;--type-sub-weight:400;--type-sub-track:-0.04em;
+--type-body-size:14px;--type-body-lh:20px;
+--type-small-size:12px;--type-caption-size:11px;--type-eyebrow-size:10px;--type-eyebrow-track:0.1em;
+/* Radii */
+--radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:12px;--radius-pill:50px;--radius-panel:48px;
+/* Shadow */
+--shadow-card:0 1px 3px rgba(0,0,0,0.05);
+/* Semantic aliases */
+--text-primary:var(--ink-1);
+--text-heading:var(--navy-900);
+--text-secondary:var(--ink-4);
+--text-muted:var(--ink-5);
+--text-on-dark:#FFFFFF;
+--text-on-dark-muted:var(--line-2);
+--text-link:var(--blue-600);
+--surface-app:var(--surface-1);
+--surface-card:var(--surface-0);
+--surface-nav-dark:var(--rentos-black-steel);
+--surface-sidebar:var(--navy-850);
+--border-default:var(--line-3);
+--border-strong:var(--line-1);
+--action-primary:var(--rentos-philadelphia);
+--action-secondary:var(--rentos-placid);
+--action-soft:var(--rentos-sky);
+}
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-ui-alt: var(--font-ui-alt);
+  --font-serif-display: var(--font-serif-display);
+  --font-mono: var(--font-mono);
+
+  /* Brand Palette */
+  --color-rentos-philadelphia: var(--rentos-philadelphia);
+  --color-rentos-placid: var(--rentos-placid);
+  --color-rentos-cherub: var(--rentos-cherub);
+  --color-rentos-black-steel: var(--rentos-black-steel);
+  --color-rentos-full-white: var(--rentos-full-white);
+  --color-rentos-sky: var(--rentos-sky);
+
+  /* Product Blues & Navies */
+  --color-blue-600: var(--blue-600);
+  --color-blue-700: var(--blue-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-850: var(--navy-850);
+  --color-navy-900: var(--navy-900);
+
+  /* Neutrals & Inks */
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-ink-5: var(--ink-5);
+  --color-ink-6: var(--ink-6);
+
+  --color-line-1: var(--line-1);
+  --color-line-2: var(--line-2);
+  --color-line-3: var(--line-3);
+  --color-line-4: var(--line-4);
+
+  /* Semantic Surfaces */
+  --color-surface-app: var(--surface-app);
+  --color-surface-card: var(--surface-card);
+  --color-surface-nav-dark: var(--surface-nav-dark);
+  --color-surface-sidebar: var(--surface-sidebar);
+  --color-surface-brand-soft: var(--surface-brand-soft);
+
+  /* Semantic Typography Colors (Clean standard Tailwind naming) */
+  --color-primary: var(--text-primary);
+  --color-heading: var(--text-heading);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-on-dark: var(--text-on-dark);
+  --color-on-dark-muted: var(--text-on-dark-muted);
+  --color-link: var(--text-link);
+
+  /* Aliases with text-* prefix for backward compatibility */
+  --color-text-primary: var(--text-primary);
+  --color-text-heading: var(--text-heading);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-on-dark: var(--text-on-dark);
+  --color-text-on-dark-muted: var(--text-on-dark-muted);
+  --color-text-link: var(--text-link);
+
+  /* Semantic Borders */
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  /* Semantic Actions */
+  --color-action-primary: var(--action-primary);
+  --color-action-secondary: var(--action-secondary);
+  --color-action-soft: var(--action-soft);
+
+  /* Radii */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill);
+  --radius-panel: var(--radius-panel);
+
+  /* Elevation */
+  --shadow-card: var(--shadow-card);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background-color: var(--surface-app);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background-color: var(--surface-app);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--blue-600);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+  }
+}
