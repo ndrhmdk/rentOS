@@ -96,13 +96,13 @@ describe("AdminReviewLoader, AdminReviewDetail & AdminReviewDialog", () => {
   });
 
   it("handles 404/retry in AdminReviewLoader and renders AdminReviewDetail", async () => {
-    vi.mocked(getAdminPackage)
-      .mockRejectedValueOnce(new ApiError(404, "Not found"))
-      .mockResolvedValue(sampleDto);
+    vi.mocked(getAdminPackage).mockRejectedValue(new ApiError(404, "Not found"));
 
     render(<AdminReviewLoader id="lst-1" />);
 
     expect(await screen.findByText("Không tìm thấy gói tin đăng")).toBeTruthy();
+
+    vi.mocked(getAdminPackage).mockResolvedValue(sampleDto);
     fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
 
     expect(await screen.findByRole("button", { name: "Phê duyệt" })).toBeTruthy();
