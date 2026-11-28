@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination";
 import { propertyLabels } from "@/components/listings/listing-format";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ApiError } from "@/lib/http/client";
 import type {
   OccupancyBadge,
@@ -203,12 +204,10 @@ export default function OwnerPropertiesPage() {
       </div>
       <div className="flex min-h-0 flex-1 flex-col">
         {loading && (
-          <div
-            className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
-            aria-busy="true"
-          >
-            Đang tải bất động sản…
-          </div>
+          <LoadingScreen
+            message="Đang tải bất động sản…"
+            className="min-h-56"
+          />
         )}
         {error && (
           <div

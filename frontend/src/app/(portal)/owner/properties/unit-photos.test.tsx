@@ -107,6 +107,46 @@ describe("UnitPhotoManager upload recovery", () => {
     vi.unstubAllGlobals();
   });
 
+  it("uses the property already loaded by the unit editor", async () => {
+    const initialProperty = property(7);
+    vi.mocked(getOwnerPropertyMedia).mockResolvedValue([]);
+
+    render(
+      <UnitPhotoManager
+        propertyId="property-1"
+        unitId="unit-1"
+        initialProperty={initialProperty}
+      />,
+    );
+
+    await waitFor(() => expect(getOwnerPropertyMedia).toHaveBeenCalledTimes(1));
+    expect(getOwnerProperty).not.toHaveBeenCalled();
+  });
+
+  it("separates new computer photos from photos already uploaded", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getOwnerPropertyMedia).mockResolvedValue([uploadedMedia("saved-1")]);
+    render(<UnitPhotoManager propertyId="property-1" unitId="unit-1" />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Ảnh đã tải lên cho căn này",
+      }),
+    ).toBeTruthy();
+    expect(screen.getByText("Đã tải lên")).toBeTruthy();
+
+    const localPhoto = new File(["local"], "local.jpg", {
+      type: "image/jpeg",
+    });
+    await user.upload(screen.getByLabelText("Chọn ảnh"), localPhoto);
+
+    expect(
+      screen.getByRole("heading", { name: "Ảnh mới từ máy tính" }),
+    ).toBeTruthy();
+    expect(screen.getByText("local.jpg")).toBeTruthy();
+    expect(screen.getByText("Chưa tải lên")).toBeTruthy();
+  });
+
   it("keeps failed files retryable and does not upload completed files again", async () => {
     const user = userEvent.setup();
     render(<UnitPhotoManager propertyId="property-1" unitId="unit-1" />);

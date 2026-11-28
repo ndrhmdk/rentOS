@@ -65,10 +65,12 @@ const ownerItems = [
 beforeEach(() => {
   vi.resetAllMocks();
   signedIn();
+  window.history.replaceState(null, "", "/");
 });
 afterEach(() => {
   cleanup();
   getQueryClient().clear();
+  window.history.replaceState(null, "", "/");
 });
 
 describe("NotificationInbox", () => {

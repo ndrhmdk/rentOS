@@ -17,7 +17,7 @@ const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 
 vi.mock("@/components/vietnam-location-picker", () => ({
@@ -85,6 +85,7 @@ function property(revision: number): OwnerPropertyDetail {
 describe("PropertyEditor stale revision recovery", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    window.history.replaceState(null, "", "/");
     vi.stubGlobal("URL", {
       createObjectURL: vi.fn(() => "blob:photo"),
       revokeObjectURL: vi.fn(),
@@ -109,7 +110,7 @@ describe("PropertyEditor stale revision recovery", () => {
       .mockRejectedValueOnce(new ApiError(409, "Stale revision"))
       .mockResolvedValueOnce(property(3));
 
-    render(<PropertyEditor propertyId="property-1" tab="overview" />);
+    render(<PropertyEditor propertyId="property-1" />);
 
     const name = await screen.findByLabelText("Tên bất động sản");
     await user.clear(name);
@@ -165,7 +166,7 @@ describe("PropertyEditor stale revision recovery", () => {
     );
 
     const user = userEvent.setup();
-    render(<PropertyEditor propertyId="property-1" tab="overview" />);
+    render(<PropertyEditor propertyId="property-1" />);
 
     const name = await screen.findByLabelText("Tên bất động sản");
     await user.clear(name);
@@ -221,7 +222,12 @@ describe("PropertyEditor stale revision recovery", () => {
       .mockResolvedValueOnce({ content_revision: 3 } as never);
 
     const user = userEvent.setup();
-    render(<PropertyEditor propertyId="property-1" tab="photos" />);
+    window.history.replaceState(
+      null,
+      "",
+      "/owner/properties/property-1/edit?tab=photos",
+    );
+    render(<PropertyEditor propertyId="property-1" />);
 
     const sharedPhoto = new File(["shared"], "shared.jpg", {
       type: "image/jpeg",

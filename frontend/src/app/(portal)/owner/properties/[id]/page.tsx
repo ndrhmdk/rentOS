@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ApiError } from "@/lib/http/client";
 import {
   getAmenityCatalog,
@@ -88,9 +89,7 @@ export default function OwnerPropertyPage({
 
   if (loading || !propertyId) {
     return (
-      <p className="px-1 py-6 text-sm text-slate-500">
-        Đang tải bất động sản…
-      </p>
+      <LoadingScreen message="Đang tải bất động sản…" />
     );
   }
 

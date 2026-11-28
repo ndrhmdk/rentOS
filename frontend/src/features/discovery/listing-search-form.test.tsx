@@ -48,7 +48,7 @@ describe("listing search form", () => {
         screen.getByRole("option", { name: "Hải Châu" }),
       ).toBeTruthy(),
     );
-    await user.selectOptions(screen.getByLabelText("Phường"), "Hải Châu");
+    await user.selectOptions(screen.getByLabelText("Phường/Xã"), "Hải Châu");
     await user.selectOptions(
       screen.getByLabelText("Mức giá hằng tháng"),
       "5-10",

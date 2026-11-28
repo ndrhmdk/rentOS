@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { getFavouritePage, type FavouritePage } from "@/lib/favourites-api";
 import { ApiError } from "@/lib/http/client";
 import { DiscoverySidebar } from "./discovery-sidebar";
@@ -29,7 +30,12 @@ export function SavedListingsScreen() {
           </div>
           <Link href="/listings" className="inline-flex min-h-11 items-center rounded-lg bg-action-primary px-4 font-semibold text-white">→ Tìm thêm căn hộ</Link>
         </header>
-        {favourites?.authStatus === "loading" && <p role="status" className="text-secondary">Đang tải Yêu thích…</p>}
+        {favourites?.authStatus === "loading" && (
+          <LoadingScreen
+            message="Đang tải Yêu thích…"
+            className="min-h-40"
+          />
+        )}
         {favourites?.authStatus === "guest" && (
           <div className="space-y-3 rounded-2xl border border-border-default bg-surface-card p-6">
             <h2 className="text-lg font-semibold text-heading">Đăng nhập để xem tin đã lưu</h2>
@@ -104,7 +110,12 @@ function SavedListings({ accountId, initialDate, revision, count }: { accountId:
         </div>
       </div>
       {moveInDate && <p className="text-sm text-secondary">Tình trạng trống cập nhật theo ngày thuê bạn đã chọn.</p>}
-      {!current && <p role="status" className="text-secondary">Đang tải tin đã lưu…</p>}
+      {!current && (
+        <LoadingScreen
+          message="Đang tải tin đã lưu…"
+          className="min-h-40"
+        />
+      )}
       {current?.error !== undefined && (
         <div className="space-y-3 rounded-2xl border border-border-default bg-surface-card p-6">
           <p role="alert">{current.error === 403 ? "Hãy xác minh email để sử dụng Yêu thích." : "Chưa tải được danh sách đã lưu."}</p>

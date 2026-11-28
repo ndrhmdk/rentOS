@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { ApiError } from "@/lib/http/client";
-import { type AmenityCatalogEntry, type AmenityDocument, type OwnerUnit } from "@/lib/owner/types";
+import { type AmenityCatalogEntry, type AmenityDocument, type OwnerPropertyDetail, type OwnerUnit } from "@/lib/owner/types";
 import { getAmenityCatalog, getOwnerProperty, updateOwnerUnit } from "@/lib/owner/api";
 import { MoneyField } from "@/components/ui/money-field";
 import { UnitPhotoManager } from "./unit-photos";
+import { LoadingScreen } from "@/components/loading-screen";
 
 const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -108,6 +109,8 @@ function amenitiesFromForm(
   };
 }
 
+type UnitTab = "details" | "photos";
+
 export function UnitEditor({
   propertyId,
   unitId,
@@ -116,15 +119,28 @@ export function UnitEditor({
   unitId: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [unit, setUnit] = useState<OwnerUnit | null>(null);
+  const [propertyDetail, setPropertyDetail] =
+    useState<OwnerPropertyDetail | null>(null);
   const [revision, setRevision] = useState(1);
   const [catalog, setCatalog] = useState<AmenityCatalogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [tab, setTab] = useState<"details" | "photos">("details");
+  const tab: UnitTab =
+    searchParams.get("tab") === "photos" ? "photos" : "details";
   const listHref = `/owner/properties/${propertyId}/edit?tab=units`;
+  const unitPath = `/owner/properties/${propertyId}/units/${unitId}`;
+
+  function openTab(next: UnitTab) {
+    const url = new URL(window.location.href);
+    url.pathname = unitPath;
+    if (next === "photos") url.searchParams.set("tab", "photos");
+    else url.searchParams.delete("tab");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }
 
   useEffect(() => {
     function resetBusy() {
@@ -149,6 +165,7 @@ export function UnitEditor({
           property.units.find(
             (item) => item.id === unitId && !item.archived_at,
           ) ?? null;
+        setPropertyDetail(property);
         setUnit(match);
         setRevision(property.content_revision);
         setCatalog(amenities);
@@ -243,7 +260,7 @@ export function UnitEditor({
           type="button"
           role="tab"
           aria-selected={tab === "details"}
-          onClick={() => setTab("details")}
+          onClick={() => openTab("details")}
           className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "details" ? "bg-[#3368a0] text-white" : "border border-slate-200 bg-white text-slate-700"}`}
         >
           Thông tin
@@ -252,19 +269,14 @@ export function UnitEditor({
           type="button"
           role="tab"
           aria-selected={tab === "photos"}
-          onClick={() => setTab("photos")}
+          onClick={() => openTab("photos")}
           className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "photos" ? "bg-[#3368a0] text-white" : "border border-slate-200 bg-white text-slate-700"}`}
         >
           Ảnh
         </button>
       </div>
       {loading && (
-        <div
-          className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
-          aria-busy="true"
-        >
-          Đang tải phòng…
-        </div>
+        <LoadingScreen message="Đang tải phòng…" className="mt-6 min-h-56" />
       )}
       {error && (
         <div
@@ -284,9 +296,13 @@ export function UnitEditor({
           ))}
         </ul>
       )}
-      {unit && tab === "photos" && (
-        <div className="mt-6">
-          <UnitPhotoManager propertyId={propertyId} unitId={unit.id} />
+      {unit && (
+        <div className={tab === "photos" ? "mt-6" : "hidden"}>
+          <UnitPhotoManager
+            propertyId={propertyId}
+            unitId={unit.id}
+            initialProperty={propertyDetail}
+          />
         </div>
       )}
       {unit && tab === "details" && (

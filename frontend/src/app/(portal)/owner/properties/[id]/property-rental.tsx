@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { propertyLabels } from "@/components/listings/listing-format";
 import type {
   AmenityDocument,
@@ -84,11 +84,8 @@ export function PropertyRental({
   detail: OwnerPropertyDetail;
   amenityLabels: Record<string, string>;
 }) {
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<PropertyTab>(() =>
-    tabFrom(searchParams.get("tab")),
-  );
+  const tab = tabFrom(searchParams.get("tab"));
   const [query, setQuery] = useState("");
   const [rental, setRental] =
     useState<(typeof rentalFilters)[number]["value"]>("all");
@@ -104,12 +101,19 @@ export function PropertyRental({
     });
   }, [property.units, query, rental]);
 
-  useEffect(() => {
+  function openTab(next: PropertyTab) {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("tab") === tab) return;
-    params.set("tab", tab);
-    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-  }, [pathname, tab]);
+    if (next === "overview") params.delete("tab");
+    else params.set("tab", next);
+    const query = params.toString();
+    const nextUrl = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }
 
   return (
     <section className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-5 px-1 py-4 sm:px-2 sm:py-6">
@@ -155,7 +159,7 @@ export function PropertyRental({
             type="button"
             role="tab"
             aria-selected={tab === value}
-            onClick={() => setTab(value)}
+            onClick={() => openTab(value)}
             className={[
               "rounded-full px-4 py-2 text-sm font-semibold",
               tab === value

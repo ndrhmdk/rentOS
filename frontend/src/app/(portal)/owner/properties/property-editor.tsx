@@ -17,6 +17,7 @@ import { type AmenityCatalogEntry, type AmenityDocument, type OwnerPropertyDetai
 import { archiveOwnerProperty, archiveOwnerUnit, getAmenityCatalog, getOwnerProperty, getOwnerPropertyMedia, removeOwnerMedia, saveOwnerUnitSharedMedia, updateOwnerGallery, updateOwnerProperty, updateOwnerUnitGallery, uploadOwnerMedia } from "@/lib/owner/api";
 import { VietnamLocationPicker } from "@/components/vietnam-location-picker";
 import { MoneyField } from "@/components/ui/money-field";
+import { LoadingScreen } from "@/components/loading-screen";
 
 const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -270,16 +271,19 @@ function amenitiesFromForm(
 
 export function PropertyEditor({
   propertyId,
-  tab,
 }: {
   propertyId: string;
-  tab: WorkspaceTab;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const tab: WorkspaceTab =
+    requestedTab === "units" || requestedTab === "photos"
+      ? requestedTab
+      : "overview";
   const [property, setProperty] = useState<OwnerPropertyDetail | null>(null);
   const [media, setMedia] = useState<OwnerPropertyMedia[]>([]);
   const [catalog, setCatalog] = useState<AmenityCatalogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -298,7 +302,6 @@ export function PropertyEditor({
   useEffect(() => {
     let active = true;
     async function load() {
-      setLoading(true);
       setError(null);
       try {
         const [detail, photos, amenities] = await Promise.all([
@@ -321,8 +324,6 @@ export function PropertyEditor({
             ? caught.message
             : "Không thể tải bất động sản.",
         );
-      } finally {
-        if (active) setLoading(false);
       }
     }
     void load();
@@ -362,11 +363,17 @@ export function PropertyEditor({
   }
 
   function openTab(next: WorkspaceTab) {
-    router.push(
-      next === "overview"
-        ? `/owner/properties/${propertyId}/edit`
-        : `/owner/properties/${propertyId}/edit?tab=${next}`,
-    );
+    const params = new URLSearchParams(window.location.search);
+    if (next === "overview") params.delete("tab");
+    else params.set("tab", next);
+    const query = params.toString();
+    const nextUrl = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
   }
 
   async function saveProperty(event: FormEvent<HTMLFormElement>) {
@@ -499,13 +506,11 @@ export function PropertyEditor({
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
         {property?.name ?? "Bất động sản"}
       </h1>
-      {loading && (
-        <div
-          className="mt-6 min-h-56 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
-          aria-busy="true"
-        >
-          Đang tải bất động sản…
-        </div>
+      {!property && !error && (
+        <LoadingScreen
+          message="Đang tải bất động sản…"
+          className="mt-6 min-h-56"
+        />
       )}
       {error && (
         <div

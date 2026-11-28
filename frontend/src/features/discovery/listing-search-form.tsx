@@ -117,7 +117,7 @@ export function ListingSearchForm() {
               height={18}
             />
           </span>
-          Phường
+          Phường/Xã
         </span>
         <span className="relative">
           <DiscoveryWardPicker
