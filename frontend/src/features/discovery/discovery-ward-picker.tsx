@@ -48,19 +48,29 @@ export function DiscoveryWardPicker({
   required?: boolean;
   cityName?: string;
 }) {
-  const [wards, setWards] = useState<AdministrativeUnit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
+  const requestKey = `${cityName}\u0000${retry}`;
+  const [loadState, setLoadState] = useState<{
+    key: string;
+    status: "loading" | "ready" | "error";
+    wards: AdministrativeUnit[];
+  }>({ key: requestKey, status: "loading", wards: [] });
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
   const valueRef = useRef(value);
-  valueRef.current = value;
+
+  const isCurrentRequest = loadState.key === requestKey;
+  const loading = !isCurrentRequest || loadState.status === "loading";
+  const error = isCurrentRequest && loadState.status === "error";
+  const wards =
+    isCurrentRequest && loadState.status === "ready" ? loadState.wards : [];
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    valueRef.current = value;
+  }, [onChange, value]);
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
 
     loadUnits(`${API_BASE}/provinces`)
       .then(async (cities) => {
@@ -73,7 +83,7 @@ export function DiscoveryWardPicker({
           `${API_BASE}/provinces/${encodeURIComponent(city.code)}/wards`,
         );
         if (!active) return;
-        setWards(nextWards);
+        setLoadState({ key: requestKey, status: "ready", wards: nextWards });
         const current = valueRef.current;
         if (
           current &&
@@ -84,24 +94,20 @@ export function DiscoveryWardPicker({
       })
       .catch(() => {
         if (active) {
-          setError("Không tải được danh sách phường.");
-          setWards([]);
+          setLoadState({ key: requestKey, status: "error", wards: [] });
         }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [cityName, retry]);
+  }, [cityName, requestKey, retry]);
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 w-full">
       <select
         id={id}
-        aria-label="Phường"
+        aria-label="Phường/Xã"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={loading}
@@ -122,7 +128,7 @@ export function DiscoveryWardPicker({
           className="mt-1 flex items-center gap-2 text-xs text-rose-700"
           role="alert"
         >
-          <span>{error}</span>
+          <span>Không tải được danh sách phường.</span>
           <button
             type="button"
             className="font-semibold underline"

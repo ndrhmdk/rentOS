@@ -55,19 +55,36 @@ export function ListingFilters({
   const router = useRouter();
   const state = parseListingSearchParams(new URLSearchParams(query));
   const [panel, setPanel] = useState<BarPanel | null>(null);
-  const [wardDraft, setWardDraft] = useState(state.ward);
-  const [streetDraft, setStreetDraft] = useState(state.street);
+  const [placeDraft, setPlaceDraft] = useState<{
+    sourceWard: string;
+    sourceStreet: string;
+    ward: string;
+    street: string;
+  } | null>(null);
+  const placeDraftMatchesQuery =
+    placeDraft?.sourceWard === state.ward &&
+    placeDraft?.sourceStreet === state.street;
+  const wardDraft = placeDraftMatchesQuery
+    ? placeDraft.ward
+    : state.ward;
+  const streetDraft = placeDraftMatchesQuery
+    ? placeDraft.street
+    : state.street;
+
+  function updatePlaceDraft(ward: string, street: string) {
+    setPlaceDraft({
+      sourceWard: state.ward,
+      sourceStreet: state.street,
+      ward,
+      street,
+    });
+  }
 
   function visit(next: ListingSearchState) {
     const params = toListingSearchParams({ ...next, page: 1 });
     const text = params.toString();
     router.replace(text ? `/listings?${text}` : "/listings");
   }
-
-  useEffect(() => {
-    setWardDraft(state.ward);
-    setStreetDraft(state.street);
-  }, [state.ward, state.street]);
 
   function submitPlaceSearch() {
     const ward = wardDraft.trim().replace(/\s+/g, " ");
@@ -86,43 +103,51 @@ export function ListingFilters({
   const filterCount =
     state.amenities.length + (state.pets ? 1 : 0) + (state.moveInDate ? 1 : 0);
 
-  const placeSelectClass =
-    "h-11 w-full appearance-none rounded-full border" +
-    " border-[#e1e7ed] bg-white px-4 text-sm";
+  const placeLabelClass =
+    "shrink-0 text-sm font-semibold text-[#5b6676]";
+  const placeControlClass =
+    "h-11 w-full min-w-0 rounded-full border border-[#e1e7ed]" +
+    " bg-white px-3 text-sm text-[#091216] outline-none";
+  const placeSelectClass = `${placeControlClass} appearance-none`;
 
   return (
-    <section className="relative grid gap-3" aria-label="Bộ lọc tin đăng">
-      <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
+    <section
+      className="relative grid w-full gap-3"
+      aria-label="Bộ lọc tin đăng"
+    >
+      <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-2">
         <form
           className={
-            "flex min-w-0 flex-1 flex-wrap items-center gap-2" +
-            " basis-full sm:basis-auto"
+            "flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2" +
+            " sm:flex-nowrap"
           }
           onSubmit={(event) => {
             event.preventDefault();
             submitPlaceSearch();
           }}
         >
-          <div className="relative min-w-0 flex-1 basis-[min(100%,12rem)]">
-            <label htmlFor="listing-street" className="sr-only">
-              Đường
-            </label>
+          <label htmlFor="listing-street" className={placeLabelClass}>
+            Đường:
+          </label>
+          <div className="min-w-[9rem] flex-1 basis-[12rem]">
             <input
               id="listing-street"
               value={streetDraft}
-              onChange={(event) => setStreetDraft(event.target.value)}
-              placeholder="Đường (ví dụ: Trần Phú)"
-              className={
-                "h-11 w-full rounded-full border border-[#e1e7ed]" +
-                " bg-white px-4 text-sm"
+              onChange={(event) =>
+                updatePlaceDraft(wardDraft, event.target.value)
               }
+              placeholder="Ví dụ: Trần Phú"
+              className={placeControlClass}
             />
           </div>
-          <div className="relative min-w-0 flex-1 basis-[min(100%,12rem)]">
+          <label htmlFor="listing-ward" className={placeLabelClass}>
+            Phường/Xã:
+          </label>
+          <div className="min-w-[9rem] flex-1 basis-[10rem] sm:max-w-[14rem]">
             <DiscoveryWardPicker
               id="listing-ward"
               value={wardDraft}
-              onChange={setWardDraft}
+              onChange={(ward) => updatePlaceDraft(ward, streetDraft)}
               className={placeSelectClass}
             />
           </div>
@@ -147,8 +172,7 @@ export function ListingFilters({
                 " bg-white text-lg text-[#5b6676]"
               }
               onClick={() => {
-                setWardDraft("");
-                setStreetDraft("");
+                updatePlaceDraft("", "");
                 const next = clearPlace(new URLSearchParams(query));
                 const text = next.toString();
                 router.replace(text ? `/listings?${text}` : "/listings");
@@ -158,7 +182,7 @@ export function ListingFilters({
             </button>
           ) : null}
         </form>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <AnchoredMenu
             open={panel === "price"}
             selected={Boolean(state.minRent || state.maxRent)}

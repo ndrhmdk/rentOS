@@ -133,13 +133,13 @@ describe("ListingFilters", () => {
     const user = userEvent.setup();
     renderFilters("bedrooms=2");
 
-    await user.type(screen.getByLabelText("Đường"), "  Trần   Phú ");
+    await user.type(screen.getByLabelText(/Đường/), "  Trần   Phú ");
     expect(mockReplace).not.toHaveBeenCalled();
 
     await waitFor(() =>
       expect(screen.getByRole("option", { name: "Hải Châu" })).toBeTruthy(),
     );
-    await user.selectOptions(screen.getByLabelText("Phường"), "Hải Châu");
+    await user.selectOptions(screen.getByLabelText(/Phường/), "Hải Châu");
     expect(mockReplace).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Tìm kiếm" }));
@@ -150,9 +150,9 @@ describe("ListingFilters", () => {
     await user.click(screen.getByRole("button", { name: "Xóa địa điểm" }));
     expect(lastQuery().get("ward")).toBeNull();
     expect(lastQuery().get("street")).toBeNull();
-    expect((screen.getByLabelText("Đường") as HTMLInputElement).value).toBe(
-      "",
-    );
+    expect(
+      (screen.getByLabelText(/Đường/) as HTMLInputElement).value,
+    ).toBe("");
   });
 
   it("shows active amenities as removable chips and counts filters on the button", async () => {
