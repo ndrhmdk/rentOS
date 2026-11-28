@@ -6,6 +6,7 @@ use App\Actions\Reports\DismissListingReportAction;
 use App\Actions\Reports\ResolveListingReportAction;
 use App\Actions\Reports\StartReportReviewAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminListingReportIndexRequest;
 use App\Http\Requests\DismissListingReportRequest;
 use App\Http\Requests\ResolveListingReportRequest;
 use App\Http\Resources\AdminListingReportResource;
@@ -35,7 +36,7 @@ class AdminListingReportsController extends Controller
     /**
      * List reports with optional status, reason filters, and search.
      */
-    public function index(Request $request): JsonResponse
+    public function index(AdminListingReportIndexRequest $request): JsonResponse
     {
         $this->ensureAdmin($request);
 

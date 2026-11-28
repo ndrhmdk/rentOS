@@ -9,9 +9,9 @@ use App\Actions\Tenancies\ListParticipantTenancies;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfirmTenancyContractRequest;
 use App\Http\Requests\DeclineTenancyContractRequest;
+use App\Http\Requests\ParticipantTenancyIndexRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TenantTenanciesController extends Controller
 {
@@ -19,14 +19,26 @@ class TenantTenanciesController extends Controller
      * Get active or confirmed tenancies for the authenticated tenant.
      */
     public function index(
-        Request $request,
+        ParticipantTenancyIndexRequest $request,
         ListParticipantTenancies $tenancies,
     ): JsonResponse {
         /** @var User $tenant */
         $tenant = $request->user();
 
+        $page = $tenancies->forTenant(
+            $tenant,
+            $request->integer('per_page', 20),
+            $request->integer('page', 1),
+        );
+
         return response()->json([
-            'data' => $tenancies->forTenant($tenant),
+            'data' => $page->items(),
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+                'last_page' => $page->lastPage(),
+            ],
         ]);
     }
 

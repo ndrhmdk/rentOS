@@ -26,7 +26,10 @@ describe("TenantContractsPage", () => {
   });
 
   it("renders empty state when tenant has no tenancies", async () => {
-    vi.mocked(getTenantTenancies).mockResolvedValue([]);
+    vi.mocked(getTenantTenancies).mockResolvedValue({
+      data: [],
+      meta: { current_page: 1, per_page: 20, total: 0, last_page: 1 },
+    });
 
     render(<TenantContractsPage />);
 
@@ -35,7 +38,8 @@ describe("TenantContractsPage", () => {
   });
 
   it("renders tenancy cards with correct status badges and terms", async () => {
-    vi.mocked(getTenantTenancies).mockResolvedValue([
+    vi.mocked(getTenantTenancies).mockResolvedValue({
+      data: [
       {
         id: "tenancy-1",
         unit_id: "unit-1",
@@ -106,7 +110,9 @@ describe("TenantContractsPage", () => {
         created_at: "2026-01-01T00:00:00Z",
         updated_at: "2026-01-01T00:00:00Z",
       },
-    ]);
+    ],
+      meta: { current_page: 1, per_page: 20, total: 2, last_page: 1 },
+    });
 
     render(<TenantContractsPage />);
 
@@ -135,7 +141,10 @@ describe("TenantContractsPage", () => {
     const user = userEvent.setup();
     vi.mocked(getTenantTenancies)
       .mockRejectedValueOnce(new ApiError(500, "Lỗi máy chủ"))
-      .mockResolvedValueOnce([]);
+      .mockResolvedValueOnce({
+        data: [],
+        meta: { current_page: 1, per_page: 20, total: 0, last_page: 1 },
+      });
 
     render(<TenantContractsPage />);
 

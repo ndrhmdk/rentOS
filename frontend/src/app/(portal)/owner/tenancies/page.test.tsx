@@ -3,8 +3,22 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/http/client";
 import { getOwnerTenancies } from "@/lib/tenancies/api";
-import type { ParticipantTenancySummary } from "@/lib/tenancies/types";
+import type { ParticipantTenancySummary, TenancyListPage } from "@/lib/tenancies/types";
 import OwnerTenanciesPage from "./page";
+
+function pageOf(
+  data: ParticipantTenancySummary[],
+): TenancyListPage<ParticipantTenancySummary> {
+  return {
+    data,
+    meta: {
+      current_page: 1,
+      per_page: 20,
+      total: data.length,
+      last_page: 1,
+    },
+  };
+}
 
 const mockReplace = vi.fn();
 // Next's useRouter() returns the same instance on every render.
@@ -70,7 +84,7 @@ afterEach(cleanup);
 
 describe("owner tenancies", () => {
   it("lists every tenancy with its contract terms and status", async () => {
-    vi.mocked(getOwnerTenancies).mockResolvedValue(items);
+    vi.mocked(getOwnerTenancies).mockResolvedValue(pageOf(items));
     render(<OwnerTenanciesPage />);
 
     expect(screen.getByText("Đang tải kỳ thuê…")).toBeTruthy();
@@ -93,7 +107,7 @@ describe("owner tenancies", () => {
 
   it("filters by tab and shows the count on each tab", async () => {
     const user = userEvent.setup();
-    vi.mocked(getOwnerTenancies).mockResolvedValue(items);
+    vi.mocked(getOwnerTenancies).mockResolvedValue(pageOf(items));
     render(<OwnerTenanciesPage />);
 
     await screen.findByText("Phòng 101");
@@ -116,7 +130,7 @@ describe("owner tenancies", () => {
 
   it("shows an empty state for a tab with nothing in it", async () => {
     const user = userEvent.setup();
-    vi.mocked(getOwnerTenancies).mockResolvedValue([tenancy("201", "ACTIVE")]);
+    vi.mocked(getOwnerTenancies).mockResolvedValue(pageOf([tenancy("201", "ACTIVE")]));
     render(<OwnerTenanciesPage />);
 
     await screen.findByText("Phòng 201");
@@ -126,7 +140,7 @@ describe("owner tenancies", () => {
 
   it("retries after a load error and sends a signed-out owner to login", async () => {
     const user = userEvent.setup();
-    vi.mocked(getOwnerTenancies).mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(items);
+    vi.mocked(getOwnerTenancies).mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(pageOf(items));
     render(<OwnerTenanciesPage />);
 
     expect((await screen.findByRole("alert")).textContent).toContain("Không thể tải danh sách kỳ thuê. Vui lòng thử lại.");

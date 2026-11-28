@@ -36,6 +36,16 @@ export type ParticipantTenancySummary = {
 
 export type TenantTenancy = ParticipantTenancySummary;
 
+export type TenancyListPage<T> = {
+  data: T[];
+  meta: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+};
+
 export type TenancyContractRecord = {
   id: string;
   version_number: number;

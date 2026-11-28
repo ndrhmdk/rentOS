@@ -1,14 +1,30 @@
 import { request } from "@/lib/http/client";
-import type { TenantTenancy, ParticipantTenancySummary, TenancyTimeline, TenancyRenewalRequest, TenancyRenewalMutationResult, TenancyDecisionResult, OwnerTenancyLifecycleResult, OwnerTenancyProposalResult } from "./types";
+import type { TenantTenancy, ParticipantTenancySummary, TenancyListPage, TenancyTimeline, TenancyRenewalRequest, TenancyRenewalMutationResult, TenancyDecisionResult, OwnerTenancyLifecycleResult, OwnerTenancyProposalResult } from "./types";
 
-export async function getTenantTenancies(): Promise<TenantTenancy[]> {
-  return request<TenantTenancy[]>("/api/v1/tenant/tenancies");
+export async function getTenantTenancies(options?: {
+  page?: number;
+  perPage?: number;
+}): Promise<TenancyListPage<TenantTenancy>> {
+  const params = new URLSearchParams();
+  params.set("page", String(options?.page ?? 1));
+  params.set("per_page", String(options?.perPage ?? 20));
+
+  return request<TenancyListPage<TenantTenancy>>(
+    `/api/v1/tenant/tenancies?${params.toString()}`,
+  );
 }
 
-export async function getOwnerTenancies(): Promise<
-  ParticipantTenancySummary[]
-> {
-  return request<ParticipantTenancySummary[]>("/api/v1/owner/tenancies");
+export async function getOwnerTenancies(options?: {
+  page?: number;
+  perPage?: number;
+}): Promise<TenancyListPage<ParticipantTenancySummary>> {
+  const params = new URLSearchParams();
+  params.set("page", String(options?.page ?? 1));
+  params.set("per_page", String(options?.perPage ?? 20));
+
+  return request<TenancyListPage<ParticipantTenancySummary>>(
+    `/api/v1/owner/tenancies?${params.toString()}`,
+  );
 }
 
 export async function getOwnerTenancyTimeline(
