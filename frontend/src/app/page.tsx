@@ -211,6 +211,8 @@ export default function Home() {
             src="/images/home/why-us.png"
             alt=""
             fill
+            preload
+            fetchPriority="high"
             sizes="(min-width: 1100px) 1100px, 100vw"
             quality={60}
             className="object-cover"

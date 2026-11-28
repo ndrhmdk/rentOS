@@ -690,6 +690,14 @@ class ListingReportsFlowsTest extends TestCase
             ->assertJsonPath('data.0.id', $reportId)
             ->assertJsonPath('meta.per_page', 5);
 
+        $this->actingAs($admin)->getJson('/api/v1/admin/listing-reports?per_page=100')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('per_page');
+
+        $this->actingAs($reporter)->getJson('/api/v1/tenant/reports?per_page=100')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('per_page');
+
         $detailRes = $this->actingAs($admin)->getJson("/api/v1/admin/listing-reports/{$reportId}");
         $detailRes->assertOk()
             ->assertJsonPath('data.id', $reportId);

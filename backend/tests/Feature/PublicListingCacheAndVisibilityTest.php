@@ -25,6 +25,18 @@ class PublicListingCacheAndVisibilityTest extends TestCase
         Cache::flush();
     }
 
+    public function test_search_miss_uses_soft_mutex_and_serves_hit_after_build(): void
+    {
+        PublicListingFixture::published();
+
+        $miss = $this->getJson('/api/v1/listings?per_page=4');
+        $miss->assertOk()->assertHeader('X-Cache', 'MISS');
+
+        $hit = $this->getJson('/api/v1/listings?per_page=4');
+        $hit->assertOk()->assertHeader('X-Cache', 'HIT');
+        $this->assertSame($miss->json('data'), $hit->json('data'));
+    }
+
     /**
      * Cache Miss then Cache Hit on search index.
      */
