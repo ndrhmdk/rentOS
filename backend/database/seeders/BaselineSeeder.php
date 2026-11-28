@@ -506,14 +506,21 @@ class BaselineSeeder extends Seeder
             throw new RuntimeException("Da Nang place {$number} is missing a ward or city.");
         }
 
-        $address = self::streetAddress((string) ($raw['addressLine'] ?? ''), $ward, $city);
+        $street = self::streetAddress(
+            (string) ($raw['addressLine'] ?? ''),
+            $ward,
+            $city,
+        );
         $recordedName = trim((string) ($raw['name'] ?? ''));
-
-        if ($address === '') {
-            $address = $latitude.', '.$longitude;
-        }
-
-        $name = $recordedName !== '' ? $recordedName : $address;
+        // Never put lat/lng in display strings — coords stay in columns only.
+        // Skip bare house numbers ("5") as the public place label.
+        $usefulStreet = $street !== '' && ! preg_match('/^\d+[A-Za-z]?$/u', $street)
+            ? $street
+            : '';
+        $address = $usefulStreet !== '' ? $usefulStreet : "Phường {$ward}";
+        $placeLabel = $recordedName !== ''
+            ? $recordedName
+            : ($usefulStreet !== '' ? $usefulStreet : "{$ward}, {$city}");
         $propertyType = ['HOUSE', 'APARTMENT', 'APARTMENT_BUILDING'][$number % 3];
         $whole = $number % 2 === 0;
         $unitKind = match ($propertyType) {
@@ -547,8 +554,8 @@ class BaselineSeeder extends Seeder
         };
 
         return [
-            'name' => $name,
-            'listing_title' => "{$label} tại {$name}",
+            'name' => $placeLabel,
+            'listing_title' => "{$label} tại {$placeLabel}",
             'listing_description' => "Cho thuê {$label} tại {$address}, {$ward}, {$city}. Dữ liệu demo, không phải nhà đang rao thật.",
             'property_type' => $propertyType,
             'rental_arrangement' => $whole ? 'WHOLE_SPACE' : 'SEPARATE_UNITS',
@@ -569,7 +576,7 @@ class BaselineSeeder extends Seeder
             ],
             'unit_label' => $label,
             'unit_kind' => $unitKind,
-            'unit_description' => "{$label} tại {$name}, {$ward}.",
+            'unit_description' => "{$label} tại {$placeLabel}, {$ward}.",
             'floor' => (string) (1 + ($number % 15)),
             'area_m2' => $areaM2,
             'bedrooms' => $bedrooms,
