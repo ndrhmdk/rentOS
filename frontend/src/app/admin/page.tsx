@@ -6,6 +6,21 @@ import { getReviewQueue } from "@/lib/admin-review-queue";
 import { adminPreviewMode, waitingLabel } from "@/lib/admin-review-api";
 import { useAdminApi } from "@/components/admin/admin-api-provider";
 
+const activityLabels: Record<string, string> = {
+  "listing.created": "đã tạo tin",
+  "listing.updated": "đã cập nhật tin",
+  "listing.submitted": "đã gửi duyệt",
+  "listing.submission_invalidated": "đã hủy hồ sơ gửi duyệt",
+  "listing.approved": "đã phê duyệt",
+  "listing.rejected": "đã từ chối",
+  "listing.published": "đã đăng công khai",
+  "listing.hidden": "đã ẩn tin",
+  "listing.hidden_by_property_archive": "đã ẩn tin (lưu trữ bất động sản)",
+  "listing.archived": "đã lưu trữ tin",
+  "listing.suspended": "đã đình chỉ",
+  "listing.restored": "đã khôi phục",
+};
+
 export default function AdminPage() {
   const { items, decisions, ready } = useAdminReviewPreview();
   const { dashboard } = useAdminApi();
@@ -82,12 +97,7 @@ export default function AdminPage() {
       ? dashboard.activities.map((item) => ({
           id: item.id,
           actor: item.actor_name ?? "Hệ thống",
-          action:
-            item.action === "listing.approved"
-              ? "đã phê duyệt"
-              : item.action === "listing.rejected"
-                ? "đã từ chối"
-                : item.action,
+          action: activityLabels[item.action] ?? item.action,
           target: item.title ?? "Tin đăng",
           at: item.created_at,
           label: new Intl.DateTimeFormat("vi-VN", {

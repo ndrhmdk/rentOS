@@ -141,6 +141,11 @@ export function SiteHeader() {
         <NavLink href="/owner" active={pathname.startsWith("/owner")}>
           Cổng chủ nhà
         </NavLink>
+        {user?.is_admin && (
+          <NavLink href="/admin" active={pathname.startsWith("/admin")}>
+            Cổng quản trị
+          </NavLink>
+        )}
       </nav>
       <div
         className={`${onHome ? "ml-auto xl:ml-0" : ""} flex shrink-0 items-center gap-3 sm:gap-4`}
@@ -291,6 +296,7 @@ export function SiteHeader() {
               { href: "/#cau-hoi", label: "FAQ" },
               { href: "/tenant", label: "Cổng cư dân" },
               { href: "/owner", label: "Cổng chủ nhà" },
+              ...(user?.is_admin ? [{ href: "/admin", label: "Cổng quản trị" }] : []),
               ...(status === "guest" ? [{ href: "/register", label: "Đăng ký tài khoản" }] : []),
             ].map((item) => (
               <Link

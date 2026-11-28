@@ -2,6 +2,12 @@
 
 This guide installs Netdata on the VPS **host** to monitor host CPU, memory, disk, and network. Laravel remains responsible for application failures and slow SQL. Netdata should keep running even if Docker or the API container has a problem, so do not add it as a service in `compose.production.yml`.
 
+**Captured lecturer evidence (T5d):**
+[`18-netdata-dashboard.png`](../../docs/06-acceptance/evidence/ui/18-netdata-dashboard.png)
+(CPU / RAM / disk / network on the VPS) and
+[`18b-netdata-alert.png`](../../docs/06-acceptance/evidence/ui/18b-netdata-alert.png)
+(Discord delivery of `rentos_ram_usage`).
+
 The linked [Netdata VPS installation guide](https://thuevpsgiare.vn/cach-cai-netdata-tren-vps/) covers installation, dashboard access, and notifications. This guide adapts those steps to rentOS: the dashboard binds only to localhost, and you reach it through an SSH tunnel. Do not expose port `19999` publicly.
 
 ## 1. Connect to the VPS

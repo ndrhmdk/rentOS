@@ -6,9 +6,7 @@ use App\Actions\Notifications\RecordNotification;
 use App\Models\AuditLog;
 use App\Models\Listing;
 use App\Models\ListingReport;
-use App\Models\Property;
 use App\Models\User;
-use App\Services\ListingCacheService;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -72,72 +70,12 @@ class ResolveListingReportAction
                 'resolution_summary' => $lockedReport->resolution_summary,
             ];
 
-            // Atomic listing suspension if requested
+            // Atomic listing suspension if requested (delegates to SuspendListingAction for audit, notification, and cache invalidation)
             if ($suspendListing) {
-                $propertyId = Listing::query()
-                    ->whereKey($lockedReport->listing_id)
-                    ->value('property_id');
-                $property = $propertyId === null
-                    ? null
-                    : Property::query()->whereKey($propertyId)->first();
-
-                if ($property !== null) {
-                    User::query()->whereKey($property->owner_id)->lockForUpdate()->firstOrFail();
-                    Property::query()->whereKey($property->id)->lockForUpdate()->firstOrFail();
-                }
-
-                /** @var Listing|null $lockedListing */
-                $lockedListing = Listing::query()
-                    ->where('id', $lockedReport->listing_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($lockedListing && ! $lockedListing->admin_suspended_at) {
+                $targetListing = Listing::query()->find($lockedReport->listing_id);
+                if ($targetListing !== null && $targetListing->admin_suspended_at === null) {
                     $reason = $suspensionReason ?: $resolutionSummary;
-                    $listingBefore = [
-                        'admin_suspended_at' => null,
-                        'admin_suspended_by' => null,
-                        'suspension_reason' => null,
-                    ];
-
-                    $lockedListing->update([
-                        'admin_suspended_at' => $now,
-                        'admin_suspended_by' => $admin->id,
-                        'suspension_reason' => $reason,
-                    ]);
-
-                    AuditLog::create([
-                        'actor_id' => $admin->id,
-                        'entity_type' => 'listing',
-                        'entity_id' => $lockedListing->id,
-                        'action' => 'listing.suspended',
-                        'before_values' => $listingBefore,
-                        'after_values' => [
-                            'admin_suspended_at' => $now->toIso8601String(),
-                            'admin_suspended_by' => $admin->id,
-                            'suspension_reason' => $reason,
-                        ],
-                        'reason' => 'Suspended via report resolution',
-                        'correlation_id' => (string) Str::uuid(),
-                    ]);
-
-                    // Notify owner if available
-                    $ownerId = $lockedListing->property?->owner_id;
-                    if ($ownerId) {
-                        app(RecordNotification::class)->record(
-                            recipientId: (string) $ownerId,
-                            audience: 'OWNER',
-                            eventKey: 'listing.suspended:'.$lockedListing->id.':'.$now->timestamp,
-                            title: 'Tin đăng đã bị đình chỉ',
-                            body: 'Tin đăng của bạn đã bị đình chỉ với lý do: '.$reason,
-                            resourceType: 'listing',
-                            resourceId: (string) $lockedListing->id,
-                            actorId: (string) $admin->id,
-                        );
-                    }
-
-                    // Same as SuspendListingAction: drop cached public copies after commit.
-                    app(ListingCacheService::class)->invalidateListing((string) $lockedListing->id);
+                    app(SuspendListingAction::class)->execute($targetListing, $admin, $reason);
                 }
             }
 

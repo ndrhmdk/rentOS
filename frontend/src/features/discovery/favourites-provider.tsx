@@ -21,7 +21,10 @@ export function useFavourites() {
 
 export function FavouritesProvider({ children }: { children: ReactNode }) {
   const { user, status } = useAuth();
-  const accountId = status === "authenticated" ? user?.id ?? null : null;
+  const accountId =
+    status === "authenticated" && user?.email_verified_at !== null
+      ? user?.id ?? null
+      : null;
   const store = useMemo(() => new FavouritesStore(accountId), [accountId]);
   const state = useSyncExternalStore(store.subscribe, store.snapshot, store.snapshot);
   const [promptOpen, setPromptOpen] = useState(false);

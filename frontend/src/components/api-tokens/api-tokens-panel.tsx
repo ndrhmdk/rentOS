@@ -14,8 +14,8 @@ import {
 } from "@/lib/tokens/new-token-secret";
 import type { PersonalAccessToken } from "@/lib/tokens/types";
 
-function formatDate(value: string | null): string {
-  if (!value) return "Không hết hạn";
+function formatDate(value: string | null, fallback = "Không hết hạn"): string {
+  if (!value) return fallback;
   return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(
     new Date(value),
   );
@@ -203,8 +203,8 @@ export function ApiTokensPanel() {
                     Quyền: {token.abilities.join(", ")}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Tạo {formatDate(token.created_at)} · Dùng gần nhất{" "}
-                    {formatDate(token.last_used_at)} · Hết hạn{" "}
+                    Tạo {formatDate(token.created_at, "--")} · Dùng gần nhất{" "}
+                    {formatDate(token.last_used_at, "Chưa sử dụng")} · Hết hạn{" "}
                     {formatDate(token.expires_at)}
                   </p>
                 </div>
@@ -370,7 +370,7 @@ function ApiUsageGuide() {
       <h3 className="mt-5 text-sm font-bold text-slate-800">Ví dụ với cURL</h3>
       <pre className="mt-2 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
         <code>
-          `curl &quot;{process.env.NEXT_PUBLIC_API_URL}/api/v1/owner/rental-requests?status=ALL&quot; -H &quot;Accept: application/json&quot; -H &quot;Authorization: Bearer YOUR_TOKEN&quot;`
+          {`curl "${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1/owner/rental-requests?status=ALL" -H "Accept: application/json" -H "Authorization: Bearer YOUR_TOKEN"`}
         </code>
       </pre>
     </section>

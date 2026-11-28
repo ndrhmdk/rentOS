@@ -44,10 +44,29 @@ describe("FavouritesProvider & FavouriteButton", () => {
     expect(screen.getByText("Đăng nhập để lưu tin")).toBeTruthy();
   });
 
+  it("does not call the favourites API before the email is verified", async () => {
+    vi.mocked(getFavouriteIds).mockClear();
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: "user-2", email: "new@example.com", name: "New", phone: "0901234567", is_admin: false, email_verified_at: null },
+      status: "authenticated",
+      refreshUser: vi.fn(),
+      signOut: vi.fn(),
+    });
+
+    render(
+      <FavouritesProvider>
+        <FavouriteButton propertyId="prop-1" />
+      </FavouritesProvider>,
+    );
+
+    expect(await screen.findByRole("button", { name: "Lưu vào Yêu thích" })).toBeTruthy();
+    expect(getFavouriteIds).not.toHaveBeenCalled();
+  });
+
   it("loads and toggles favourite for authenticated user", async () => {
     const user = userEvent.setup();
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: "user-1", email: "user@example.com", name: "User", phone: "0901234567", is_admin: false, email_verified_at: null },
+      user: { id: "user-1", email: "user@example.com", name: "User", phone: "0901234567", is_admin: false, email_verified_at: "2026-11-25T10:00:00Z" },
       status: "authenticated",
       refreshUser: vi.fn(),
       signOut: vi.fn(),

@@ -54,15 +54,36 @@ class ListingReportPolicyTest extends TestCase
     public function test_investigate_and_suspend_listing_require_admin(): void
     {
         $admin = new User;
+        $admin->setDateFormat('Y-m-d H:i:s');
         $admin->is_admin = true;
+        $admin->account_status = 'ACTIVE';
+        $admin->email_verified_at = '2026-11-25 12:00:00';
+
+        $unverifiedAdmin = new User;
+        $unverifiedAdmin->setDateFormat('Y-m-d H:i:s');
+        $unverifiedAdmin->is_admin = true;
+        $unverifiedAdmin->account_status = 'ACTIVE';
+
+        $suspendedAdmin = new User;
+        $suspendedAdmin->setDateFormat('Y-m-d H:i:s');
+        $suspendedAdmin->is_admin = true;
+        $suspendedAdmin->account_status = 'SUSPENDED';
+        $suspendedAdmin->email_verified_at = '2026-11-25 12:00:00';
 
         $regular = new User;
+        $regular->setDateFormat('Y-m-d H:i:s');
         $regular->is_admin = false;
+        $regular->account_status = 'ACTIVE';
+        $regular->email_verified_at = '2026-11-25 12:00:00';
 
         $this->assertTrue($this->policy->investigate($admin));
+        $this->assertFalse($this->policy->investigate($unverifiedAdmin));
+        $this->assertFalse($this->policy->investigate($suspendedAdmin));
         $this->assertFalse($this->policy->investigate($regular));
 
         $this->assertTrue($this->policy->suspendListing($admin));
+        $this->assertFalse($this->policy->suspendListing($unverifiedAdmin));
+        $this->assertFalse($this->policy->suspendListing($suspendedAdmin));
         $this->assertFalse($this->policy->suspendListing($regular));
     }
 }

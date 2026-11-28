@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { ApiError } from "@/lib/http/client";
 import {
   dismissAdminReport,
@@ -31,6 +32,7 @@ export function AdminReportsView() {
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isForbiddenOrNotFound, setIsForbiddenOrNotFound] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export function AdminReportsView() {
     let ignore = false;
     async function load() {
       try {
+        setLoadError(null);
         const response = await getAdminListingReports({
           status: statusFilter || undefined,
           reason_code: reasonFilter || undefined,
@@ -71,7 +74,7 @@ export function AdminReportsView() {
           if (err instanceof ApiError && (err.status === 404 || err.status === 403 || err.status === 401)) {
             setIsForbiddenOrNotFound(true);
           } else {
-            setActionError("Không thể tải danh sách điều tra. Vui lòng thử lại sau.");
+            setLoadError("Không thể tải danh sách điều tra. Vui lòng thử lại sau.");
           }
           setLoading(false);
         }
@@ -132,6 +135,23 @@ export function AdminReportsView() {
     }
   }
 
+  function patchSelectedListingSuspension(
+    isSuspended: boolean,
+    reason: string | null,
+  ) {
+    setSelectedReport((current) => {
+      if (!current?.listing) return current;
+      return {
+        ...current,
+        listing: {
+          ...current.listing,
+          is_suspended: isSuspended,
+          suspension_reason: reason,
+        },
+      };
+    });
+  }
+
   async function handleExecuteAction(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedReport || !actionType) return;
@@ -141,7 +161,9 @@ export function AdminReportsView() {
     try {
       if (actionType === "RESOLVE") {
         if (!resolutionSummary.trim()) {
-          setActionError("Vui lòng nhập tóm tắt kết quả xử lý gửi cho người báo cáo.");
+          setActionError(
+            "Vui lòng nhập tóm tắt kết quả xử lý gửi cho người báo cáo.",
+          );
           setSubmittingAction(false);
           return;
         }
@@ -154,13 +176,19 @@ export function AdminReportsView() {
           resolution_summary: resolutionSummary.trim(),
           internal_notes: internalNotes.trim() || undefined,
           suspend_listing: suspendListing,
-          suspension_reason: suspendListing ? suspensionReason.trim() : undefined,
+          suspension_reason: suspendListing
+            ? suspensionReason.trim()
+            : undefined,
         });
-        setSelectedReport(res.data ?? (res as unknown as AdminListingReport));
+        setSelectedReport(
+          res.data ?? (res as unknown as AdminListingReport),
+        );
         setActionSuccess("Báo cáo đã được giải quyết thành công.");
       } else if (actionType === "DISMISS") {
         if (!resolutionSummary.trim()) {
-          setActionError("Vui lòng nhập lý do bác bỏ gửi cho người báo cáo.");
+          setActionError(
+            "Vui lòng nhập lý do bác bỏ gửi cho người báo cáo.",
+          );
           setSubmittingAction(false);
           return;
         }
@@ -168,7 +196,9 @@ export function AdminReportsView() {
           resolution_summary: resolutionSummary.trim(),
           internal_notes: internalNotes.trim() || undefined,
         });
-        setSelectedReport(res.data ?? (res as unknown as AdminListingReport));
+        setSelectedReport(
+          res.data ?? (res as unknown as AdminListingReport),
+        );
         setActionSuccess("Báo cáo đã được bác bỏ thành công.");
       } else if (actionType === "SUSPEND") {
         if (!directReason.trim()) {
@@ -176,7 +206,15 @@ export function AdminReportsView() {
           setSubmittingAction(false);
           return;
         }
-        await suspendAdminListing(selectedReport.listing_id, directReason.trim());
+        const reason = directReason.trim();
+        const res = await suspendAdminListing(
+          selectedReport.listing_id,
+          reason,
+        );
+        patchSelectedListingSuspension(
+          res.data?.is_suspended ?? true,
+          res.data?.suspension_reason ?? reason,
+        );
         setActionSuccess("Tin đăng đã được đình chỉ thành công.");
       } else if (actionType === "RESTORE") {
         if (!directReason.trim()) {
@@ -184,7 +222,14 @@ export function AdminReportsView() {
           setSubmittingAction(false);
           return;
         }
-        await restoreAdminListing(selectedReport.listing_id, directReason.trim());
+        const res = await restoreAdminListing(
+          selectedReport.listing_id,
+          directReason.trim(),
+        );
+        patchSelectedListingSuspension(
+          res.data?.is_suspended ?? false,
+          null,
+        );
         setActionSuccess("Tin đăng đã được khôi phục thành công.");
       }
 
@@ -204,13 +249,13 @@ export function AdminReportsView() {
   function renderStatusBadge(status: ReportStatus) {
     switch (status) {
       case "OPEN":
-        return <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">Chờ xử lý</span>;
+        return <StatusBadge tone="info">Chờ xử lý</StatusBadge>;
       case "REVIEWING":
-        return <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-semibold text-purple-700 border border-purple-200">Đang điều tra</span>;
+        return <StatusBadge tone="review">Đang điều tra</StatusBadge>;
       case "RESOLVED":
-        return <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">Đã giải quyết</span>;
+        return <StatusBadge tone="success">Đã giải quyết</StatusBadge>;
       case "DISMISSED":
-        return <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 border border-slate-200">Đã bác bỏ</span>;
+        return <StatusBadge tone="neutral">Đã bác bỏ</StatusBadge>;
     }
   }
 
@@ -232,7 +277,7 @@ export function AdminReportsView() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Quản trị Điều tra Báo cáo & Đình chỉ Tin</h1>
+          <h1 className="text-[28px] font-bold leading-[38px] tracking-[-0.035em] text-slate-900">Báo cáo vi phạm</h1>
           <p className="mt-1 text-sm text-slate-500">
             Hàng đợi thẩm định vi phạm, xử lý khiếu nại và kiểm soát hiển thị tin đăng công khai.
           </p>
@@ -240,16 +285,16 @@ export function AdminReportsView() {
       </div>
 
       {actionSuccess ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 flex justify-between items-center">
+        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 flex justify-between items-center">
           <span>{actionSuccess}</span>
-          <button type="button" onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-800 font-bold ml-4">✕</button>
+          <button type="button" aria-label="Đóng thông báo thành công" onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-800 font-bold ml-4">✕</button>
         </div>
       ) : null}
 
       {actionError ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex justify-between items-center">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex justify-between items-center">
           <span>{actionError}</span>
-          <button type="button" onClick={() => setActionError(null)} className="text-rose-600 hover:text-rose-800 font-bold ml-4">✕</button>
+          <button type="button" aria-label="Đóng thông báo lỗi" onClick={() => setActionError(null)} className="text-rose-600 hover:text-rose-800 font-bold ml-4">✕</button>
         </div>
       ) : null}
 
@@ -258,10 +303,10 @@ export function AdminReportsView() {
         <div className="flex flex-wrap gap-2">
           {[
             { label: "Tất cả", value: "" },
-            { label: "Chờ xử lý (OPEN)", value: "OPEN" },
-            { label: "Đang xem xét (REVIEWING)", value: "REVIEWING" },
-            { label: "Đã giải quyết (RESOLVED)", value: "RESOLVED" },
-            { label: "Đã bác bỏ (DISMISSED)", value: "DISMISSED" },
+            { label: "Chờ xử lý", value: "OPEN" },
+            { label: "Đang điều tra", value: "REVIEWING" },
+            { label: "Đã giải quyết", value: "RESOLVED" },
+            { label: "Đã bác bỏ", value: "DISMISSED" },
           ].map((tab) => (
             <button
               key={tab.value}
@@ -270,7 +315,7 @@ export function AdminReportsView() {
                 setStatusFilter(tab.value);
                 setPage(1);
               }}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${statusFilter === tab.value
+              className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${statusFilter === tab.value
                   ? "bg-[#3368a0] text-white shadow-sm"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
@@ -282,6 +327,7 @@ export function AdminReportsView() {
 
         <div className="flex flex-col sm:flex-row gap-2">
           <select
+            aria-label="Lọc theo lý do vi phạm"
             value={reasonFilter}
             onChange={(e) => {
               setReasonFilter(e.target.value);
@@ -298,6 +344,7 @@ export function AdminReportsView() {
 
           <input
             type="text"
+            aria-label="Tìm theo tin đăng hoặc người báo cáo"
             placeholder="Tìm theo tin đăng, người báo..."
             value={search}
             onChange={(e) => {
@@ -312,23 +359,39 @@ export function AdminReportsView() {
       {/* Reports Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+          <table className="w-full min-w-[780px] divide-y divide-slate-200 text-left text-sm">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-4 py-3.5">Tin đăng</th>
-                <th className="px-4 py-3.5">Lý do vi phạm</th>
-                <th className="px-4 py-3.5">Người gửi</th>
-                <th className="px-4 py-3.5">Trạng thái</th>
-                <th className="px-4 py-3.5">Đình chỉ</th>
-                <th className="px-4 py-3.5">Ngày gửi</th>
-                <th className="px-4 py-3.5 text-right">Thao tác</th>
+                <th className="px-3 py-3.5">Tin đăng</th>
+                <th className="px-3 py-3.5">Lý do vi phạm</th>
+                <th className="px-3 py-3.5">Người gửi</th>
+                <th className="px-3 py-3.5">Trạng thái</th>
+                <th className="px-3 py-3.5">Đình chỉ</th>
+                <th className="px-3 py-3.5">Ngày gửi</th>
+                <th className="px-3 py-3.5 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={7} role="status" className="px-4 py-8 text-center text-sm text-slate-500">
                     Đang tải dữ liệu điều tra...
+                  </td>
+                </tr>
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={7} role="alert" className="px-4 py-8 text-center text-sm text-rose-700">
+                    <p>{loadError}</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoading(true);
+                        setReloadKey((k) => k + 1);
+                      }}
+                      className="mt-3 inline-flex items-center rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700"
+                    >
+                      Thử lại
+                    </button>
                   </td>
                 </tr>
               ) : (reports?.length ?? 0) === 0 ? (
@@ -340,34 +403,32 @@ export function AdminReportsView() {
               ) : (
                 (reports ?? []).map((report) => (
                   <tr key={report.id} className="hover:bg-slate-50/80 transition cursor-pointer" onClick={() => setSelectedReport(report)}>
-                    <td className="px-4 py-3.5 font-medium text-slate-900 max-w-xs truncate">
+                    <td className="px-3 py-3.5 font-medium text-slate-900 max-w-[200px] truncate">
                       {report.listing?.title ?? report.listing_id}
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-xs font-medium text-slate-700 bg-slate-100 rounded px-2 py-0.5">
+                    <td className="px-3 py-3.5">
+                      <StatusBadge>
                         {reasonLabels[report.reason_code] ?? report.reason_code}
-                      </span>
+                      </StatusBadge>
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-600">
+                    <td className="px-3 py-3.5 text-xs text-slate-600">
                       <div className="font-medium text-slate-900">{report.reporter?.name}</div>
                       <div className="text-slate-400">{report.reporter?.email}</div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3.5">
                       {renderStatusBadge(report.status)}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-3 py-3.5">
                       {report.listing?.is_suspended ? (
-                        <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
-                          Đã đình chỉ
-                        </span>
+                        <StatusBadge tone="danger">Đã đình chỉ</StatusBadge>
                       ) : (
                         <span className="text-xs text-slate-400">Bình thường</span>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-slate-500 whitespace-nowrap">
+                    <td className="px-3 py-3.5 text-xs text-slate-500 whitespace-nowrap">
                       {formatDate(report.created_at)}
                     </td>
-                    <td className="px-4 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => setSelectedReport(report)}
@@ -413,8 +474,14 @@ export function AdminReportsView() {
       {/* Investigation Detail Modal / Drawer */}
       {selectedReport && !actionType ? (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-report-detail-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           onClick={() => setSelectedReport(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setSelectedReport(null);
+          }}
         >
           <div
             className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-5"
@@ -423,13 +490,14 @@ export function AdminReportsView() {
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-slate-900">Chi tiết Hồ sơ Báo cáo</h2>
+                  <h2 id="admin-report-detail-title" className="text-xl font-bold text-slate-900">Chi tiết Hồ sơ Báo cáo</h2>
                   {renderStatusBadge(selectedReport.status)}
                 </div>
                 <p className="text-xs text-slate-400 mt-1">Mã hồ sơ: {selectedReport.id}</p>
               </div>
               <button
                 type="button"
+                aria-label="Đóng chi tiết hồ sơ báo cáo"
                 onClick={() => setSelectedReport(null)}
                 className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
               >
@@ -447,13 +515,9 @@ export function AdminReportsView() {
                 </div>
                 <div>
                   {selectedReport.listing?.is_suspended ? (
-                    <span className="inline-flex items-center rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-800">
-                      Đang bị đình chỉ
-                    </span>
+                    <StatusBadge tone="danger">Đang bị đình chỉ</StatusBadge>
                   ) : (
-                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-                      Đang công khai
-                    </span>
+                    <StatusBadge tone="success">Đang công khai</StatusBadge>
                   )}
                 </div>
               </div>
@@ -586,15 +650,21 @@ export function AdminReportsView() {
       {/* Decision Action Modal */}
       {selectedReport && actionType ? (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-report-action-title"
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4"
           onClick={() => setActionType(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setActionType(null);
+          }}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 id="admin-report-action-title" className="text-lg font-bold text-slate-900">
                 {actionType === "RESOLVE" && "Giải quyết Báo cáo"}
                 {actionType === "DISMISS" && "Bác bỏ Báo cáo"}
                 {actionType === "SUSPEND" && "Đình chỉ Tin đăng"}
@@ -602,6 +672,7 @@ export function AdminReportsView() {
               </h3>
               <button
                 type="button"
+                aria-label="Đóng hộp thoại thao tác"
                 onClick={() => setActionType(null)}
                 className="text-slate-400 hover:text-slate-600"
               >

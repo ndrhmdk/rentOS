@@ -708,4 +708,69 @@ class ListingReportsFlowsTest extends TestCase
         $this->actingAs($nonAdmin)->getJson('/api/v1/admin/listing-reports')->assertNotFound();
         $this->actingAs($nonAdmin)->getJson("/api/v1/admin/listing-reports/{$reportId}")->assertNotFound();
     }
+
+    public function test_reporter_privacy_hides_internal_notes_and_admin_endpoints_enforce_session_active_verified_and_uuid(): void
+    {
+        $published = PublicListingFixture::published();
+        $reporter = User::factory()->create();
+        $admin = $this->createAdminUser();
+
+        // Warm public cache first
+        $this->getJson('/api/v1/listings')->assertOk();
+        $this->getJson("/api/v1/listings/{$published->listingId}")->assertOk();
+
+        $submitRes = $this->actingAs($reporter)->postJson("/api/v1/listings/{$published->listingId}/reports", [
+            'reason_code' => 'FRAUD',
+            'description' => 'Nghi vấn lừa đảo tiền cọc.',
+        ])->assertCreated();
+        $reportId = $submitRes->json('data.id');
+
+        // Start review & resolve with suspend_listing = true and private internal_notes
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reports/{$reportId}/start-review")->assertOk();
+        $this->actingAs($admin, 'web')->postJson("/api/v1/admin/listing-reports/{$reportId}/resolve", [
+            'resolution_summary' => 'Đã xử lý đình chỉ tin vi phạm.',
+            'internal_notes' => 'Ghi chú mật nội bộ: IP trùng tài khoản lừa đảo.',
+            'suspend_listing' => true,
+            'suspension_reason' => 'Vi phạm chính sách đặt cọc.',
+        ])->assertOk();
+
+        // FR72 Privacy: reporter viewing own report must NOT see internal_notes or reviewed_by
+        $this->app['auth']->forgetGuards();
+        $reporterView = $this->actingAs($reporter, 'web')
+            ->getJson("/api/v1/tenant/reports/{$reportId}")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'RESOLVED')
+            ->assertJsonPath('data.resolution_summary', 'Đã xử lý đình chỉ tin vi phạm.')
+            ->assertJsonMissingPath('data.internal_notes')
+            ->assertJsonMissingPath('data.reviewed_by');
+        $this->assertStringNotContainsString('Ghi chú mật nội bộ', $reporterView->getContent() ?: '');
+
+        // Cache invalidation: detail returns 404 and search excludes listing with X-Cache: MISS
+        $this->getJson("/api/v1/listings/{$published->listingId}")->assertNotFound();
+        $searchAfter = $this->getJson('/api/v1/listings')->assertOk();
+        $searchAfter->assertHeader('X-Cache', 'MISS');
+        $this->assertNotContains($published->listingId, collect($searchAfter->json('data'))->pluck('id')->all());
+
+        // Non-UUID parameters return 404 instead of 500
+        $this->actingAs($admin, 'web')->getJson('/api/v1/admin/listing-reports/not-a-uuid')->assertNotFound();
+        $this->actingAs($admin, 'web')->postJson('/api/v1/admin/listings/not-a-uuid/suspend', ['reason' => 'test'])->assertNotFound();
+
+        // PAT caller on session-only admin report/suspension endpoints is rejected with 403
+        $pat = $admin->createToken('ci-token', ['account:read'], now()->addHour())->plainTextToken;
+        $this->app['auth']->forgetGuards();
+        $this->withToken($pat)->getJson('/api/v1/admin/listing-reports')->assertForbidden();
+        $this->withToken($pat)->postJson("/api/v1/admin/listings/{$published->listingId}/restore", ['reason' => 'test'])->assertForbidden();
+
+        // Suspended or unverified admin is denied with 404 (non-disclosure)
+        $unverifiedAdmin = $this->createAdminUser();
+        DB::table('users')->where('id', $unverifiedAdmin->id)->update(['email_verified_at' => null]);
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($unverifiedAdmin->fresh(), 'web')->getJson('/api/v1/admin/listing-reports')->assertNotFound();
+
+        $suspendedAdmin = $this->createAdminUser();
+        DB::table('users')->where('id', $suspendedAdmin->id)->update(['account_status' => 'SUSPENDED']);
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($suspendedAdmin->fresh(), 'web')->getJson('/api/v1/admin/listing-reports')->assertNotFound();
+    }
 }

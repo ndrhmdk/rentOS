@@ -59,7 +59,7 @@ const reasons = [
   },
   {
     title: "Minh bạch chi phí",
-    body: "Giá thuê, tiền cọc và các khoảng phí được công khai rõ ràng.",
+    body: "Giá thuê, tiền cọc và các khoản phí được công khai rõ ràng.",
     icon: "/images/home/list.svg",
     width: 22,
     height: 22,
@@ -161,7 +161,7 @@ export default function Home() {
               href="/listings"
               className="mt-5 inline-flex min-h-12 w-full max-w-[460px] items-center justify-between rounded-md bg-white px-5 text-base font-semibold text-black sm:mt-8 sm:h-[60px] sm:px-6 sm:text-xl"
             >
-              Tìm nhà ngay!
+              Xem tất cả tin đăng
               <span aria-hidden="true">↗</span>
             </Link>
           </div>

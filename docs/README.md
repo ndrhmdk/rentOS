@@ -10,6 +10,7 @@ Read product → domain → module PRD → workflow → acceptance → architect
 6. [Acceptance and traceability](06-acceptance/README.md)
 7. [Architecture](07-architecture/README.md)
 8. [Assumptions](08-project/assumptions.md), [constraints](08-project/constraints.md), [open questions](08-project/open-questions.md), [glossary](08-project/glossary.md)
+9. **Project Summary & Handover:** [Final Project Summary](08-project/final-project-summary.md), [Summary Template](08-project/final-summary-template.md), [Course Compliance](08-project/course-compliance.md)
 
 ## Modules
 

@@ -9,8 +9,8 @@ Admin workflows are secure and accessible, and the marker/team can reproduce the
 ## Ownership and order
 
 - Phase 4.
-- Implementation: **Tri** (frontend + backend + own tests).
-- Reviewer: **Hien**.
+- Implementation: **Hien** (frontend + backend + verification).
+- Reviewer: **Khai**.
 - Prerequisites: [RNT-04](RNT-04.md), [RNT-08](RNT-08.md), [RNT-12](RNT-12.md), [RNT-13](RNT-13.md), [RNT-14](RNT-14.md), [RNT-15](RNT-15.md).
 - Publication: Draft; actual GitHub issue URL not recorded.
 
