@@ -16,6 +16,8 @@ import { ApiError } from "@/lib/http/client";
 import { type AmenityCatalogEntry, type AmenityDocument, type OwnerPropertyDetail, type OwnerPropertyMedia, type OwnerUnit } from "@/lib/owner/types";
 import { archiveOwnerProperty, archiveOwnerUnit, getAmenityCatalog, getOwnerProperty, getOwnerPropertyMedia, removeOwnerMedia, saveOwnerUnitSharedMedia, updateOwnerGallery, updateOwnerProperty, updateOwnerUnitGallery, uploadOwnerMedia } from "@/lib/owner/api";
 import { VietnamLocationPicker } from "@/components/vietnam-location-picker";
+import { MoneyField } from "@/components/ui/money-field";
+import { LoadingScreen } from "@/components/loading-screen";
 
 const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -115,11 +117,11 @@ function AmenityFields({
           ? "Tiện nghi"
           : `Tiện nghi ${scope === "unit" ? "trong phòng" : "dùng chung"}`}
       </legend>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {entries.map((item) => (
           <label
             key={item.key}
-            className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
+            className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm text-slate-700"
           >
             <input
               type="checkbox"
@@ -135,7 +137,7 @@ function AmenityFields({
               maxLength={160}
               aria-label={`Ghi chú ${item.label}`}
               placeholder="Ghi chú tùy chọn"
-              className="ml-2 w-40 rounded-md border border-slate-200 px-2 py-1 text-xs"
+              className="ml-auto min-w-0 w-2/5 rounded-md border border-slate-200 px-2 py-1 text-xs"
             />
           </label>
         ))}
@@ -194,20 +196,16 @@ function WholeSpaceFields({ property }: { property: OwnerPropertyDetail }) {
       </label>
       <label className="text-sm font-medium text-slate-700">
         Giá thuê tháng (VND)
-        <input
+        <MoneyField
           name="advertised_monthly_rent"
-          type="number"
-          min="1"
           defaultValue={unit?.advertised_monthly_rent ?? ""}
           className={fieldClass}
         />
       </label>
       <label className="text-sm font-medium text-slate-700">
         Tiền đặt cọc (VND)
-        <input
+        <MoneyField
           name="deposit"
-          type="number"
-          min="0"
           defaultValue={unit?.deposit ?? ""}
           className={fieldClass}
         />
@@ -273,16 +271,19 @@ function amenitiesFromForm(
 
 export function PropertyEditor({
   propertyId,
-  tab,
 }: {
   propertyId: string;
-  tab: WorkspaceTab;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const tab: WorkspaceTab =
+    requestedTab === "units" || requestedTab === "photos"
+      ? requestedTab
+      : "overview";
   const [property, setProperty] = useState<OwnerPropertyDetail | null>(null);
   const [media, setMedia] = useState<OwnerPropertyMedia[]>([]);
   const [catalog, setCatalog] = useState<AmenityCatalogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -301,7 +302,6 @@ export function PropertyEditor({
   useEffect(() => {
     let active = true;
     async function load() {
-      setLoading(true);
       setError(null);
       try {
         const [detail, photos, amenities] = await Promise.all([
@@ -324,8 +324,6 @@ export function PropertyEditor({
             ? caught.message
             : "Không thể tải bất động sản.",
         );
-      } finally {
-        if (active) setLoading(false);
       }
     }
     void load();
@@ -365,11 +363,17 @@ export function PropertyEditor({
   }
 
   function openTab(next: WorkspaceTab) {
-    router.push(
-      next === "overview"
-        ? `/owner/properties/${propertyId}`
-        : `/owner/properties/${propertyId}?tab=${next}`,
-    );
+    const params = new URLSearchParams(window.location.search);
+    if (next === "overview") params.delete("tab");
+    else params.set("tab", next);
+    const query = params.toString();
+    const nextUrl = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
   }
 
   async function saveProperty(event: FormEvent<HTMLFormElement>) {
@@ -494,21 +498,19 @@ export function PropertyEditor({
   return (
     <section className="mx-auto w-full max-w-6xl px-1 py-4 sm:px-2 sm:py-6">
       <Link
-        href="/owner/properties"
+        href={`/owner/properties/${propertyId}`}
         className="mb-2 inline-flex text-sm font-semibold text-[#3368a0] hover:underline"
       >
-        ← Danh sách bất động sản
+        ← Quay lại tổng quan
       </Link>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
         {property?.name ?? "Bất động sản"}
       </h1>
-      {loading && (
-        <div
-          className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500"
-          aria-busy="true"
-        >
-          Đang tải bất động sản…
-        </div>
+      {!property && !error && (
+        <LoadingScreen
+          message="Đang tải bất động sản…"
+          className="mt-6 min-h-56"
+        />
       )}
       {error && (
         <div

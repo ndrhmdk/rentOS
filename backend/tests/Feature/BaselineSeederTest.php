@@ -24,6 +24,22 @@ class BaselineSeederTest extends TestCase
         $this->assertDatabaseCount('listings', 200);
         $this->assertSame(200, DB::table('listings')->where('publication_status', 'PUBLISHED')->count());
         $this->assertSame(0, DB::table('properties')->where('city', '!=', 'Đà Nẵng')->count());
+        $coordinateTitle = DB::table('listings')
+            ->where('title', '~', '[0-9]{2}\\.[0-9]{3,}.*,.*[0-9]{2,3}\\.[0-9]{3,}')
+            ->count();
+        $this->assertSame(
+            0,
+            $coordinateTitle,
+            'Listing titles must not embed raw latitude/longitude.',
+        );
+        $coordinateName = DB::table('properties')
+            ->where('name', '~', '[0-9]{2}\\.[0-9]{3,}.*,.*[0-9]{2,3}\\.[0-9]{3,}')
+            ->count();
+        $this->assertSame(
+            0,
+            $coordinateName,
+            'Property names must not embed raw latitude/longitude.',
+        );
         $this->assertSame(0, DB::table('property_media')->where('storage_path', 'not like', 'seed/%')->count());
         $this->assertSame(0, DB::table('property_media as media')
             ->join('units', 'units.id', '=', 'media.unit_id')

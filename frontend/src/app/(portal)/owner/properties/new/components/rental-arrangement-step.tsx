@@ -1,5 +1,6 @@
 "use client";
 
+import { MoneyField } from "@/components/ui/money-field";
 import {
   inputClass,
   textareaClass,
@@ -119,16 +120,11 @@ export function RentalArrangementStep({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-medium text-slate-700">
               Giá thuê tháng (₫)
-              <input name="rent" type="number" min={1} className={inputClass} />
+              <MoneyField name="rent" className={inputClass} />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Tiền đặt cọc (₫)
-              <input
-                name="deposit"
-                type="number"
-                min={0}
-                className={inputClass}
-              />
+              <MoneyField name="deposit" className={inputClass} />
             </label>
             <label className="text-sm font-medium text-slate-700">
               Thời hạn thuê tối thiểu (tháng)
@@ -359,26 +355,20 @@ export function RentalArrangementStep({
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Giá thuê tháng (₫)
-                  <input
+                  <MoneyField
                     name={`new_${index}_rent`}
-                    type="number"
-                    min="1"
                     value={room.rent}
-                    onChange={(event) =>
-                      onUpdateRoom(index, { rent: event.target.value })
-                    }
+                    onValueChange={(rent) => onUpdateRoom(index, { rent })}
                     className={inputClass}
                   />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                   Tiền đặt cọc (₫)
-                  <input
+                  <MoneyField
                     name={`new_${index}_deposit`}
-                    type="number"
-                    min="0"
                     value={room.deposit}
-                    onChange={(event) =>
-                      onUpdateRoom(index, { deposit: event.target.value })
+                    onValueChange={(deposit) =>
+                      onUpdateRoom(index, { deposit })
                     }
                     className={inputClass}
                   />

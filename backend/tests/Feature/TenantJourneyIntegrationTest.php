@@ -58,7 +58,7 @@ class TenantJourneyIntegrationTest extends TestCase
         // -------------------------------------------------------------
         // Step 1: Discovery & Search (FR19, FR20)
         // -------------------------------------------------------------
-        $searchResponse = $this->getJson('/api/v1/listings?location=My%20Khe&move_in_date=2026-12-01');
+        $searchResponse = $this->getJson('/api/v1/listings?street=My%20Khe&move_in_date=2026-12-01');
         $searchResponse->assertOk();
         $this->assertContains(
             $published->listingId,

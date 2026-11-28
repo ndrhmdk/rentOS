@@ -16,6 +16,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('v1')->name('api.v1.
             'update' => 'properties.update',
         ]);
     Route::patch('/owner/properties/{property}/archive', [OwnerPropertiesController::class, 'archive'])->name('properties.archive');
+    Route::get('/owner/properties/{property}/rental', [OwnerPropertiesController::class, 'rental'])->name('properties.rental');
 
     // Units
     Route::post('/owner/properties/{property}/units', [OwnerPropertiesController::class, 'storeUnit'])->name('properties.units.store');

@@ -27,6 +27,11 @@ class PersonalAccessTokensTest extends TestCase
         $this->assertSame('rentos_test', config('database.connections.pgsql.database'));
     }
 
+    public function test_sanctum_expiration_minutes_is_configured(): void
+    {
+        $this->assertSame(10080, (int) config('sanctum.expiration'));
+    }
+
     public function test_browser_can_create_list_and_revoke_a_scoped_token(): void
     {
         $user = User::factory()->create();

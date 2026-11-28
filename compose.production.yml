@@ -14,7 +14,7 @@ x-laravel-env: &laravel-env
   FRONTEND_URL: ${FRONTEND_URL:-https://rentos.io.vn}
   LOG_CHANNEL: ${LOG_CHANNEL:-stack}
   LOG_STACK: ${LOG_STACK:-stderr}
-  LOG_LEVEL: ${LOG_LEVEL:-error}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   TELESCOPE_ENABLED: ${TELESCOPE_ENABLED:-false}
   MONITORING_SLOW_QUERIES: ${MONITORING_SLOW_QUERIES:-true}
   SLOW_QUERY_MS: ${SLOW_QUERY_MS:-1000}
@@ -38,12 +38,12 @@ x-laravel-env: &laravel-env
   DB_SCHEMA: ${DB_SCHEMA:-public}
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://rentos.io.vn}
   SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-rentos.io.vn}
-  SESSION_DRIVER: ${SESSION_DRIVER:-file}
+  SESSION_DRIVER: ${SESSION_DRIVER:-file} # Backend is now only deployed on one server
   SESSION_DOMAIN: ${SESSION_DOMAIN:-.rentos.io.vn}
   SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-true}
   SESSION_SAME_SITE: ${SESSION_SAME_SITE:-lax}
   QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-  CACHE_STORE: ${CACHE_STORE:-file}
+  CACHE_STORE: ${CACHE_STORE:-file} # Backend is now only deployed on one server
   SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL is required}
   SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is required}
   SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-property-media}
@@ -52,6 +52,7 @@ x-laravel-env: &laravel-env
   MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-support@rentos.io.vn}
   MAIL_FROM_NAME: ${MAIL_FROM_NAME:-rentOS}
   MAIL_MAILER: ${MAIL_MAILER:-resend}
+  SANCTUM_EXPIRATION_MINUTES: ${SANCTUM_EXPIRATION_MINUTES:-10080}
 
 services:
   migrate:
@@ -65,7 +66,7 @@ services:
       - --force
     environment: *laravel-env
 
-  # Frontend is hosted on Vercel. This stack runs API, worker, and migrate only.
+  # Frontend is hosted on Vercel. This stack runs API, worker, scheduler, and migrate only.
 
   api:
     image: ghcr.io/${IMAGE_OWNER:-ndrhmdk}/rentos-backend:${IMAGE_TAG:-production}
@@ -93,6 +94,21 @@ services:
       - queue:work
       - --sleep=10
       - --tries=3
+    environment: *laravel-env
+    volumes:
+      - laravel_storage:/var/www/html/storage
+
+  scheduler:
+    image: ghcr.io/${IMAGE_OWNER:-ndrhmdk}/rentos-backend:${IMAGE_TAG:-production}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command:
+      - php
+      - artisan
+      - schedule:work
     environment: *laravel-env
     volumes:
       - laravel_storage:/var/www/html/storage

@@ -134,8 +134,8 @@ export default function OwnerTenanciesPage() {
       setError("");
 
       try {
-        const result = await getOwnerTenancies();
-        if (active) setTenancies(result);
+        const result = await getOwnerTenancies({ page: 1, perPage: 20 });
+        if (active) setTenancies(result.data);
       } catch (caught) {
         if (!active) return;
 

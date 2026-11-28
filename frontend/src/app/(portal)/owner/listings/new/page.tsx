@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ListingEditor } from "../listing-editor";
 
 export default function NewOwnerListingPage({
@@ -8,9 +9,7 @@ export default function NewOwnerListingPage({
 }) {
   return (
     <Suspense
-      fallback={
-        <p className="px-1 py-6 text-sm text-slate-500">Đang tải tin đăng…</p>
-      }
+      fallback={<LoadingScreen message="Đang tải tin đăng…" />}
     >
       <NewOwnerListingLoader searchParams={searchParams} />
     </Suspense>

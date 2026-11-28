@@ -29,11 +29,14 @@ type PendingPhoto = { file: File; operationId: string };
 export function UnitPhotoManager({
   propertyId,
   unitId,
+  initialProperty = null,
 }: {
   propertyId: string;
   unitId: string;
+  initialProperty?: OwnerPropertyDetail | null;
 }) {
-  const [property, setProperty] = useState<OwnerPropertyDetail | null>(null);
+  const [property, setProperty] =
+    useState<OwnerPropertyDetail | null>(initialProperty);
   const [media, setMedia] = useState<OwnerPropertyMedia[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pending, setPending] = useState<PendingPhoto[]>([]);
@@ -68,7 +71,9 @@ export function UnitPhotoManager({
     async function loadPhotos() {
       try {
         const [detail, photos] = await Promise.all([
-          getOwnerProperty(propertyId),
+          initialProperty
+            ? Promise.resolve(initialProperty)
+            : getOwnerProperty(propertyId),
           getOwnerPropertyMedia(propertyId),
         ]);
         if (!active) return;
@@ -94,7 +99,7 @@ export function UnitPhotoManager({
     return () => {
       active = false;
     };
-  }, [propertyId, unitId]);
+  }, [initialProperty, propertyId, unitId]);
 
   useEffect(() => {
     return () => {
@@ -304,69 +309,104 @@ export function UnitPhotoManager({
             </div>
           </div>
           {pending.length > 0 && (
+            <section aria-labelledby="pending-unit-photos-heading" className="space-y-2">
+              <div>
+                <h3 id="pending-unit-photos-heading" className="text-sm font-semibold text-slate-900">
+                  Ảnh mới từ máy tính
+                </h3>
+                <p className="text-xs text-slate-600">
+                  Các ảnh này chưa được tải lên và chỉ xuất hiện trong phiên hiện tại.
+                </p>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {pending.map(({ file, operationId }, index) => (
+                  <li
+                    key={operationId}
+                    className="overflow-hidden rounded-xl border border-dashed border-amber-400 bg-amber-50/30"
+                  >
+                    <div className="relative aspect-[4/3] bg-slate-100">
+                      {pendingUrls[index] && (
+                        <Image
+                          src={pendingUrls[index]}
+                          alt={file.name}
+                          fill
+                          unoptimized
+                          sizes="30vw"
+                          className="object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 p-3 text-sm">
+                      <span className="min-w-0 truncate" title={file.name}>
+                        {file.name}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">
+                        Chưa tải lên
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </form>
+        <section aria-labelledby="saved-unit-photos-heading" className="mt-5 space-y-2">
+          <div>
+            <h3 id="saved-unit-photos-heading" className="text-sm font-semibold text-slate-900">
+              Ảnh đã tải lên cho căn này
+            </h3>
+            <p className="text-xs text-slate-600">
+              Những ảnh đã lưu trong thư viện sản phẩm.
+            </p>
+          </div>
+          {own.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
+              Chưa có ảnh đã tải lên cho căn này.
+            </p>
+          ) : (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {pending.map(({ file, operationId }, index) => (
+              {own.map((photo) => (
                 <li
-                  key={operationId}
+                  key={photo.id}
                   className="overflow-hidden rounded-xl border border-slate-200"
                 >
                   <div className="relative aspect-[4/3] bg-slate-100">
-                    {pendingUrls[index] && (
-                      <Image
-                        src={pendingUrls[index]}
-                        alt={file.name}
-                        fill
-                        unoptimized
-                        sizes="30vw"
+                    {photo.preview_url ? (
+                      <OwnerPhoto
+                        src={photo.preview_url}
+                        alt={photo.caption || "Ảnh căn"}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover"
                       />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                        Ảnh
+                      </div>
                     )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 p-3 text-sm">
+                    <span className="min-w-0 truncate">
+                      {photo.caption || "Ảnh căn"}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-900">
+                        Đã tải lên
+                      </span>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void remove(photo)}
+                        className="font-semibold text-rose-700"
+                      >
+                        Gỡ
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
             </ul>
           )}
-        </form>
-        {own.length === 0 ? (
-          <p className="mt-4 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
-            Chưa có ảnh riêng.
-          </p>
-        ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {own.map((photo) => (
-              <li
-                key={photo.id}
-                className="overflow-hidden rounded-xl border border-slate-200"
-              >
-                <div className="relative aspect-[4/3] bg-slate-100">
-                  {photo.preview_url ? (
-                    <OwnerPhoto
-                      src={photo.preview_url}
-                      alt={photo.caption || "Ảnh căn"}
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                      Ảnh
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-between gap-2 p-3 text-sm">
-                  <span className="truncate">{photo.caption || "Ảnh căn"}</span>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void remove(photo)}
-                    className="font-semibold text-rose-700"
-                  >
-                    Gỡ
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        </section>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">

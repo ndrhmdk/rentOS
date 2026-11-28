@@ -24,15 +24,44 @@ function renderFilters(query = "", filtersOpen = false, onToggleFilters = vi.fn(
   return render(<ListingFilters query={query} amenities={amenities} filtersOpen={filtersOpen} onToggleFilters={onToggleFilters} />);
 }
 
+function mockLocationFetch() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith("/provinces")) {
+        return Response.json({
+          success: true,
+          data: [{ code: "48", name: "Đà Nẵng" }],
+        });
+      }
+      if (url.includes("/wards")) {
+        return Response.json({
+          success: true,
+          data: [
+            { code: "1", name: "Hải Châu" },
+            { code: "2", name: "Sơn Trà" },
+          ],
+        });
+      }
+      return Response.json({ success: false }, { status: 404 });
+    }),
+  );
+}
+
 beforeEach(() => {
   mockReplace.mockReset();
+  mockLocationFetch();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("ListingFilters", () => {
   it("applies a price range given in millions and labels the button with it", async () => {
     const user = userEvent.setup();
-    const { rerender } = renderFilters("location=S%C6%A1n%20Tr%C3%A0&page=3");
+    const { rerender } = renderFilters("ward=S%C6%A1n%20Tr%C3%A0&page=3");
 
     await user.click(screen.getByRole("button", { name: /^Giá/ }));
     await user.type(screen.getByLabelText(/Tối thiểu/), "3.5");
@@ -42,7 +71,7 @@ describe("ListingFilters", () => {
     const query = lastQuery();
     expect(query.get("min_rent")).toBe("3500000");
     expect(query.get("max_rent")).toBe("6000000");
-    expect(query.get("location")).toBe("Sơn Trà");
+    expect(query.get("ward")).toBe("Sơn Trà");
     expect(query.get("page")).toBeNull();
 
     rerender(<ListingFilters query="min_rent=3500000&max_rent=6000000" amenities={amenities} filtersOpen={false} onToggleFilters={vi.fn()} />);
@@ -100,17 +129,30 @@ describe("ListingFilters", () => {
     expect(price.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("searches the typed location after a pause and can clear it", async () => {
+  it("searches street then ward only when the search button is pressed", async () => {
     const user = userEvent.setup();
     renderFilters("bedrooms=2");
 
-    await user.type(screen.getByLabelText("Địa điểm"), "  Hải   Châu ");
-    await waitFor(() => expect(lastQuery().get("location")).toBe("Hải Châu"));
+    await user.type(screen.getByLabelText(/Đường/), "  Trần   Phú ");
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    await waitFor(() =>
+      expect(screen.getByRole("option", { name: "Hải Châu" })).toBeTruthy(),
+    );
+    await user.selectOptions(screen.getByLabelText(/Phường/), "Hải Châu");
+    expect(mockReplace).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Tìm kiếm" }));
+    expect(lastQuery().get("street")).toBe("Trần Phú");
+    expect(lastQuery().get("ward")).toBe("Hải Châu");
     expect(lastQuery().get("bedrooms")).toBe("2");
 
     await user.click(screen.getByRole("button", { name: "Xóa địa điểm" }));
-    expect(lastQuery().get("location")).toBeNull();
-    expect((screen.getByLabelText("Địa điểm") as HTMLInputElement).value).toBe("");
+    expect(lastQuery().get("ward")).toBeNull();
+    expect(lastQuery().get("street")).toBeNull();
+    expect(
+      (screen.getByLabelText(/Đường/) as HTMLInputElement).value,
+    ).toBe("");
   });
 
   it("shows active amenities as removable chips and counts filters on the button", async () => {

@@ -3,31 +3,32 @@
 namespace App\Actions\Tenancies;
 
 use App\Models\User;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ListParticipantTenancies
 {
     /**
-     * @return Collection<int, \stdClass>
+     * @return LengthAwarePaginator<int, \stdClass>
      */
-    public function forOwner(User $owner): Collection
+    public function forOwner(User $owner, int $perPage = 20, int $page = 1): LengthAwarePaginator
     {
-        return $this->forParticipant($owner, true);
+        return $this->forParticipant($owner, true, $perPage, $page);
     }
 
     /**
-     * @return Collection<int, \stdClass>
+     * @return LengthAwarePaginator<int, \stdClass>
      */
-    public function forTenant(User $tenant): Collection
+    public function forTenant(User $tenant, int $perPage = 20, int $page = 1): LengthAwarePaginator
     {
-        return $this->forParticipant($tenant, false);
+        return $this->forParticipant($tenant, false, $perPage, $page);
     }
 
     /**
-     * @return Collection<int, \stdClass>
+     * @return LengthAwarePaginator<int, \stdClass>
      */
-    private function forParticipant(User $viewer, bool $isOwner): Collection
+    private function forParticipant(User $viewer, bool $isOwner, int $perPage, int $page): LengthAwarePaginator
     {
         $participantColumn = $isOwner
             ? 'tenancies.owner_id'
@@ -37,6 +38,15 @@ class ListParticipantTenancies
             ? 'tenancies.tenant_id'
             : 'tenancies.owner_id';
 
+        /** @var LengthAwarePaginator<int, \stdClass> $pageResult */
+        $pageResult = $this->baseQuery($participantColumn, $counterpartyColumn, $viewer->id)
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return $pageResult;
+    }
+
+    private function baseQuery(string $participantColumn, string $counterpartyColumn, string $viewerId): Builder
+    {
         return DB::table('tenancies')
             ->join('units', 'units.id', '=', 'tenancies.unit_id')
             ->join('properties', 'properties.id', '=', 'units.property_id')
@@ -50,7 +60,7 @@ class ListParticipantTenancies
                     ->on('latest_contracts.tenancy_id', '=', 'tenancies.id');
             })
             ->join('users as counterparty', 'counterparty.id', '=', $counterpartyColumn)
-            ->where($participantColumn, $viewer->id)
+            ->where($participantColumn, $viewerId)
             ->orderByDesc('tenancies.created_at')
             ->select([
                 'tenancies.id',
@@ -86,7 +96,6 @@ class ListParticipantTenancies
                 'latest_contracts.end_date as latest_confirmed_contract_end_date',
                 'latest_contracts.monthly_rent as latest_confirmed_contract_monthly_rent',
                 'latest_contracts.deposit_amount as latest_confirmed_contract_deposit_amount',
-            ])
-            ->get();
+            ]);
     }
 }

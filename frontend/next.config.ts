@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
     // under the homepage; 75 stays for screens that already request it.
     formats: ["image/avif", "image/webp"],
     qualities: [60, 75],
-    // Local Supabase Storage is on loopback. The optimizer has to be allowed to fetch it.
-    dangerouslyAllowLocalIP: true,
+    // Local Supabase Storage is on loopback. Only allow that in non-production builds.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
     remotePatterns: [
       {
         protocol: "http",
@@ -36,12 +36,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "rnzjpgntyfwsrsvdrqfy.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "rnzjpgntyfwsrsvdrqfy.supabase.co",
         pathname: "/storage/v1/object/sign/**",
       },
     ],

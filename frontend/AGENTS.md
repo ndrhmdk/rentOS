@@ -73,6 +73,13 @@ Example error format: `"Room 1 - Field Name: Error message"` (Vietnamese: `"Phò
 
 ## State Management Patterns
 
+### URL-backed tabs and data loading
+
+- Derive the active tab directly from `useSearchParams()` (or local state for tabs that are not URL-backed). Do not copy props or query parameters into state with an effect.
+- Change URL-backed tabs in the click handler with the native History API (`window.history.replaceState` or `pushState`), which keeps Next.js URL hooks in sync without navigating and remounting the page.
+- Keep fetch effects keyed to the resource identity and explicit retry inputs. Do not add presentational tab state to fetch dependencies; filter already-loaded data locally when possible.
+- Use `router.push`/`replace` for actual navigation, such as opening a different resource or redirecting after authentication, not for switching views within the same resource.
+
 ### Location Search Debouncing
 
 Use the pattern from `src/features/discovery/listing-filters.tsx`:

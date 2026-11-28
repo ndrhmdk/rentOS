@@ -133,6 +133,8 @@ class TenantTenanciesTest extends TestCase
 
         $response->assertOk()
             ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('meta.per_page', 20)
             ->assertJsonMissing(['is_tenant', 'is_owner', 'properties_count']);
 
         $returnedIds = collect($response->json('data'))->pluck('id')->all();

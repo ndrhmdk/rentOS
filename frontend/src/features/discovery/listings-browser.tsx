@@ -20,7 +20,8 @@ import {
 import type { ListingSearchState } from "./listing-search-params";
 
 const emptySearch: ListingSearchState = {
-  location: "",
+  ward: "",
+  street: "",
   moveInDate: "",
   minRent: "",
   maxRent: "",
@@ -223,10 +224,11 @@ export function ListingsBrowser() {
   }, [query, attempt, parsed.error]);
 
   const body = result?.body;
+  const placeLabel = [state.street, state.ward].filter(Boolean).join(", ");
   const heading =
     body?.meta.result_label ??
-    (state.location
-      ? `${body?.meta.total ?? 0} tin đăng tại ${state.location}`
+    (placeLabel
+      ? `${body?.meta.total ?? 0} tin đăng tại ${placeLabel}`
       : `${body?.meta.total ?? 0} tin đăng`);
 
   return (
@@ -242,8 +244,8 @@ export function ListingsBrowser() {
           />
           <div>
             <h1 className="text-[28px] font-semibold tracking-[-0.4px] text-[#091216]">
-              {state.location
-                ? `Nhà cho thuê tại ${state.location}`
+              {placeLabel
+                ? `Nhà cho thuê tại ${placeLabel}`
                 : "Nhà cho thuê"}
             </h1>
             <p className="text-sm text-[#5b6676]">

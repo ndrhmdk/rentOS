@@ -24,14 +24,23 @@ class TenancyParticipantApiTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $case['tenancy']->id)
             ->assertJsonPath('data.0.status', 'PENDING_CONFIRMATION')
-            ->assertJsonPath('data.0.rental_request_status', 'ACCEPTED');
+            ->assertJsonPath('data.0.rental_request_status', 'ACCEPTED')
+            ->assertJsonPath('meta.current_page', 1)
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.total', 1);
 
-        $this->actingAs($case['listing']->owner)->getJson('/api/v1/owner/tenancies')
+        $this->actingAs($case['listing']->owner)->getJson('/api/v1/owner/tenancies?per_page=5')
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $case['tenancy']->id)
-            ->assertJsonPath('data.0.counterparty_name', $case['tenant']->name);
+            ->assertJsonPath('data.0.counterparty_name', $case['tenant']->name)
+            ->assertJsonPath('meta.per_page', 5)
+            ->assertJsonPath('meta.total', 1);
+
+        $this->actingAs($case['listing']->owner)->getJson('/api/v1/owner/tenancies?per_page=100')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('per_page');
 
         $this->actingAs($case['tenant'])->getJson(
             "/api/v1/tenant/tenancies/{$case['tenancy']->id}",

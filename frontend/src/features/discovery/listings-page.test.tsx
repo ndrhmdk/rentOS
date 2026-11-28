@@ -8,7 +8,7 @@ const replace = vi.fn();
 // per render would re-run effects that depend on `router` and reload the page.
 const mockRouter = { replace };
 let query =
-  "location=H%E1%BA%A3i%20Ch%C3%A2u&max_rent=4000000&amenities=wifi&page=2";
+  "ward=H%E1%BA%A3i%20Ch%C3%A2u&max_rent=4000000&amenities=wifi&page=2";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
@@ -79,10 +79,10 @@ describe("listings page", () => {
     replace.mockReset();
     requests.length = 0;
     query =
-      "location=H%E1%BA%A3i%20Ch%C3%A2u&max_rent=4000000&amenities=wifi&page=2";
+      "ward=H%E1%BA%A3i%20Ch%C3%A2u&max_rent=4000000&amenities=wifi&page=2";
   });
 
-  it("clears only the location and keeps the other filters", async () => {
+  it("clears only the place filters and keeps the other filters", async () => {
     const user = userEvent.setup();
     render(<ListingsBrowser />);
     requests[0]?.resolve(card("Studio", "Còn trống"));
@@ -93,7 +93,8 @@ describe("listings page", () => {
 
     const href = String(replace.mock.calls[0]?.[0]);
     const next = new URL(href, "http://localhost").searchParams;
-    expect(next.get("location")).toBeNull();
+    expect(next.get("ward")).toBeNull();
+    expect(next.get("street")).toBeNull();
     expect(next.get("max_rent")).toBe("4000000");
     expect(next.getAll("amenities")).toEqual(["wifi"]);
     expect(next.get("page")).toBe("1");
@@ -112,7 +113,7 @@ describe("listings page", () => {
   it("ignores a slower response after a newer search starts", async () => {
     const view = render(<ListingsBrowser />);
     const first = requests[0];
-    query = "location=S%C6%A1n%20Tr%C3%A0";
+    query = "ward=S%C6%A1n%20Tr%C3%A0";
     view.rerender(<ListingsBrowser />);
     const second = requests[1];
 

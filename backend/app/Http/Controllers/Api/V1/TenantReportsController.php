@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TenantListingReportIndexRequest;
 use App\Http\Resources\ReporterListingReportResource;
 use App\Models\ListingReport;
 use App\Models\User;
@@ -14,7 +15,7 @@ class TenantReportsController extends Controller
     /**
      * List all reports submitted by the authenticated user.
      */
-    public function index(Request $request): JsonResponse
+    public function index(TenantListingReportIndexRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();

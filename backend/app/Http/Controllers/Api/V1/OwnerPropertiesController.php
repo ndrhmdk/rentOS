@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\OwnerProperties\PropertyWriteService;
+use App\Domain\Rentals\OwnerPropertyFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArchivePropertyMediaRequest;
 use App\Http\Requests\ArchivePropertyRequest;
 use App\Http\Requests\ArchiveUnitRequest;
+use App\Http\Requests\ListOwnerPropertiesRequest;
 use App\Http\Requests\StorePropertyMediaRequest;
 use App\Http\Requests\StorePropertyRequest;
 use App\Http\Requests\StoreUnitRequest;
@@ -16,6 +18,8 @@ use App\Http\Requests\UpdatePropertyGalleryRequest;
 use App\Http\Requests\UpdatePropertyRequest;
 use App\Http\Requests\UpdateUnitGalleryRequest;
 use App\Http\Requests\UpdateUnitRequest;
+use App\Http\Resources\OwnerPropertyRentalResource;
+use App\Http\Resources\OwnerPropertySummaryResource;
 use App\Http\Resources\PropertyMediaResource;
 use App\Http\Resources\PropertyResource;
 use App\Http\Resources\UnitResource;
@@ -37,7 +41,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class OwnerPropertiesController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(ListOwnerPropertiesRequest $request): AnonymousResourceCollection
     {
         /** @var User $user */
         $user = $request->user();
@@ -45,14 +49,48 @@ class OwnerPropertiesController extends Controller
         abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
         Gate::authorize('viewAny', Property::class);
 
+        $occupancy = (string) $request->input('occupancy', 'all');
+        /** @var list<string> $listingStatuses */
+        $listingStatuses = array_values(array_filter(
+            (array) $request->input('listing_status', []),
+            fn (mixed $status): bool => is_string($status),
+        ));
+
         $properties = Property::query()
             ->where('owner_id', $user->id)
-            ->when(! $request->boolean('include_archived'), fn ($query) => $query->whereNull('archived_at'))
+            ->when(
+                ! $request->boolean('include_archived'),
+                fn ($query) => $query->whereNull('archived_at'),
+            );
+        OwnerPropertyFilters::applyOccupancy($properties, $occupancy);
+        OwnerPropertyFilters::applyListingStatuses($properties, $listingStatuses);
+
+        $properties = $properties
             ->orderByDesc('created_at')
-            ->with(['units', 'currentListing'])
+            ->with([
+                'units' => fn ($query) => $query->whereNull('archived_at'),
+                'units.tenancies.tenant',
+                'currentListing',
+            ])
             ->paginate(20);
 
-        return PropertyResource::collection($properties);
+        return OwnerPropertySummaryResource::collection($properties);
+    }
+
+    public function rental(Request $request, Property $property): OwnerPropertyRentalResource
+    {
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($user->canManageOwnerProducts(), 403);
+        abort_if($user->currentAccessToken() instanceof PersonalAccessToken, 403);
+        Gate::authorize('view', $property);
+
+        $property->load([
+            'units' => fn ($query) => $query->whereNull('archived_at')->orderBy('label'),
+            'units.tenancies.tenant',
+        ]);
+
+        return new OwnerPropertyRentalResource($property);
     }
 
     public function store(StorePropertyRequest $request, PropertyWriteService $propertyWriter): JsonResponse

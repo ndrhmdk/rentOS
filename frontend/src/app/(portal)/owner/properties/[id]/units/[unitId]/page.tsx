@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { UnitEditor } from "../../../unit-editor";
 
 export default function OwnerUnitPage({
@@ -6,15 +5,7 @@ export default function OwnerUnitPage({
 }: {
   params: Promise<{ id: string; unitId: string }>;
 }) {
-  return (
-    <Suspense
-      fallback={
-        <p className="px-1 py-6 text-sm text-slate-500">Đang tải phòng…</p>
-      }
-    >
-      <OwnerUnitLoader params={params} />
-    </Suspense>
-  );
+  return <OwnerUnitLoader params={params} />;
 }
 
 async function OwnerUnitLoader({

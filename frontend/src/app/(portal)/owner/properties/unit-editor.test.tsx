@@ -11,7 +11,10 @@ const mockReplace = vi.fn();
 // Next's useRouter() returns the same instance on every render.
 const mockRouter = { push: mockPush, replace: mockReplace };
 
-vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => mockRouter,
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 vi.mock("@/lib/owner/api", () => ({
   getOwnerProperty: vi.fn(),
   getAmenityCatalog: vi.fn(),
@@ -52,6 +55,7 @@ function property(units: OwnerUnit[] = [unit()]): OwnerPropertyDetail {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  window.history.replaceState(null, "", "/");
   vi.mocked(getAmenityCatalog).mockResolvedValue([
     { key: "air_conditioner", label: "Điều hòa", scopes: ["unit"] },
     { key: "wifi", label: "Wi-Fi", scopes: ["unit", "property"] },
@@ -67,7 +71,7 @@ describe("UnitEditor", () => {
     vi.mocked(updateOwnerUnit).mockResolvedValue(undefined as never);
     render(<UnitEditor propertyId="property-1" unitId="unit-1" />);
 
-    expect(screen.getByText("Đang tải phòng…")).toBeTruthy();
+    expect(screen.getByRole("status")).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "Sửa Phòng 101" })).toBeTruthy();
     expect(screen.getByLabelText("Ghi chú Điều hòa")).toBeTruthy();
     expect(screen.getByLabelText("Ghi chú Wi-Fi")).toBeTruthy();
@@ -82,7 +86,11 @@ describe("UnitEditor", () => {
     await user.clear(screen.getByLabelText("Diện tích (m²)"));
     await user.click(screen.getByRole("button", { name: "Lưu phòng" }));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/owner/properties/property-1?tab=units"));
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith(
+        "/owner/properties/property-1/edit?tab=units",
+      ),
+    );
     expect(updateOwnerUnit).toHaveBeenCalledWith("property-1", "unit-1", expect.objectContaining({
       expected_content_revision: 7,
       label: "Phòng 102",
@@ -134,17 +142,58 @@ describe("UnitEditor", () => {
     expect((screen.getByRole("button", { name: "Lưu phòng" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("switches to the photo tab", async () => {
+  it("switches to the photo tab and updates the URL", async () => {
     const user = userEvent.setup();
     vi.mocked(getOwnerProperty).mockResolvedValue(property());
-    render(<UnitEditor propertyId="property-1" unitId="unit-1" />);
+    const { rerender } = render(
+      <UnitEditor propertyId="property-1" unitId="unit-1" />,
+    );
 
     await screen.findByRole("heading", { name: "Sửa Phòng 101" });
     await user.click(screen.getByRole("tab", { name: "Ảnh" }));
 
+    expect(window.location.search).toBe("?tab=photos");
+    rerender(<UnitEditor propertyId="property-1" unitId="unit-1" />);
     expect(screen.getByText("Ảnh của unit-1")).toBeTruthy();
+    expect(getOwnerProperty).toHaveBeenCalledTimes(1);
+    expect(getAmenityCatalog).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: "Lưu phòng" })).toBeNull();
-    expect(screen.getByRole("tab", { name: "Ảnh" }).getAttribute("aria-selected")).toBe("true");
+    expect(
+      screen.getByRole("tab", { name: "Ảnh" }).getAttribute("aria-selected"),
+    ).toBe("true");
+
+    await user.click(screen.getByRole("tab", { name: "Thông tin" }));
+    expect(window.location.search).toBe("");
+    rerender(<UnitEditor propertyId="property-1" unitId="unit-1" />);
+    expect(screen.getByText("Ảnh của unit-1").parentElement?.className).toContain(
+      "hidden",
+    );
+    expect(getOwnerProperty).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("tab", { name: "Ảnh" }));
+    rerender(<UnitEditor propertyId="property-1" unitId="unit-1" />);
+    expect(screen.getByText("Ảnh của unit-1").parentElement?.className).not.toContain(
+      "hidden",
+    );
+    expect(getOwnerProperty).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("tab", { name: "Thông tin" }).getAttribute("aria-selected"),
+    ).toBe("false");
+  });
+
+  it("opens the photo tab from the current URL query", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/owner/properties/property-1/units/unit-1?tab=photos",
+    );
+    vi.mocked(getOwnerProperty).mockResolvedValue(property());
+    render(<UnitEditor propertyId="property-1" unitId="unit-1" />);
+
+    await screen.findByRole("heading", { name: "Sửa Phòng 101" });
+    expect(screen.getByText("Ảnh của unit-1")).toBeTruthy();
+    expect(
+      screen.getByRole("tab", { name: "Ảnh" }).getAttribute("aria-selected"),
+    ).toBe("true");
   });
 
   it("treats an archived unit as missing", async () => {

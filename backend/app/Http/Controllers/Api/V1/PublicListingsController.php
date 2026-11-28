@@ -18,6 +18,7 @@ use Dedoc\Scramble\Attributes\Header;
 use Dedoc\Scramble\Attributes\HeaderParameter;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PublicListingsController extends Controller
@@ -34,54 +35,87 @@ class PublicListingsController extends Controller
     ): JsonResponse {
         $criteria = $this->criteria($request);
 
-        $cached = $cache->getSearch($criteria);
-        if ($cached !== null) {
-            $cachedIds = $cached['listing_ids'] ?? [];
-            if ($cachedIds === []) {
-                return response()->json([
-                    'data' => $cached['data'],
-                    'meta' => $cached['meta'],
-                ])->header('X-Cache', 'HIT');
-            }
+        $hit = $this->cachedSearchResponse($cache, $criteria);
+        if ($hit !== null) {
+            return $hit;
+        }
 
-            // Fresh visibility gate: ensure all cached listings remain publicly visible
-            $visibleCount = Listing::query()->publiclyVisible()->whereIn('id', $cachedIds)->count();
-            if ($visibleCount === count($cachedIds)) {
-                return response()->json([
-                    'data' => $cached['data'],
-                    'meta' => $cached['meta'],
-                ])->header('X-Cache', 'HIT');
+        $mutexKey = $cache->searchKey($criteria).':building';
+        $wonMutex = Cache::add($mutexKey, 1, 10);
+
+        if (! $wonMutex) {
+            usleep(100_000);
+            $hit = $this->cachedSearchResponse($cache, $criteria);
+            if ($hit !== null) {
+                return $hit;
             }
         }
 
-        return DB::transaction(function () use ($criteria, $presentation, $cache): JsonResponse {
-            ['ids' => $pageIds, 'total' => $total] = EligibleUnitQuery::matchingListingPage($criteria);
-            $listings = $presentation->cardsFor($pageIds, $criteria);
-
-            $meta = [
-                'current_page' => $criteria->page,
-                'per_page' => $criteria->perPage,
-                'total' => $total,
-                'last_page' => max(1, (int) ceil($total / $criteria->perPage)),
-            ];
-
-            if ($criteria->moveInDate !== null) {
-                $meta['result_label'] = $total.' tin đăng còn trống từ '.CarbonImmutable::parse($criteria->moveInDate)->format('d/m/Y');
+        try {
+            $hit = $this->cachedSearchResponse($cache, $criteria);
+            if ($hit !== null) {
+                return $hit;
             }
 
-            $data = PublicListingCardResource::collection($listings)->resolve();
+            return DB::transaction(function () use ($criteria, $presentation, $cache): JsonResponse {
+                ['ids' => $pageIds, 'total' => $total] = EligibleUnitQuery::matchingListingPage($criteria);
+                $listings = $presentation->cardsFor($pageIds, $criteria);
 
-            $cache->putSearch($criteria, [
-                'data' => $data,
-                'meta' => $meta,
-                'listing_ids' => $pageIds,
-            ]);
+                $meta = [
+                    'current_page' => $criteria->page,
+                    'per_page' => $criteria->perPage,
+                    'total' => $total,
+                    'last_page' => max(1, (int) ceil($total / $criteria->perPage)),
+                ];
 
+                if ($criteria->moveInDate !== null) {
+                    $meta['result_label'] = $total.' tin đăng còn trống từ '.CarbonImmutable::parse($criteria->moveInDate)->format('d/m/Y');
+                }
+
+                $data = PublicListingCardResource::collection($listings)->resolve();
+
+                $cache->putSearch($criteria, [
+                    'data' => $data,
+                    'meta' => $meta,
+                    'listing_ids' => $pageIds,
+                ]);
+
+                return response()->json([
+                    'data' => $data,
+                    'meta' => $meta,
+                ])->header('X-Cache', 'MISS');
+            });
+        } finally {
+            if ($wonMutex) {
+                Cache::forget($mutexKey);
+            }
+        }
+    }
+
+    private function cachedSearchResponse(ListingCacheService $cache, ListingSearchCriteria $criteria): ?JsonResponse
+    {
+        $cached = $cache->getSearch($criteria);
+        if ($cached === null) {
+            return null;
+        }
+
+        $cachedIds = $cached['listing_ids'] ?? [];
+        if ($cachedIds === []) {
             return response()->json([
-                'data' => $data,
-                'meta' => $meta,
-            ])->header('X-Cache', 'MISS');
-        });
+                'data' => $cached['data'],
+                'meta' => $cached['meta'],
+            ])->header('X-Cache', 'HIT');
+        }
+
+        $visibleCount = Listing::query()->publiclyVisible()->whereIn('id', $cachedIds)->count();
+        if ($visibleCount !== count($cachedIds)) {
+            return null;
+        }
+
+        return response()->json([
+            'data' => $cached['data'],
+            'meta' => $cached['meta'],
+        ])->header('X-Cache', 'HIT');
     }
 
     #[HeaderParameter('If-None-Match', 'ETag from a previous response; a match returns 304 with no body.', required: false)]
@@ -131,8 +165,14 @@ class PublicListingsController extends Controller
         /** @var list<string> $amenities */
         $amenities = array_values($request->input('amenities', []));
 
+        $ward = LocationQuery::fromInput(
+            $request->input('ward') ?? $request->input('location'),
+        );
+        $street = LocationQuery::fromInput($request->input('street'));
+
         return new ListingSearchCriteria(
-            location: LocationQuery::fromInput($request->input('location')),
+            ward: $ward,
+            street: $street,
             moveInDate: $request->input('move_in_date'),
             minRent: $request->filled('min_rent') ? $request->integer('min_rent') : null,
             maxRent: $request->filled('max_rent') ? $request->integer('max_rent') : null,

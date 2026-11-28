@@ -29,15 +29,27 @@ describe("tenancies API", () => {
   });
 
   it("fetches tenant and owner tenancies lists", async () => {
-    vi.mocked(client.request).mockResolvedValueOnce([{ id: "ten-1" }]);
+    const tenantPage = {
+      data: [{ id: "ten-1" }],
+      meta: { current_page: 1, per_page: 20, total: 1, last_page: 1 },
+    };
+    vi.mocked(client.request).mockResolvedValueOnce(tenantPage);
     const tenantRes = await getTenantTenancies();
-    expect(client.request).toHaveBeenCalledWith("/api/v1/tenant/tenancies");
-    expect(tenantRes).toEqual([{ id: "ten-1" }]);
+    expect(client.request).toHaveBeenCalledWith(
+      "/api/v1/tenant/tenancies?page=1&per_page=20",
+    );
+    expect(tenantRes).toEqual(tenantPage);
 
-    vi.mocked(client.request).mockResolvedValueOnce([{ id: "ten-2" }]);
+    const ownerPage = {
+      data: [{ id: "ten-2" }],
+      meta: { current_page: 1, per_page: 20, total: 1, last_page: 1 },
+    };
+    vi.mocked(client.request).mockResolvedValueOnce(ownerPage);
     const ownerRes = await getOwnerTenancies();
-    expect(client.request).toHaveBeenCalledWith("/api/v1/owner/tenancies");
-    expect(ownerRes).toEqual([{ id: "ten-2" }]);
+    expect(client.request).toHaveBeenCalledWith(
+      "/api/v1/owner/tenancies?page=1&per_page=20",
+    );
+    expect(ownerRes).toEqual(ownerPage);
   });
 
   it("fetches owner and tenant tenancy timelines", async () => {

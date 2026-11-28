@@ -63,7 +63,7 @@ describe("home page", () => {
     vi.mocked(fetchListings).mockResolvedValue({ data: [], meta: { current_page: 1, per_page: 3, total: 0, last_page: 1 } } as Awaited<ReturnType<typeof fetchListings>>);
     render(<Home />);
 
-    const area = screen.getAllByRole("link").find((link) => link.getAttribute("href") === "/listings?location=H%E1%BA%A3i%20Ch%C3%A2u");
+    const area = screen.getAllByRole("link").find((link) => link.getAttribute("href") === "/listings?ward=H%E1%BA%A3i%20Ch%C3%A2u");
     expect(area?.textContent).toContain("Hải Châu");
     const faq = screen.getByText("Thời hạn thuê tối thiểu là bao lâu?").closest("details");
     expect(faq?.open).toBe(true);

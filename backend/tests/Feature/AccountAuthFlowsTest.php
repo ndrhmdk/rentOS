@@ -266,6 +266,30 @@ class AccountAuthFlowsTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
+    public function test_registration_is_throttled_per_ip(): void
+    {
+        Notification::fake();
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->postJson('/register', [
+                'name' => 'Throttle User '.$attempt,
+                'email' => "throttle{$attempt}@example.test",
+                'password' => 'A-strong-password-123',
+                'password_confirmation' => 'A-strong-password-123',
+            ])->assertCreated();
+
+            $this->app['auth']->forgetGuards();
+            $this->flushSession();
+        }
+
+        $this->postJson('/register', [
+            'name' => 'Throttle User Over',
+            'email' => 'throttle-over@example.test',
+            'password' => 'A-strong-password-123',
+            'password_confirmation' => 'A-strong-password-123',
+        ])->assertTooManyRequests();
+    }
+
     public function test_forged_and_foreign_verification_links_do_not_verify_either_user(): void
     {
         $user = User::factory()->unverified()->create();

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createOwnerUnitBatch, getOwnerProperty } from "@/lib/owner/api";
 import { type OwnerPropertyDetail } from "@/lib/owner/types";
 import { ApiError } from "@/lib/http/client";
+import { MoneyField } from "@/components/ui/money-field";
 
 const fieldClass =
   "mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -278,7 +279,7 @@ function AddUnitsPageContent() {
         })),
       });
       toast.success(`Đã thêm ${rooms.length} phòng mới.`);
-      router.push(`/owner/properties/${propertyId}?tab=units`);
+      router.push(`/owner/properties/${propertyId}/edit?tab=units`);
     } catch (error) {
       // Parse and display backend validation errors
       if (error instanceof ApiError && error.status === 422) {
@@ -332,7 +333,7 @@ function AddUnitsPageContent() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <Link
-          href={`/owner/properties/${propertyId}?tab=units`}
+          href={`/owner/properties/${propertyId}/edit?tab=units`}
           className="text-sm font-semibold text-[#3368a0] hover:underline"
         >
           ← Quay lại danh sách căn
@@ -559,25 +560,17 @@ function AddUnitsPageContent() {
               </label>
               <label className="text-sm font-medium text-slate-700">
                 Giá thuê (₫/tháng)
-                <input
-                  type="number"
-                  min="0"
+                <MoneyField
                   value={room.rent}
-                  onChange={(event) =>
-                    updateRoom(index, { rent: event.target.value })
-                  }
+                  onValueChange={(rent) => updateRoom(index, { rent })}
                   className={fieldClass}
                 />
               </label>
               <label className="text-sm font-medium text-slate-700">
                 Tiền cọc (₫)
-                <input
-                  type="number"
-                  min="0"
+                <MoneyField
                   value={room.deposit}
-                  onChange={(event) =>
-                    updateRoom(index, { deposit: event.target.value })
-                  }
+                  onValueChange={(deposit) => updateRoom(index, { deposit })}
                   className={fieldClass}
                 />
               </label>
@@ -625,7 +618,7 @@ function AddUnitsPageContent() {
           </p>
           <div className="flex gap-2">
             <Link
-              href={`/owner/properties/${propertyId}?tab=units`}
+              href={`/owner/properties/${propertyId}/edit?tab=units`}
               className={secondaryButtonClass}
             >
               Hủy

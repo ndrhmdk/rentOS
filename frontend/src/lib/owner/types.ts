@@ -1,17 +1,113 @@
+export type OccupancyStatus =
+  | "OCCUPIED"
+  | "AWAITING_MOVE_IN"
+  | "PENDING_CONFIRMATION"
+  | "VACANT"
+  | "MAINTENANCE"
+  | "RETIRED"
+  | "EMPTY"
+  | "READY";
+
+export type OccupancyBadge =
+  | { kind: "single"; status: OccupancyStatus; label: string }
+  | {
+      kind: "counts";
+      items: Array<{ status: OccupancyStatus; label: string }>;
+    };
+
+export type OwnerOccupancyFilter =
+  | "all"
+  | "OCCUPIED"
+  | "VACANT"
+  | "MAINTENANCE"
+  | "PENDING_CONFIRMATION"
+  | "AWAITING_MOVE_IN";
+
+export type OwnerListingStatusFilter =
+  | "all"
+  | "published"
+  | "pending"
+  | "hidden"
+  | "none"
+  | "draft"
+  | "rejected"
+  | "approved"
+  | "suspended";
+
+export type OwnerPropertyListingSummary = {
+  id: string;
+  title: string;
+  moderation_status: OwnerListing["moderation_status"];
+  publication_status: OwnerListing["publication_status"];
+  admin_suspended_at: string | null;
+};
+
 export type OwnerProperty = {
   id: string;
   owner_id: string;
-  client_operation_id: string;
+  client_operation_id?: string;
   name: string;
   property_type: string;
   rental_arrangement: string;
+  address_line?: string | null;
+  ward?: string | null;
   city: string | null;
   policies?: unknown;
   units?: OwnerUnit[];
-  listing?: OwnerListing | null;
+  unit_count?: number;
+  occupancy?: OccupancyBadge;
+  listing?: OwnerPropertyListingSummary | OwnerListing | null;
   archived_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type OwnerPropertySummary = OwnerProperty & {
+  address_line: string | null;
+  ward: string | null;
+  unit_count: number;
+  occupancy: OccupancyBadge;
+  listing: OwnerPropertyListingSummary | null;
+};
+
+export type OwnerPropertyPage = {
+  data: OwnerPropertySummary[];
+  meta: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+};
+
+export type OwnerPropertyRentalUnit = {
+  id: string;
+  label: string;
+  operational: OccupancyStatus;
+  operational_label: string;
+  rental: OccupancyStatus;
+  rental_label: string;
+  tenant_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  tenancy_id: string | null;
+};
+
+export type OwnerPropertyRental = {
+  id: string;
+  name: string;
+  address: string;
+  property_type: string;
+  property_type_label: string;
+  rental_arrangement: "WHOLE_SPACE" | "SEPARATE_UNITS" | string;
+  rental_arrangement_label: string;
+  counts: {
+    total: number;
+    occupied: number;
+    vacant: number;
+    maintenance: number;
+  };
+  units: OwnerPropertyRentalUnit[];
 };
 
 export type OwnerPropertyDetail = OwnerProperty & {

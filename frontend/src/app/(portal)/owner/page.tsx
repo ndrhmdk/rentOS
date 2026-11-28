@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { AdminIcon } from "@/components/admin/admin-icons";
 import { ListingIcon } from "@/components/listings/listing-icon";
+import { LoadingScreen } from "@/components/loading-screen";
 import { ApiError } from "@/lib/http/client";
 import { useAuth } from "@/lib/auth-context";
 import { getOwnerPropertyPreview, getOwnerSummary, type OwnerPropertyPreview, type OwnerSummary } from "@/lib/owner-summary-api";
@@ -153,7 +154,12 @@ function OwnerOverview() {
             <h2 id="owner-properties-heading" className="text-lg font-semibold text-heading">Bất động sản của bạn</h2>
             <Link className={link + " text-sm"} href={propertyPath}>Quản lý bất động sản <span aria-hidden="true">→</span></Link>
           </div>
-          {!properties && <p role="status" className="text-sm text-secondary">Đang tải bất động sản…</p>}
+          {!properties && (
+            <LoadingScreen
+              message="Đang tải bất động sản…"
+              className="min-h-40"
+            />
+          )}
           {properties && "error" in properties && (
             <LoadError
               error={properties.error}

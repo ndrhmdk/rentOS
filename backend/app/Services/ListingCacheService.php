@@ -32,7 +32,8 @@ class ListingCacheService
         sort($amenities);
 
         $payload = [
-            'location' => $criteria->location?->value(),
+            'ward' => $criteria->ward?->value(),
+            'street' => $criteria->street?->value(),
             'move_in_date' => $criteria->moveInDate,
             'min_rent' => $criteria->minRent,
             'max_rent' => $criteria->maxRent,

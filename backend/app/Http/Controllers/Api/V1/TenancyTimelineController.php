@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Tenancies\ListParticipantTenancies;
 use App\Actions\Tenancies\ReadTenancyTimeline;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ParticipantTenancyIndexRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class TenancyTimelineController extends Controller
     }
 
     public function ownerIndex(
-        Request $request,
+        ParticipantTenancyIndexRequest $request,
         ListParticipantTenancies $tenancies,
     ): JsonResponse {
         /** @var User $owner */
@@ -38,8 +39,20 @@ class TenancyTimelineController extends Controller
             404,
         );
 
+        $page = $tenancies->forOwner(
+            $owner,
+            $request->integer('per_page', 20),
+            $request->integer('page', 1),
+        );
+
         return response()->json([
-            'data' => $tenancies->forOwner($owner),
+            'data' => $page->items(),
+            'meta' => [
+                'current_page' => $page->currentPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+                'last_page' => $page->lastPage(),
+            ],
         ]);
     }
 }

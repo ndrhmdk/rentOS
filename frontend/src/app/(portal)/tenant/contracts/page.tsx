@@ -70,8 +70,8 @@ export default function TenantContractsPage() {
 
     async function load(): Promise<void> {
       try {
-        const result = await getTenantTenancies();
-        if (active) setTenancies(result);
+        const result = await getTenantTenancies({ page: 1, perPage: 20 });
+        if (active) setTenancies(result.data);
       } catch (caught) {
         if (!active) return;
 
